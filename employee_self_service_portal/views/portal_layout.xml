@@ -1,0 +1,7 @@
+<odoo>
+    <template id="portal_employee_layout" inherit_id="portal.portal_layout">
+        <xpath expr="//div[@id='wrap']" position="inside">
+            <!-- You can add global info or shared layout adjustments here -->
+        </xpath>
+    </template>
+</odoo>

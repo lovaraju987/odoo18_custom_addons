@@ -1,0 +1,7 @@
+<!-- <odoo>
+    <menuitem id="menu_api_root" name="API Management" sequence="90"/>
+    <menuitem id="menu_api_keys" name="API Keys"
+              parent="menu_api_root" action="action_res_api_key"/>
+    <menuitem id="menu_api_dashboard_root" name="Dashboard" parent="menu_api_root" sequence="5"/>
+
+</odoo> -->

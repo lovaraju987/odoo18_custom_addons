@@ -1,0 +1,13 @@
+<odoo>
+    <record id="view_employee_form_report_inherit" model="ir.ui.view">
+        <field name="name">hr.employee.form.report.inherit</field>
+        <field name="model">hr.employee</field>
+        <field name="inherit_id" ref="hr.view_employee_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//header" position="inside">
+                <button name="%(action_report_technician_pdf)d" type="action"
+                        class="btn btn-primary" string="Print Shift Report"/>
+            </xpath>
+        </field>
+    </record>
+</odoo>

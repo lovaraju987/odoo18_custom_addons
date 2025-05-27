@@ -1,0 +1,101 @@
+# API Management Module
+
+This module provides functionality to manage API keys and dynamic API endpoints within Odoo. It allows administrators to:
+
+- Generate and manage API keys.
+- Define dynamic endpoints that expose data from various Odoo models.
+- Automatically generate unique URL paths for each endpoint.
+- Control which fields are accessible via each endpoint.
+- Restrict endpoint access via allowed API keys.
+
+## Features
+
+- **API Keys**  
+  - Create API keys linked to specific users.
+  - Assign allowed models and companies.
+  - Prevent deletion of keys that have associated endpoints.
+
+- **API Endpoints**  
+  - Define endpoints by selecting an existing Odoo model.
+  - Automatically generate a URL path based on the model’s technical name (e.g. `sale.order` becomes `sale_order`).  
+  - If the generated URL already exists, a numeric suffix is appended to guarantee uniqueness.
+  - Choose allowed fields from the selected model that will be exposed.
+  - Activate/deactivate endpoints and assign allowed API keys.
+
+- **User Interface**  
+  - In the API Key form view, a dedicated notebook page lists associated endpoints.
+  - Clicking on an endpoint record will redirect to a dedicated endpoint form view.
+  - Endpoints can be deleted via a trash icon in the list view (when configured via a proper relational field).
+
+## Installation
+
+1. **Place Module Code:**  
+   Copy the module files into your Odoo custom addons directory (e.g., `c:\odoo18_custom_addons\api_management`).
+
+2. **Update Module List:**  
+   Restart the Odoo server and update the module list.
+   - In Odoo, navigate to Apps and click on *Update Apps List*.
+
+3. **Upgrade/Install Module:**  
+   Install or upgrade the API Management module.  
+   - Make sure to restart the server after any code modifications.
+
+## File Overview
+
+- **Models:**
+  - **res_api_key.py:**  
+    Contains the `ResApiKey` model for managing API keys.  
+    Also includes restrictions such as preventing deletion if endpoints exist.
+  
+  - **res_api_endpoint.py:**  
+    Contains the `ApiEndpoint` model.  
+    Includes an onchange method to auto-populate the URL path based on the selected model and ensures uniqueness with an SQL constraint.  
+    Additionally, the `create`, `default_get`, and `write` methods have been overridden for wizard compatibility.
+
+- **Views:**
+  - **res_api_key_views.xml:**  
+    Provides the form view for API keys with a dedicated notebook page for endpoints.  
+    The notebook view redirects to a dedicated API Endpoint form view (configured via context).
+  
+  - **res_api_endpoint_views.xml (if available):**  
+    Contains the form view for API endpoints (referenced via XML ID `api_management.res_api_endpoint_form_view`).
+
+## Usage
+
+1. **API Key Management:**  
+   - Create a new API key record.
+   - Assign users, allowed models (via many2many field), and companies.
+   - Use the *Regenerate Key* button to create a new API key value.
+
+2. **Defining Endpoints:**  
+   - In the API Key form view, navigate to the *API Endpoints* notebook page.
+   - Click on *Add Endpoint* to open the dedicated API Endpoint form view.
+   - Select a model. The URL path is automatically generated (and updated uniquely if needed).
+   - Select allowed fields that will be exposed via the endpoint.
+   - Save the endpoint. The unique URL path is enforced by the SQL constraint to avoid conflicts.
+
+3. **Wizard Behavior:**  
+   - When endpoints are created via a wizard view, the overridden `default_get`, `create`, and `write` methods ensure that the URL path is automatically populated using the same logic as in the regular form view.
+
+## Troubleshooting
+
+- **URL Path Not Populating:**  
+  If you find that the URL path is not automatically populated when using a wizard form view, ensure that the overridden `default_get`, `create`, and `write` methods are in place. Also, verify that the `model_id` field is being set correctly in the wizard context.
+
+- **View Redirection:**  
+  If clicking on an endpoint in the API Key notebook does not open its dedicated form view, check that the context key
+  `{'form_view_ref': 'api_management.res_api_endpoint_form_view'}` in the notebook XML is correct and that the dedicated form view is defined.
+
+## Best Practices
+
+- Test the module in a development environment after any changes.
+- Upgrade the module after changes using Odoo’s developer mode and ensure caches are cleared.
+- Review Odoo logs for detailed error traces during development.
+
+## License
+
+[Specify your license here.]
+
+## Acknowledgments
+
+This module is developed for managing API access in a flexible and secure way within Odoo.

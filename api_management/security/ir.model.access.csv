@@ -1,0 +1,5 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_res_api_key_user,res.api.key user,model_res_api_key,base.group_system,1,1,1,1
+access_api_access_log_user,access.api.access.log.user,model_api_access_log,base.group_system,1,0,0,0
+access_res_api_endpoint,res.api.endpoint,model_res_api_endpoint,,1,1,1,1
+access_res_api_endpoint_wizard,res.api.endpoint.wizard,model_res_api_endpoint_wizard,,1,1,1,1

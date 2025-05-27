@@ -1,0 +1,44 @@
+<odoo>
+    <!-- Pivot View -->
+    <record id="view_api_access_log_pivot" model="ir.ui.view">
+        <field name="name">api.access.log.pivot</field>
+        <field name="model">api.access.log</field>
+        <field name="arch" type="xml">
+            <pivot string="API Access Logs">
+                <field name="timestamp" type="row"/>
+                <field name="status" type="col"/>
+                <field name="api_key_id" type="row"/>
+                <field name="endpoint" type="row"/>
+            </pivot>
+        </field>
+    </record>
+
+    <!-- Graph View -->
+    <record id="view_api_access_log_graph" model="ir.ui.view">
+        <field name="name">api.access.log.graph</field>
+        <field name="model">api.access.log</field>
+        <field name="arch" type="xml">
+            <graph string="API Request Stats" type="bar">
+                <field name="timestamp" type="row"/>
+                <field name="status" type="col"/>
+            </graph>
+        </field>
+    </record>
+
+    <!-- Action -->
+    <record id="action_api_dashboard" model="ir.actions.act_window">
+        <field name="name">API Usage Dashboard</field>
+        <field name="res_model">api.access.log</field>
+        <field name="view_mode">pivot,graph</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                No logs yet. API activity will appear here.
+            </p>
+        </field>
+    </record>
+
+    <!-- Dashboard Menu -->
+    <menuitem id="menu_api_dashboard_root" name="Dashboard" parent="menu_api_root" sequence="5"/>
+    <menuitem id="menu_api_dashboard" name="Usage Dashboard"
+              parent="menu_api_dashboard_root" action="action_api_dashboard"/>
+</odoo>

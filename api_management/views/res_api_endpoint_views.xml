@@ -1,0 +1,49 @@
+<odoo>
+  <!-- List view -->
+  <record id="view_res_api_endpoint_list" model="ir.ui.view">
+    <field name="name">res.api.endpoint.list</field>
+    <field name="model">res.api.endpoint</field>
+    <field name="arch" type="xml">
+      <list string="API Endpoints">
+        <field name="name"/>
+        <field name="url_path"/>
+        <field name="model_id"/>
+        <field name="active"/>
+      </list>
+    </field>
+  </record>
+
+  <!-- Form view -->
+  <record id="view_res_api_endpoint_form" model="ir.ui.view">
+    <field name="name">res.api.endpoint.form</field>
+    <field name="model">res.api.endpoint</field>
+    <field name="arch" type="xml">
+      <form string="API Endpoint">
+        <sheet>
+          <group>
+            <field name="name"/>
+            <field name="url_path"/>
+            <field name="model_id"/>
+            <field name="field_ids" widget="many2many_tags"/>
+            <field name="api_key_ids" widget="many2many_tags"/>
+            <field name="active"/>
+          </group>
+        </sheet>
+      </form>
+    </field>
+  </record>
+
+  <!-- Action -->
+  <record id="action_res_api_endpoint" model="ir.actions.act_window">
+    <field name="name">API Endpoints</field>
+    <field name="res_model">res.api.endpoint</field>
+    <field name="view_mode">list,form</field>
+  </record>
+
+  <!-- Menu under API Management -->
+  <menuitem id="menu_api_endpoints"
+            name="API Endpoints"
+            parent="menu_api_root"
+            action="action_res_api_endpoint"
+            sequence="30"/>
+</odoo>

@@ -1,0 +1,29 @@
+<odoo>
+    <template id="portal_employee_profile" name="My Employee Profile">
+        <t t-call="portal.portal_layout">
+            <div class="o_portal container my-4">
+                <h2>My Employee Profile</h2>
+                <div class="card p-3">
+                    <p><strong>Name:</strong> <t t-esc="employee.name"/></p>
+                    <p><strong>Job Title:</strong> <t t-esc="employee.job_title"/></p>
+                    <p><strong>Work Email:</strong> <t t-esc="employee.work_email"/></p>
+                    <p><strong>Work Phone:</strong> <t t-esc="employee.work_phone"/></p>
+                </div>
+
+                <div class="mt-4">
+                    <form action="/my/employee/attendance/checkin" method="post" style="display:inline-block">
+                        <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
+                        <button type="submit" class="btn btn-primary">Check In</button>
+                    </form>
+                    <form action="/my/employee/attendance/checkout" method="post" style="display:inline-block; margin-left:10px;">
+                        <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
+                        <button type="submit" class="btn btn-danger">Check Out</button>
+                    </form>
+                </div>
+                <div class="mt-4">
+                    <a class="btn btn-secondary" href="/my/employee/attendance">View My Attendance</a>
+                </div>
+            </div>
+        </t>
+    </template>
+</odoo>

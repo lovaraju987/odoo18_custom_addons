@@ -1,0 +1,10 @@
+<odoo>
+    <record id="action_report_technician_pdf" model="ir.actions.report">
+        <field name="name">Employee Shift Report</field>
+        <field name="model">hr.employee</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">employee_shift_report.technician_report_template</field>
+        <field name="report_file">employee_shift_report.technician_report_template</field>
+        <field name="print_report_name">'Employee_Report_' + object.name</field>
+    </record>
+</odoo>

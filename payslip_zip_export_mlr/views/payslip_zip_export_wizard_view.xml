@@ -1,0 +1,24 @@
+<odoo>
+  <record id="view_payslip_zip_export_form" model="ir.ui.view">
+    <field name="name">payslip.zip.export.form</field>
+    <field name="model">payslip.zip.export</field>
+    <field name="arch" type="xml">
+      <form string="Export Payslips">
+        <footer>
+          <button name="export_zip"
+                  type="object"
+                  string="Export"
+                  class="btn-primary"/>
+          <button string="Cancel" class="btn-secondary" special="cancel"/>
+        </footer>
+      </form>
+    </field>
+  </record>
+
+  <record id="action_payslip_zip_export_wizard" model="ir.actions.act_window">
+    <field name="name">Export Payslips as ZIP</field>
+    <field name="res_model">payslip.zip.export</field>
+    <field name="view_mode">form</field>
+    <field name="target">new</field>
+  </record>
+</odoo>

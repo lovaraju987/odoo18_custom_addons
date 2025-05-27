@@ -1,0 +1,51 @@
+<odoo>
+
+    <record id="view_res_api_key_list" model="ir.ui.view">
+        <field name="name">res.api.key.list</field>
+        <field name="model">res.api.key</field>
+        <field name="arch" type="xml">
+            <list string="API Keys">
+                <field name="name"/>
+                <field name="key" readonly="1"/>
+                <field name="user_id"/>
+                <field name="is_admin"/>
+                <field name="active"/>
+                <field name="expiry_date"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_res_api_key_form" model="ir.ui.view">
+        <field name="name">res.api.key.form</field>
+        <field name="model">res.api.key</field>
+        <field name="arch" type="xml">
+            <form string="API Key">
+                <header>
+                    <button name="generate_key"
+                            type="object"
+                            string="Regenerate Key"
+                            class="btn-primary"
+                            visibility="not key"/>
+                </header>
+                <group>
+                    <field name="name"/>
+                    <field name="key" readonly="1"/>
+                    <field name="user_id"/>
+                    <field name="is_admin"/>
+                    <field name="active"/>
+                    <field name="expiry_date"/>
+                </group>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_res_api_key" model="ir.actions.act_window">
+        <field name="name">API Keys</field>
+        <field name="res_model">res.api.key</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <menuitem id="menu_api_root" name="API Management"/>
+    <menuitem id="menu_api_keys" name="API Keys" parent="menu_api_root" action="action_res_api_key"/>
+
+</odoo>
