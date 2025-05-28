@@ -60,7 +60,10 @@ def serialize_field(record, field_name, field):
 class DynamicAPI(http.Controller):
     @http.route('/api/<string:endpoint_path>', auth='none', type='http', methods=['GET'], csrf=False)
     def dynamic_api_handler(self, endpoint_path, **kwargs):
-        api_key_value = request.httprequest.headers.get('x-api-key')
+        api_key_value = (
+                    request.httprequest.headers.get('x-api-key') or
+                    request.params.get('key')  # allow ?key=your_api_key in URL
+                )
         ip_address = request.httprequest.remote_addr
         query_string = request.httprequest.query_string.decode()
 
