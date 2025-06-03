@@ -55,12 +55,23 @@ class PortalEmployee(http.Controller):
             return request.redirect('/my/employee')
         if http.request.httprequest.method == 'POST':
             vals = {}
-            if post.get('work_email'):
-                vals['work_email'] = post.get('work_email')
-            if post.get('work_phone'):
-                vals['work_phone'] = post.get('work_phone')
-            if post.get('address_home_id'):
-                vals['address_home_id'] = int(post.get('address_home_id'))
+            # Personal Details
+            vals['work_email'] = post.get('work_email')
+            vals['work_phone'] = post.get('work_phone')
+            vals['birthday'] = post.get('birthday')
+            vals['gender'] = post.get('gender')
+            vals['marital'] = post.get('marital')
+            # Experience & Skills
+            vals['x_experience'] = post.get('x_experience')
+            vals['x_skills'] = post.get('x_skills')
+            # Certifications
+            vals['x_certifications'] = post.get('x_certifications')
+            # Bank Details
+            vals['x_bank_account'] = post.get('x_bank_account')
+            vals['x_bank_name'] = post.get('x_bank_name')
+            vals['x_ifsc'] = post.get('x_ifsc')
+            # Only update fields that are present in the form
+            vals = {k: v for k, v in vals.items() if v is not None}
             if vals:
                 employee.sudo().write(vals)
             return request.redirect('/my/employee')
