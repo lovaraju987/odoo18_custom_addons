@@ -47,3 +47,27 @@ class PortalEmployee(http.Controller):
             'attendances': attendances,
             'employee': employee,
         })
+
+    @http.route('/my/employee/edit', type='http', auth='user', website=True, methods=['GET', 'POST'])
+    def portal_employee_edit(self, **post):
+        employee = request.env['hr.employee'].sudo().search([('user_id', '=', request.uid)], limit=1)
+        if not employee:
+            return request.redirect('/my/employee')
+        if http.request.httprequest.method == 'POST':
+            vals = {}
+            if post.get('work_email'):
+                vals['work_email'] = post.get('work_email')
+            if post.get('work_phone'):
+                vals['work_phone'] = post.get('work_phone')
+            if post.get('address_home_id'):
+                vals['address_home_id'] = int(post.get('address_home_id'))
+            if vals:
+                employee.sudo().write(vals)
+            return request.redirect('/my/employee')
+        return request.render('employee_self_service_portal.portal_employee_edit', {
+            'employee': employee,
+        })
+
+    @http.route('/my/ess', type='http', auth='user', website=True)
+    def portal_ess_dashboard(self, **kwargs):
+        return request.render('employee_self_service_portal.portal_ess_dashboard')

@@ -14,6 +14,8 @@
         "views/portal_employee_templates.xml",
         "views/portal_attendance_templates.xml",
         "views/employee_form_view.xml",
+        "views/portal_employee_edit_templates.xml",
+        "views/portal_ess_dashboard.xml",
     ],
     "installable": True,
     "application": True,

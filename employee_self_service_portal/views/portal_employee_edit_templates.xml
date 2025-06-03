@@ -1,0 +1,23 @@
+<odoo>
+    <template id="portal_employee_edit" name="Edit My Profile">
+        <t t-call="portal.portal_layout">
+            <div class="o_portal container my-4">
+                <h2>Edit My Profile</h2>
+                <form action="/my/employee/edit" method="post" class="card p-3">
+                    <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
+                    <div class="form-group">
+                        <label>Email</label>
+                        <input type="email" name="work_email" class="form-control" t-att-value="employee.work_email"/>
+                    </div>
+                    <div class="form-group">
+                        <label>Phone</label>
+                        <input type="text" name="work_phone" class="form-control" t-att-value="employee.work_phone"/>
+                    </div>
+                    <!-- Add more fields as needed -->
+                    <button type="submit" class="btn btn-primary mt-3">Save</button>
+                    <a href="/my/employee" class="btn btn-secondary mt-3">Cancel</a>
+                </form>
+            </div>
+        </t>
+    </template>
+</odoo>
