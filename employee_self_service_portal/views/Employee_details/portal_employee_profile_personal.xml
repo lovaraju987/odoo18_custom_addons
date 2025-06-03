@@ -45,6 +45,46 @@
           </div>
           <button type="submit" class="btn btn-primary mt-3">Save</button>
         </form>
+        <div class="card my-4">
+          <div class="card-header bg-info text-white">
+            <h5 class="mb-0">Private Information</h5>
+          </div>
+          <div class="card-body">
+            <div class="row">
+              <!-- Private Contact & Address -->
+              <div class="col-md-6 mb-2"><b>Private Street</b><br/><t t-esc="employee.private_street"/></div>
+              <div class="col-md-6 mb-2"><b>Private Street2</b><br/><t t-esc="employee.private_street2"/></div>
+              <div class="col-md-6 mb-2"><b>Private City</b><br/><t t-esc="employee.private_city"/></div>
+              <div class="col-md-6 mb-2"><b>Private State</b><br/><t t-esc="employee.private_state_id.name"/></div>
+              <div class="col-md-6 mb-2"><b>Private Zip</b><br/><t t-esc="employee.private_zip"/></div>
+              <div class="col-md-6 mb-2"><b>Private Country</b><br/><t t-esc="employee.private_country_id.name"/></div>
+              <div class="col-md-6 mb-2"><b>Private Email</b><br/><t t-esc="employee.private_email"/></div>
+              <div class="col-md-6 mb-2"><b>Private Phone</b><br/><t t-esc="employee.private_phone"/></div>
+              <div class="col-md-6 mb-2"><b>Bank Account</b><br/><t t-esc="employee.bank_account_id.acc_number"/></div>
+              <!-- <div class="col-md-6 mb-2"><b>Citizenship</b><br/><t t-esc="employee.citizenship"/></div> -->
+              <div class="col-md-6 mb-2"><b>Nationality (Country)</b><br/><t t-esc="employee.country_id.name"/></div>
+              <div class="col-md-6 mb-2"><b>Identification No</b><br/><t t-esc="employee.identification_id"/></div>
+              <div class="col-md-6 mb-2"><b>SSN No</b><br/><t t-esc="employee.ssnid"/></div>
+              <div class="col-md-6 mb-2"><b>Passport No</b><br/><t t-esc="employee.passport_id"/></div>
+              <div class="col-md-6 mb-2"><b>Gender</b><br/><t t-esc="employee.gender"/></div>
+              <div class="col-md-6 mb-2"><b>Date of Birth</b><br/><t t-esc="employee.birthday"/></div>
+              <div class="col-md-6 mb-2"><b>Place of Birth</b><br/><t t-esc="employee.place_of_birth"/></div>
+              <div class="col-md-6 mb-2"><b>Country of Birth</b><br/><t t-esc="employee.country_of_birth.name"/></div>
+              <div class="col-md-6 mb-2"><b>Emergency Contact Name</b><br/><t t-esc="employee.emergency_contact"/></div>
+              <div class="col-md-6 mb-2"><b>Emergency Contact Phone</b><br/><t t-esc="employee.emergency_phone"/></div>
+              <div class="col-md-6 mb-2"><b>Marital Status</b><br/><t t-esc="employee.marital"/></div>
+              <div class="col-md-6 mb-2"><b>Number of Dependent Children</b><br/><t t-esc="employee.children"/></div>
+              <div class="col-md-6 mb-2"><b>Certificate Level</b><br/><t t-esc="employee.certificate"/></div>
+              <div class="col-md-6 mb-2"><b>Field of Study</b><br/><t t-esc="employee.study_field"/></div>
+              <div class="col-md-6 mb-2"><b>School</b><br/><t t-esc="employee.study_school"/></div>
+              <div class="col-md-6 mb-2"><b>Visa No</b><br/><t t-esc="employee.visa_no"/></div>
+              <div class="col-md-6 mb-2"><b>Work Permit No</b><br/><t t-esc="employee.permit_no"/></div>
+              <div class="col-md-6 mb-2"><b>Visa Expiration Date</b><br/><t t-esc="employee.visa_expire"/></div>
+              <div class="col-md-6 mb-2"><b>Work Permit Expiration Date</b><br/><t t-esc="employee.work_permit_expiration_date"/></div>
+              <div class="col-md-6 mb-2"><b>Private Car Plate</b><br/><t t-esc="employee.private_car_plate"/></div>
+            </div>
+          </div>
+        </div>
       </t>
     </t>
   </template>
