@@ -12,7 +12,7 @@
               <div class="col-md-9">
                 <div class="row">
                   <div class="col-md-6 mb-2"><b>Full Name</b><br/><t t-esc="employee.name"/></div>
-                  <div class="col-md-6 mb-2"><b>Employee ID</b><br/><t t-esc="employee.employee_id"/></div>
+                  <div class="col-md-6 mb-2"><b>Employee ID</b><br/><t t-esc="employee.barcode"/></div>
                   <div class="col-md-6 mb-2"><b>Department</b><br/><t t-esc="employee.department_id.name"/></div>
                   <div class="col-md-6 mb-2"><b>Designation</b><br/><t t-esc="employee.job_title"/></div>
                   <div class="col-md-6 mb-2"><b>Line Manager</b><br/><t t-esc="employee.parent_id.name"/></div>
