@@ -3,88 +3,189 @@
     <t t-call="employee_self_service_portal.portal_employee_profile_base">
       <t t-set="section" t-value="'personal'"/>
       <t t-set="section_content">
-        <form action="/my/employee/personal" method="post" class="card p-3">
+        <form id="employeeCombinedForm" action="/my/employee/personal" method="post" class="card p-3 position-relative">
           <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
+          <!-- Edit Icon -->
+          <span id="editIcon" style="position:absolute;top:10px;right:20px;cursor:pointer;font-size:22px;color:#d9534f;">
+            <i class="fa fa-pencil"></i>
+          </span>
           <div class="row">
+            <!-- Personal Details -->
             <div class="col-md-6 mb-2">
               <label>Email</label>
-              <input type="email" name="work_email" class="form-control" t-att-value="employee.work_email"/>
+              <input type="email" name="work_email" class="form-control" t-att-value="employee.work_email" readonly="readonly"/>
             </div>
             <div class="col-md-6 mb-2">
               <label>Phone</label>
-              <input type="text" name="work_phone" class="form-control" t-att-value="employee.work_phone"/>
+              <input type="text" name="work_phone" class="form-control" t-att-value="employee.work_phone" readonly="readonly"/>
             </div>
             <div class="col-md-6 mb-2">
               <label>Nationality</label>
-              <input type="text" name="x_nationality" class="form-control" t-att-value="employee.x_nationality"/>
+              <input type="text" name="x_nationality" class="form-control" t-att-value="employee.x_nationality" readonly="readonly"/>
             </div>
             <div class="col-md-6 mb-2">
               <label>Emirates Id</label>
-              <input type="text" name="x_emirates_id" class="form-control" t-att-value="employee.x_emirates_id"/>
+              <input type="text" name="x_emirates_id" class="form-control" t-att-value="employee.x_emirates_id" readonly="readonly"/>
             </div>
             <div class="col-md-6 mb-2">
               <label>Emirates Id Expiry Date</label>
-              <input type="date" name="x_emirates_expiry" class="form-control" t-att-value="employee.x_emirates_expiry"/>
+              <input type="date" name="x_emirates_expiry" class="form-control" t-att-value="employee.x_emirates_expiry" readonly="readonly"/>
             </div>
             <div class="col-md-6 mb-2">
               <label>Passport Number</label>
-              <input type="text" name="x_passport_number" class="form-control" t-att-value="employee.x_passport_number"/>
+              <input type="text" name="x_passport_number" class="form-control" t-att-value="employee.x_passport_number" readonly="readonly"/>
             </div>
             <div class="col-md-6 mb-2">
               <label>Passport Issuing Country</label>
-              <input type="text" name="x_passport_country" class="form-control" t-att-value="employee.x_passport_country"/>
+              <input type="text" name="x_passport_country" class="form-control" t-att-value="employee.x_passport_country" readonly="readonly"/>
             </div>
             <div class="col-md-6 mb-2">
               <label>Passport Issue Date</label>
-              <input type="date" name="x_passport_issue" class="form-control" t-att-value="employee.x_passport_issue"/>
+              <input type="date" name="x_passport_issue" class="form-control" t-att-value="employee.x_passport_issue" readonly="readonly"/>
             </div>
             <div class="col-md-6 mb-2">
               <label>Passport Expiry Date</label>
-              <input type="date" name="x_passport_expiry" class="form-control" t-att-value="employee.x_passport_expiry"/>
+              <input type="date" name="x_passport_expiry" class="form-control" t-att-value="employee.x_passport_expiry" readonly="readonly"/>
+            </div>
+            <!-- Private Information -->
+            <div class="col-md-6 mb-2">
+              <label>Private Street</label>
+              <input type="text" name="private_street" class="form-control" t-att-value="employee.private_street" readonly="readonly"/>
+            </div>
+            <div class="col-md-6 mb-2">
+              <label>Private Street2</label>
+              <input type="text" name="private_street2" class="form-control" t-att-value="employee.private_street2" readonly="readonly"/>
+            </div>
+            <div class="col-md-6 mb-2">
+              <label>Private City</label>
+              <input type="text" name="private_city" class="form-control" t-att-value="employee.private_city" readonly="readonly"/>
+            </div>
+            <div class="col-md-6 mb-2">
+              <label>Private State</label>
+              <input type="text" name="private_state_id" class="form-control" t-att-value="employee.private_state_id.name" readonly="readonly"/>
+            </div>
+            <div class="col-md-6 mb-2">
+              <label>Private Zip</label>
+              <input type="text" name="private_zip" class="form-control" t-att-value="employee.private_zip" readonly="readonly"/>
+            </div>
+            <div class="col-md-6 mb-2">
+              <label>Private Country</label>
+              <input type="text" name="private_country_id" class="form-control" t-att-value="employee.private_country_id.name" readonly="readonly"/>
+            </div>
+            <div class="col-md-6 mb-2">
+              <label>Private Email</label>
+              <input type="email" name="private_email" class="form-control" t-att-value="employee.private_email" readonly="readonly"/>
+            </div>
+            <div class="col-md-6 mb-2">
+              <label>Private Phone</label>
+              <input type="text" name="private_phone" class="form-control" t-att-value="employee.private_phone" readonly="readonly"/>
+            </div>
+            <div class="col-md-6 mb-2">
+              <label>Bank Account</label>
+              <input type="text" name="bank_account_id" class="form-control" t-att-value="employee.bank_account_id.acc_number" readonly="readonly"/>
+            </div>
+            <div class="col-md-6 mb-2">
+              <label>Nationality (Country)</label>
+              <input type="text" name="country_id" class="form-control" t-att-value="employee.country_id.name" readonly="readonly"/>
+            </div>
+            <div class="col-md-6 mb-2">
+              <label>Identification No</label>
+              <input type="text" name="identification_id" class="form-control" t-att-value="employee.identification_id" readonly="readonly"/>
+            </div>
+            <div class="col-md-6 mb-2">
+              <label>SSN No</label>
+              <input type="text" name="ssnid" class="form-control" t-att-value="employee.ssnid" readonly="readonly"/>
+            </div>
+            <div class="col-md-6 mb-2">
+              <label>Passport No</label>
+              <input type="text" name="passport_id" class="form-control" t-att-value="employee.passport_id" readonly="readonly"/>
+            </div>
+            <div class="col-md-6 mb-2">
+              <label>Gender</label>
+              <input type="text" name="gender" class="form-control" t-att-value="employee.gender" readonly="readonly"/>
+            </div>
+            <div class="col-md-6 mb-2">
+              <label>Date of Birth</label>
+              <input type="date" name="birthday" class="form-control" t-att-value="employee.birthday" readonly="readonly"/>
+            </div>
+            <div class="col-md-6 mb-2">
+              <label>Place of Birth</label>
+              <input type="text" name="place_of_birth" class="form-control" t-att-value="employee.place_of_birth" readonly="readonly"/>
+            </div>
+            <div class="col-md-6 mb-2">
+              <label>Country of Birth</label>
+              <input type="text" name="country_of_birth" class="form-control" t-att-value="employee.country_of_birth.name" readonly="readonly"/>
+            </div>
+            <div class="col-md-6 mb-2">
+              <label>Emergency Contact Name</label>
+              <input type="text" name="emergency_contact" class="form-control" t-att-value="employee.emergency_contact" readonly="readonly"/>
+            </div>
+            <div class="col-md-6 mb-2">
+              <label>Emergency Contact Phone</label>
+              <input type="text" name="emergency_phone" class="form-control" t-att-value="employee.emergency_phone" readonly="readonly"/>
+            </div>
+            <div class="col-md-6 mb-2">
+              <label>Marital Status</label>
+              <input type="text" name="marital" class="form-control" t-att-value="employee.marital" readonly="readonly"/>
+            </div>
+            <div class="col-md-6 mb-2">
+              <label>Number of Dependent Children</label>
+              <input type="text" name="children" class="form-control" t-att-value="employee.children" readonly="readonly"/>
+            </div>
+            <div class="col-md-6 mb-2">
+              <label>Certificate Level</label>
+              <input type="text" name="certificate" class="form-control" t-att-value="employee.certificate" readonly="readonly"/>
+            </div>
+            <div class="col-md-6 mb-2">
+              <label>Field of Study</label>
+              <input type="text" name="study_field" class="form-control" t-att-value="employee.study_field" readonly="readonly"/>
+            </div>
+            <div class="col-md-6 mb-2">
+              <label>School</label>
+              <input type="text" name="study_school" class="form-control" t-att-value="employee.study_school" readonly="readonly"/>
+            </div>
+            <div class="col-md-6 mb-2">
+              <label>Visa No</label>
+              <input type="text" name="visa_no" class="form-control" t-att-value="employee.visa_no" readonly="readonly"/>
+            </div>
+            <div class="col-md-6 mb-2">
+              <label>Work Permit No</label>
+              <input type="text" name="permit_no" class="form-control" t-att-value="employee.permit_no" readonly="readonly"/>
+            </div>
+            <div class="col-md-6 mb-2">
+              <label>Visa Expiration Date</label>
+              <input type="date" name="visa_expire" class="form-control" t-att-value="employee.visa_expire" readonly="readonly"/>
+            </div>
+            <div class="col-md-6 mb-2">
+              <label>Work Permit Expiration Date</label>
+              <input type="date" name="work_permit_expiration_date" class="form-control" t-att-value="employee.work_permit_expiration_date" readonly="readonly"/>
+            </div>
+            <div class="col-md-6 mb-2">
+              <label>Private Car Plate</label>
+              <input type="text" name="private_car_plate" class="form-control" t-att-value="employee.private_car_plate" readonly="readonly"/>
             </div>
           </div>
-          <button type="submit" class="btn btn-primary mt-3">Save</button>
+          <button type="submit" id="saveCombinedBtn" class="btn btn-primary mt-3" style="display:none;">Save</button>
         </form>
-        <div class="card my-4">
-          <div class="card-header bg-info text-white">
-            <h5 class="mb-0">Private Information</h5>
-          </div>
-          <div class="card-body">
-            <div class="row">
-              <!-- Private Contact & Address -->
-              <div class="col-md-6 mb-2"><b>Private Street</b><br/><t t-esc="employee.private_street"/></div>
-              <div class="col-md-6 mb-2"><b>Private Street2</b><br/><t t-esc="employee.private_street2"/></div>
-              <div class="col-md-6 mb-2"><b>Private City</b><br/><t t-esc="employee.private_city"/></div>
-              <div class="col-md-6 mb-2"><b>Private State</b><br/><t t-esc="employee.private_state_id.name"/></div>
-              <div class="col-md-6 mb-2"><b>Private Zip</b><br/><t t-esc="employee.private_zip"/></div>
-              <div class="col-md-6 mb-2"><b>Private Country</b><br/><t t-esc="employee.private_country_id.name"/></div>
-              <div class="col-md-6 mb-2"><b>Private Email</b><br/><t t-esc="employee.private_email"/></div>
-              <div class="col-md-6 mb-2"><b>Private Phone</b><br/><t t-esc="employee.private_phone"/></div>
-              <div class="col-md-6 mb-2"><b>Bank Account</b><br/><t t-esc="employee.bank_account_id.acc_number"/></div>
-              <!-- <div class="col-md-6 mb-2"><b>Citizenship</b><br/><t t-esc="employee.citizenship"/></div> -->
-              <div class="col-md-6 mb-2"><b>Nationality (Country)</b><br/><t t-esc="employee.country_id.name"/></div>
-              <div class="col-md-6 mb-2"><b>Identification No</b><br/><t t-esc="employee.identification_id"/></div>
-              <div class="col-md-6 mb-2"><b>SSN No</b><br/><t t-esc="employee.ssnid"/></div>
-              <div class="col-md-6 mb-2"><b>Passport No</b><br/><t t-esc="employee.passport_id"/></div>
-              <div class="col-md-6 mb-2"><b>Gender</b><br/><t t-esc="employee.gender"/></div>
-              <div class="col-md-6 mb-2"><b>Date of Birth</b><br/><t t-esc="employee.birthday"/></div>
-              <div class="col-md-6 mb-2"><b>Place of Birth</b><br/><t t-esc="employee.place_of_birth"/></div>
-              <div class="col-md-6 mb-2"><b>Country of Birth</b><br/><t t-esc="employee.country_of_birth.name"/></div>
-              <div class="col-md-6 mb-2"><b>Emergency Contact Name</b><br/><t t-esc="employee.emergency_contact"/></div>
-              <div class="col-md-6 mb-2"><b>Emergency Contact Phone</b><br/><t t-esc="employee.emergency_phone"/></div>
-              <div class="col-md-6 mb-2"><b>Marital Status</b><br/><t t-esc="employee.marital"/></div>
-              <div class="col-md-6 mb-2"><b>Number of Dependent Children</b><br/><t t-esc="employee.children"/></div>
-              <div class="col-md-6 mb-2"><b>Certificate Level</b><br/><t t-esc="employee.certificate"/></div>
-              <div class="col-md-6 mb-2"><b>Field of Study</b><br/><t t-esc="employee.study_field"/></div>
-              <div class="col-md-6 mb-2"><b>School</b><br/><t t-esc="employee.study_school"/></div>
-              <div class="col-md-6 mb-2"><b>Visa No</b><br/><t t-esc="employee.visa_no"/></div>
-              <div class="col-md-6 mb-2"><b>Work Permit No</b><br/><t t-esc="employee.permit_no"/></div>
-              <div class="col-md-6 mb-2"><b>Visa Expiration Date</b><br/><t t-esc="employee.visa_expire"/></div>
-              <div class="col-md-6 mb-2"><b>Work Permit Expiration Date</b><br/><t t-esc="employee.work_permit_expiration_date"/></div>
-              <div class="col-md-6 mb-2"><b>Private Car Plate</b><br/><t t-esc="employee.private_car_plate"/></div>
-            </div>
-          </div>
-        </div>
+      </t>
+      <t t-raw="0">
+        <script type="text/javascript">
+          document.addEventListener('DOMContentLoaded', function() {
+            var editIcon = document.getElementById('editIcon');
+            var saveBtn = document.getElementById('saveCombinedBtn');
+            var form = document.getElementById('employeeCombinedForm');
+            if(editIcon &amp;&amp; form) {
+              editIcon.addEventListener('click', function() {
+                var inputs = form.querySelectorAll('input');
+                inputs.forEach(function(input) {
+                  input.removeAttribute('readonly');
+                });
+                editIcon.style.display = 'none';
+                saveBtn.style.display = '';
+              });
+            }
+          });
+        </script>
       </t>
     </t>
   </template>
