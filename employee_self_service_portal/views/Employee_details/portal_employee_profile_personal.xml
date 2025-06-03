@@ -1,0 +1,15 @@
+<odoo>
+  <template id="portal_employee_profile_personal">
+    <t t-call="employee_self_service_portal.portal_employee_profile_base">
+      <t t-set="section" t-value="'personal'"/>
+      <t t-set="section_content">
+        <form action="/my/employee/personal" method="post" class="card p-3">
+          <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
+          <!-- Personal Details fields here -->
+          <!-- ... -->
+          <button type="submit" class="btn btn-primary mt-3">Save</button>
+        </form>
+      </t>
+    </t>
+  </template>
+</odoo>

@@ -3,6 +3,8 @@ from odoo import http, fields
 from odoo.http import request
 
 class PortalEmployee(http.Controller):
+    def _get_employee(self):
+        return request.env['hr.employee'].sudo().search([('user_id', '=', request.uid)], limit=1)
 
     @http.route('/my/employee', type='http', auth='user', website=True)
     def portal_employee_profile(self, **kwargs):
@@ -82,3 +84,23 @@ class PortalEmployee(http.Controller):
     @http.route('/my/ess', type='http', auth='user', website=True)
     def portal_ess_dashboard(self, **kwargs):
         return request.render('employee_self_service_portal.portal_ess_dashboard')
+
+    @http.route('/my/employee/personal', type='http', auth='user', website=True, methods=['GET', 'POST'])
+    def portal_employee_personal(self, **post):
+        employee = self._get_employee()
+        if request.httprequest.method == 'POST':
+            # update personal details
+            vals = {
+                'work_email': post.get('work_email'),
+                'work_phone': post.get('work_phone'),
+                'birthday': post.get('birthday'),
+                'gender': post.get('gender'),
+                'marital': post.get('marital'),
+            }
+            employee.sudo().write({k: v for k, v in vals.items() if v is not None})
+        return request.render('employee_self_service_portal.portal_employee_profile_personal', {
+            'employee': employee,
+            'section': 'personal',
+        })
+
+    # Repeat for /experience, /certification, /bank with their own templates and fields

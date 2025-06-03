@@ -1,0 +1,52 @@
+<odoo>
+  <template id="portal_employee_profile_base">
+    <t t-call="portal.portal_layout">
+      <div class="o_portal container my-4">
+        <!-- Header Section -->
+        <div class="card mb-4">
+          <div class="card-header bg-success text-white">
+            <h4 class="mb-0">Employee Details</h4>
+          </div>
+          <div class="card-body">
+            <div class="row align-items-center">
+              <div class="col-md-9">
+                <div class="row">
+                  <div class="col-md-6 mb-2"><b>Full Name</b><br/><t t-esc="employee.name"/></div>
+                  <div class="col-md-6 mb-2"><b>Employee ID</b><br/><t t-esc="employee.employee_id"/></div>
+                  <div class="col-md-6 mb-2"><b>Department</b><br/><t t-esc="employee.department_id.name"/></div>
+                  <div class="col-md-6 mb-2"><b>Designation</b><br/><t t-esc="employee.job_title"/></div>
+                  <div class="col-md-6 mb-2"><b>Line Manager</b><br/><t t-esc="employee.parent_id.name"/></div>
+                  <div class="col-md-6 mb-2"><b>Role</b><br/><t t-esc="employee.job_id.name"/></div>
+                  <div class="col-md-6 mb-2"><b>Email ID</b><br/><t t-esc="employee.work_email"/></div>
+                </div>
+              </div>
+              <div class="col-md-3 text-center">
+                <img src="/web/static/src/img/avatar.png" class="rounded-circle" style="width:100px;height:100px;" alt="Avatar"/>
+                <div class="mt-2 fw-bold"><t t-esc="employee.name"/></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- Navigation Tabs -->
+        <div class="mb-3">
+          <ul class="nav nav-tabs">
+            <li class="nav-item">
+              <a class="nav-link t-attf-class='nav-link #{'active' if section == 'personal' else ''}'" href="/my/employee/personal">Personal Details</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link t-attf-class='nav-link #{'active' if section == 'experience' else ''}'" href="/my/employee/experience">Experience &amp; Skills</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link t-attf-class='nav-link #{'active' if section == 'certification' else ''}'" href="/my/employee/certification">Certification</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link t-attf-class='nav-link #{'active' if section == 'bank' else ''}'" href="/my/employee/bank">Bank Details</a>
+            </li>
+          </ul>
+        </div>
+        <!-- Section Content -->
+        <t t-call="section_content"/>
+      </div>
+    </t>
+  </template>
+</odoo>

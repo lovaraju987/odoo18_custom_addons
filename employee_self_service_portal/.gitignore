@@ -1,0 +1,94 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# C extensions
+*.so
+
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+.hypothesis/
+.pytest_cache/
+
+# Odoo specific
+*.log
+*.db
+*.sql
+*.pot
+*.mo
+
+# VSCode
+.vscode/
+
+# MacOS
+.DS_Store
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Static files
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.svg
+
+# Ignore node_modules if using JS/CSS build tools
+node_modules/
+
+# Ignore compiled files in static
+static/*/dist/
+static/*/build/
+
+# Ignore backup files
+*~
+*.bak
+*.tmp
+
+# Ignore IDE files
+.idea/
+*.sublime-workspace
+*.sublime-project
+
+# Ignore Odoo auto-generated files
+*.pyc
+*.pyo
+
+# Ignore test databases
+test_db_*
+
+# Ignore other system files
+*.swp
+*.swo
