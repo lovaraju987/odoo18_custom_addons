@@ -31,21 +31,21 @@
         <div class="mb-3">
           <ul class="nav nav-tabs">
             <li class="nav-item">
-              <a class="nav-link t-attf-class='nav-link #{'active' if section == 'personal' else ''}'" href="/my/employee/personal">Personal Details</a>
+              <a t-attf-class="nav-link #{'active' if section == 'personal' else ''}" href="/my/employee/personal">Personal Details</a>
             </li>
             <li class="nav-item">
-              <a class="nav-link t-attf-class='nav-link #{'active' if section == 'experience' else ''}'" href="/my/employee/experience">Experience &amp; Skills</a>
+              <a t-attf-class="nav-link #{'active' if section == 'experience' else ''}" href="/my/employee/experience">Experience &amp; Skills</a>
             </li>
             <li class="nav-item">
-              <a class="nav-link t-attf-class='nav-link #{'active' if section == 'certification' else ''}'" href="/my/employee/certification">Certification</a>
+              <a t-attf-class="nav-link #{'active' if section == 'certification' else ''}" href="/my/employee/certification">Certification</a>
             </li>
             <li class="nav-item">
-              <a class="nav-link t-attf-class='nav-link #{'active' if section == 'bank' else ''}'" href="/my/employee/bank">Bank Details</a>
+              <a t-attf-class="nav-link #{'active' if section == 'bank' else ''}" href="/my/employee/bank">Bank Details</a>
             </li>
           </ul>
         </div>
         <!-- Section Content -->
-        <t t-call="section_content"/>
+        <t t-raw="section_content"/>
       </div>
     </t>
   </template>

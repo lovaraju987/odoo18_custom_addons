@@ -5,8 +5,44 @@
       <t t-set="section_content">
         <form action="/my/employee/personal" method="post" class="card p-3">
           <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
-          <!-- Personal Details fields here -->
-          <!-- ... -->
+          <div class="row">
+            <div class="col-md-6 mb-2">
+              <label>Email</label>
+              <input type="email" name="work_email" class="form-control" t-att-value="employee.work_email"/>
+            </div>
+            <div class="col-md-6 mb-2">
+              <label>Phone</label>
+              <input type="text" name="work_phone" class="form-control" t-att-value="employee.work_phone"/>
+            </div>
+            <div class="col-md-6 mb-2">
+              <label>Nationality</label>
+              <input type="text" name="x_nationality" class="form-control" t-att-value="employee.x_nationality"/>
+            </div>
+            <div class="col-md-6 mb-2">
+              <label>Emirates Id</label>
+              <input type="text" name="x_emirates_id" class="form-control" t-att-value="employee.x_emirates_id"/>
+            </div>
+            <div class="col-md-6 mb-2">
+              <label>Emirates Id Expiry Date</label>
+              <input type="date" name="x_emirates_expiry" class="form-control" t-att-value="employee.x_emirates_expiry"/>
+            </div>
+            <div class="col-md-6 mb-2">
+              <label>Passport Number</label>
+              <input type="text" name="x_passport_number" class="form-control" t-att-value="employee.x_passport_number"/>
+            </div>
+            <div class="col-md-6 mb-2">
+              <label>Passport Issuing Country</label>
+              <input type="text" name="x_passport_country" class="form-control" t-att-value="employee.x_passport_country"/>
+            </div>
+            <div class="col-md-6 mb-2">
+              <label>Passport Issue Date</label>
+              <input type="date" name="x_passport_issue" class="form-control" t-att-value="employee.x_passport_issue"/>
+            </div>
+            <div class="col-md-6 mb-2">
+              <label>Passport Expiry Date</label>
+              <input type="date" name="x_passport_expiry" class="form-control" t-att-value="employee.x_passport_expiry"/>
+            </div>
+          </div>
           <button type="submit" class="btn btn-primary mt-3">Save</button>
         </form>
       </t>

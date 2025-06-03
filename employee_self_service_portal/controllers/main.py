@@ -7,9 +7,12 @@ class PortalEmployee(http.Controller):
         return request.env['hr.employee'].sudo().search([('user_id', '=', request.uid)], limit=1)
 
     @http.route('/my/employee', type='http', auth='user', website=True)
-    def portal_employee_profile(self, **kwargs):
+    def portal_employee_profile(self, **kw):
         employee = request.env['hr.employee'].sudo().search([('user_id', '=', request.uid)], limit=1)
-        return request.render('employee_self_service_portal.portal_employee_profile', {'employee': employee})
+        return request.render('employee_self_service_portal.portal_employee_profile_personal', {
+            'employee': employee,
+            'section': 'personal',
+        })
 
     @http.route('/my/employee/attendance/checkin', type='http', auth='user', methods=['POST'], website=True)
     def check_in(self, **post):
@@ -103,4 +106,44 @@ class PortalEmployee(http.Controller):
             'section': 'personal',
         })
 
-    # Repeat for /experience, /certification, /bank with their own templates and fields
+    @http.route('/my/employee/experience', type='http', auth='user', website=True, methods=['GET', 'POST'])
+    def portal_employee_experience(self, **post):
+        employee = self._get_employee()
+        if request.httprequest.method == 'POST':
+            vals = {
+                'x_experience': post.get('x_experience'),
+                'x_skills': post.get('x_skills'),
+            }
+            employee.sudo().write({k: v for k, v in vals.items() if v is not None})
+        return request.render('employee_self_service_portal.portal_employee_profile_experience', {
+            'employee': employee,
+            'section': 'experience',
+        })
+
+    @http.route('/my/employee/certification', type='http', auth='user', website=True, methods=['GET', 'POST'])
+    def portal_employee_certification(self, **post):
+        employee = self._get_employee()
+        if request.httprequest.method == 'POST':
+            vals = {
+                'x_certifications': post.get('x_certifications'),
+            }
+            employee.sudo().write({k: v for k, v in vals.items() if v is not None})
+        return request.render('employee_self_service_portal.portal_employee_profile_certification', {
+            'employee': employee,
+            'section': 'certification',
+        })
+
+    @http.route('/my/employee/bank', type='http', auth='user', website=True, methods=['GET', 'POST'])
+    def portal_employee_bank(self, **post):
+        employee = self._get_employee()
+        if request.httprequest.method == 'POST':
+            vals = {
+                'x_bank_account': post.get('x_bank_account'),
+                'x_bank_name': post.get('x_bank_name'),
+                'x_ifsc': post.get('x_ifsc'),
+            }
+            employee.sudo().write({k: v for k, v in vals.items() if v is not None})
+        return request.render('employee_self_service_portal.portal_employee_profile_bank', {
+            'employee': employee,
+            'section': 'bank',
+        })

@@ -12,18 +12,13 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <t t-foreach="attendances" t-as="att">
-                            <tr>
-                                <td><t t-esc="att.check_in"/></td>
-                                <td><t t-esc="att.check_out"/></td>
-                                <td>
-                                    <t t-if="att.check_out">
-                                        <t t-esc="(att.check_out - att.check_in).total_seconds() // 3600"/>h
-                                    </t>
-                                    <t t-if="not att.check_out">-</t>
-                                </td>
-                            </tr>
-                        </t>
+                      <t t-foreach="attendance_records" t-as="att">
+                        <tr>
+                          <td><t t-esc="att.check_in"/></td>
+                          <td><t t-esc="att.check_out"/></td>
+                          <td><t t-esc="att.duration"/></td>
+                        </tr>
+                      </t>
                     </tbody>
                 </table>
             </div>
