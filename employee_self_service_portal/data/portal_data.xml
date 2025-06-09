@@ -12,4 +12,11 @@
         <field name="url">/my/employee/attendance</field>
         <field name="target">self</field>
     </record>
+
+    <record id="action_portal_tasks" model="ir.actions.act_url">
+        <field name="name">My Tasks</field>
+        <field name="type">ir.actions.act_url</field>
+        <field name="url">/my/employee/tasks</field>
+        <field name="target">self</field>
+    </record>
 </odoo>
