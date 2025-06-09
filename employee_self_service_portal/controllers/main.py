@@ -147,3 +147,15 @@ class PortalEmployee(http.Controller):
             'employee': employee,
             'section': 'bank',
         })
+
+    @http.route('/my/employee/tasks', type='http', auth='user', website=True)
+    def portal_employee_tasks(self, **kwargs):
+        employee = self._get_employee()
+        user = request.env.user
+        tasks = request.env['project.task'].sudo().search([
+            ('user_ids', 'in', [user.id])
+        ], order='date_deadline asc, priority desc')
+        return request.render('employee_self_service_portal.portal_employee_tasks', {
+            'employee': employee,
+            'tasks': tasks,
+        })

@@ -1,0 +1,38 @@
+<odoo>
+  <template id="portal_employee_tasks" name="My Tasks">
+    <t t-call="portal.portal_layout">
+      <div class="o_portal container my-4">
+        <h2>My Tasks</h2>
+        <t t-if="not tasks">
+          <div class="alert alert-info">No tasks assigned to you.</div>
+        </t>
+        <t t-if="tasks">
+          <table class="table table-striped">
+            <thead>
+              <tr>
+                <th>Title</th>
+                <th>Project</th>
+                <th>Deadline</th>
+                <th>Status</th>
+                <th>Priority</th>
+                <th>Description</th>
+              </tr>
+            </thead>
+            <tbody>
+              <t t-foreach="tasks" t-as="task">
+                <tr>
+                  <td><t t-esc="task.name"/></td>
+                  <td><t t-esc="task.project_id.name"/></td>
+                  <td><t t-esc="task.date_deadline or '-'"/></td>
+                  <td><t t-esc="task.stage_id.name"/></td>
+                  <td><t t-esc="task.priority"/></td>
+                  <td><t t-esc="task.description and (task.description[:60] + ('...' if len(task.description) > 60 else '')) or ''"/></td>
+                </tr>
+              </t>
+            </tbody>
+          </table>
+        </t>
+      </div>
+    </t>
+  </template>
+</odoo>
