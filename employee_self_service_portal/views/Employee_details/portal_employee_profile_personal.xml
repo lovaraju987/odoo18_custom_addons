@@ -1,0 +1,203 @@
+<odoo>
+  <template id="portal_employee_profile_personal">
+    <t t-call="employee_self_service_portal.portal_employee_profile_base">
+      <t t-set="section" t-value="'personal'"/>
+      <t t-set="section_content">
+        <div class="card p-3 position-relative">
+          <!-- Button and Icon Row -->
+          <div style="position:absolute;top:8px;right:20px;z-index:9999;display:flex;gap:16px;align-items:center;background:#fff;">
+            <span id="editIcon" style="cursor:pointer;font-size:22px;color:#d9534f;">
+              <i class="fa fa-pencil"></i>
+            </span>
+            <button type="button" id="editBtn" class="btn btn-warning">Edit</button>
+          </div>
+          <form id="employeeCombinedForm" action="/my/employee/personal" method="post">
+            <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
+            <div class="row">
+              <!-- Personal Details -->
+              <div class="col-md-6 mb-2">
+                <label>Email</label>
+                <input type="email" name="work_email" class="form-control" t-att-value="employee.work_email" readonly="readonly"/>
+              </div>
+              <div class="col-md-6 mb-2">
+                <label>Phone</label>
+                <input type="text" name="work_phone" class="form-control" t-att-value="employee.work_phone" readonly="readonly"/>
+              </div>
+              <div class="col-md-6 mb-2">
+                <label>Nationality</label>
+                <input type="text" name="x_nationality" class="form-control" t-att-value="employee.x_nationality" readonly="readonly"/>
+              </div>
+              <div class="col-md-6 mb-2">
+                <label>Emirates Id</label>
+                <input type="text" name="x_emirates_id" class="form-control" t-att-value="employee.x_emirates_id" readonly="readonly"/>
+              </div>
+              <div class="col-md-6 mb-2">
+                <label>Emirates Id Expiry Date</label>
+                <input type="date" name="x_emirates_expiry" class="form-control" t-att-value="employee.x_emirates_expiry" readonly="readonly"/>
+              </div>
+              <div class="col-md-6 mb-2">
+                <label>Passport Number</label>
+                <input type="text" name="x_passport_number" class="form-control" t-att-value="employee.x_passport_number" readonly="readonly"/>
+              </div>
+              <div class="col-md-6 mb-2">
+                <label>Passport Issuing Country</label>
+                <input type="text" name="x_passport_country" class="form-control" t-att-value="employee.x_passport_country" readonly="readonly"/>
+              </div>
+              <div class="col-md-6 mb-2">
+                <label>Passport Issue Date</label>
+                <input type="date" name="x_passport_issue" class="form-control" t-att-value="employee.x_passport_issue" readonly="readonly"/>
+              </div>
+              <div class="col-md-6 mb-2">
+                <label>Passport Expiry Date</label>
+                <input type="date" name="x_passport_expiry" class="form-control" t-att-value="employee.x_passport_expiry" readonly="readonly"/>
+              </div>
+              <!-- Private Information -->
+              <div class="col-md-6 mb-2">
+                <label>Private Street</label>
+                <input type="text" name="private_street" class="form-control" t-att-value="employee.private_street" readonly="readonly"/>
+              </div>
+              <div class="col-md-6 mb-2">
+                <label>Private Street2</label>
+                <input type="text" name="private_street2" class="form-control" t-att-value="employee.private_street2" readonly="readonly"/>
+              </div>
+              <div class="col-md-6 mb-2">
+                <label>Private City</label>
+                <input type="text" name="private_city" class="form-control" t-att-value="employee.private_city" readonly="readonly"/>
+              </div>
+              <div class="col-md-6 mb-2">
+                <label>Private State</label>
+                <input type="text" name="private_state_id" class="form-control" t-att-value="employee.private_state_id.name" readonly="readonly"/>
+              </div>
+              <div class="col-md-6 mb-2">
+                <label>Private Zip</label>
+                <input type="text" name="private_zip" class="form-control" t-att-value="employee.private_zip" readonly="readonly"/>
+              </div>
+              <div class="col-md-6 mb-2">
+                <label>Private Country</label>
+                <input type="text" name="private_country_id" class="form-control" t-att-value="employee.private_country_id.name" readonly="readonly"/>
+              </div>
+              <div class="col-md-6 mb-2">
+                <label>Private Email</label>
+                <input type="email" name="private_email" class="form-control" t-att-value="employee.private_email" readonly="readonly"/>
+              </div>
+              <div class="col-md-6 mb-2">
+                <label>Private Phone</label>
+                <input type="text" name="private_phone" class="form-control" t-att-value="employee.private_phone" readonly="readonly"/>
+              </div>
+              <div class="col-md-6 mb-2">
+                <label>Bank Account</label>
+                <input type="text" name="bank_account_id" class="form-control" t-att-value="employee.bank_account_id.acc_number" readonly="readonly"/>
+              </div>
+              <div class="col-md-6 mb-2">
+                <label>Nationality (Country)</label>
+                <input type="text" name="country_id" class="form-control" t-att-value="employee.country_id.name" readonly="readonly"/>
+              </div>
+              <div class="col-md-6 mb-2">
+                <label>Identification No</label>
+                <input type="text" name="identification_id" class="form-control" t-att-value="employee.identification_id" readonly="readonly"/>
+              </div>
+              <div class="col-md-6 mb-2">
+                <label>SSN No</label>
+                <input type="text" name="ssnid" class="form-control" t-att-value="employee.ssnid" readonly="readonly"/>
+              </div>
+              <div class="col-md-6 mb-2">
+                <label>Passport No</label>
+                <input type="text" name="passport_id" class="form-control" t-att-value="employee.passport_id" readonly="readonly"/>
+              </div>
+              <div class="col-md-6 mb-2">
+                <label>Gender</label>
+                <input type="text" name="gender" class="form-control" t-att-value="employee.gender" readonly="readonly"/>
+              </div>
+              <div class="col-md-6 mb-2">
+                <label>Date of Birth</label>
+                <input type="date" name="birthday" class="form-control" t-att-value="employee.birthday" readonly="readonly"/>
+              </div>
+              <div class="col-md-6 mb-2">
+                <label>Place of Birth</label>
+                <input type="text" name="place_of_birth" class="form-control" t-att-value="employee.place_of_birth" readonly="readonly"/>
+              </div>
+              <div class="col-md-6 mb-2">
+                <label>Country of Birth</label>
+                <input type="text" name="country_of_birth" class="form-control" t-att-value="employee.country_of_birth.name" readonly="readonly"/>
+              </div>
+              <div class="col-md-6 mb-2">
+                <label>Emergency Contact Name</label>
+                <input type="text" name="emergency_contact" class="form-control" t-att-value="employee.emergency_contact" readonly="readonly"/>
+              </div>
+              <div class="col-md-6 mb-2">
+                <label>Emergency Contact Phone</label>
+                <input type="text" name="emergency_phone" class="form-control" t-att-value="employee.emergency_phone" readonly="readonly"/>
+              </div>
+              <div class="col-md-6 mb-2">
+                <label>Marital Status</label>
+                <input type="text" name="marital" class="form-control" t-att-value="employee.marital" readonly="readonly"/>
+              </div>
+              <div class="col-md-6 mb-2">
+                <label>Number of Dependent Children</label>
+                <input type="text" name="children" class="form-control" t-att-value="employee.children" readonly="readonly"/>
+              </div>
+              <div class="col-md-6 mb-2">
+                <label>Certificate Level</label>
+                <input type="text" name="certificate" class="form-control" t-att-value="employee.certificate" readonly="readonly"/>
+              </div>
+              <div class="col-md-6 mb-2">
+                <label>Field of Study</label>
+                <input type="text" name="study_field" class="form-control" t-att-value="employee.study_field" readonly="readonly"/>
+              </div>
+              <div class="col-md-6 mb-2">
+                <label>School</label>
+                <input type="text" name="study_school" class="form-control" t-att-value="employee.study_school" readonly="readonly"/>
+              </div>
+              <div class="col-md-6 mb-2">
+                <label>Visa No</label>
+                <input type="text" name="visa_no" class="form-control" t-att-value="employee.visa_no" readonly="readonly"/>
+              </div>
+              <div class="col-md-6 mb-2">
+                <label>Work Permit No</label>
+                <input type="text" name="permit_no" class="form-control" t-att-value="employee.permit_no" readonly="readonly"/>
+              </div>
+              <div class="col-md-6 mb-2">
+                <label>Visa Expiration Date</label>
+                <input type="date" name="visa_expire" class="form-control" t-att-value="employee.visa_expire" readonly="readonly"/>
+              </div>
+              <div class="col-md-6 mb-2">
+                <label>Work Permit Expiration Date</label>
+                <input type="date" name="work_permit_expiration_date" class="form-control" t-att-value="employee.work_permit_expiration_date" readonly="readonly"/>
+              </div>
+              <div class="col-md-6 mb-2">
+                <label>Private Car Plate</label>
+                <input type="text" name="private_car_plate" class="form-control" t-att-value="employee.private_car_plate" readonly="readonly"/>
+              </div>
+            </div>
+            <button type="submit" id="saveCombinedBtn" class="btn btn-primary mt-3" style="display:none;">Save</button>
+          </form>
+        </div>
+      </t>
+        <t t-raw="0">
+          <script type="text/javascript">
+            window.onload = function() {
+              var editIcon = document.getElementById('editIcon');
+              var editBtn = document.getElementById('editBtn');
+              var saveBtn = document.getElementById('saveCombinedBtn');
+              var form = document.getElementById('employeeCombinedForm');
+              function enableEdit() {
+                var inputs = form.querySelectorAll('input:not([type="hidden"])');
+                inputs.forEach(function(input) {
+                  input.removeAttribute('readonly');
+                });
+                if(editIcon) editIcon.style.display = 'none';
+                if(editBtn) editBtn.style.display = 'none';
+                if(saveBtn) saveBtn.style.display = '';
+              }
+              if (editIcon &amp;&amp; form) {
+                editIcon.addEventListener('click', enableEdit);
+              }
+              if (editBtn &amp;&amp; form) {
+                editBtn.addEventListener('click', enableEdit);
+              }
+            };
+          </script>
+        </t>
+    </t>
+  </template>
+</odoo>

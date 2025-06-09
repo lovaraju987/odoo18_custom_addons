@@ -1,0 +1,27 @@
+<odoo>
+    <template id="portal_attendance" name="My Attendance">
+        <t t-call="portal.portal_layout">
+            <div class="o_portal">
+                <h2>Attendance Records</h2>
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Check-In</th>
+                            <th>Check-Out</th>
+                            <th>Duration</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                      <t t-foreach="attendance_records" t-as="att">
+                        <tr>
+                          <td><t t-esc="att.check_in"/></td>
+                          <td><t t-esc="att.check_out"/></td>
+                          <td><t t-esc="att.duration"/></td>
+                        </tr>
+                      </t>
+                    </tbody>
+                </table>
+            </div>
+        </t>
+    </template>
+</odoo>

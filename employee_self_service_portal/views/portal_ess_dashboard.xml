@@ -1,0 +1,39 @@
+<odoo>
+    <template id="portal_ess_dashboard" name="ESS Portal Dashboard">
+        <t t-call="portal.portal_layout">
+            <div class="o_portal container my-4">
+                <h2>Employee Self Service Portal</h2>
+                <div class="row">
+                    <div class="col-md-4 mb-4">
+                        <a href="/my/employee" class="card text-center h-100 shadow-sm text-decoration-none">
+                            <div class="card-body">
+                                <i class="fa fa-id-badge fa-2x mb-2"></i>
+                                <h5 class="card-title">Profile Info</h5>
+                                <p class="card-text">View and edit your profile information.</p>
+                            </div>
+                        </a>
+                    </div>
+                    <div class="col-md-4 mb-4">
+                        <a href="/my/employee/attendance" class="card text-center h-100 shadow-sm text-decoration-none">
+                            <div class="card-body">
+                                <i class="fa fa-calendar-check-o fa-2x mb-2"></i>
+                                <h5 class="card-title">Attendance</h5>
+                                <p class="card-text">Check your attendance records.</p>
+                            </div>
+                        </a>
+                    </div>
+                    <div class="col-md-4 mb-4">
+                        <a href="/my/employee/payslips" class="card text-center h-100 shadow-sm text-decoration-none">
+                            <div class="card-body">
+                                <i class="fa fa-file-text-o fa-2x mb-2"></i>
+                                <h5 class="card-title">Payslips</h5>
+                                <p class="card-text">View and download your payslips.</p>
+                            </div>
+                        </a>
+                    </div>
+                    <!-- Add more sections as needed: Leaves, Timesheets, Tasks, Expenses, Announcements -->
+                </div>
+            </div>
+        </t>
+    </template>
+</odoo>
