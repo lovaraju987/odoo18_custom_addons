@@ -1,0 +1,6 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_crm_lead_portal_user,access.crm.lead.portal,crm.model_crm_lead,base.group_portal,1,1,0,1
+access_crm_stage_portal_user,access.crm.stage,crm.model_crm_stage,base.group_portal,1,1,0,0
+sales_team.access_crm_tag_portal,access_crm_tag_portal,sales_team.model_crm_tag,base.group_portal,1,1,0,0
+
+
