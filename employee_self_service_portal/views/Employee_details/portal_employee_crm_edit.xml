@@ -134,11 +134,32 @@
           <div class="col-md-5">
             <div class="mb-4">
               <h4>Activities</h4>
+              <t t-if="not lead.activity_ids">
+                <div class="alert alert-info">No activities scheduled.</div>
+              </t>
               <t t-foreach="lead.activity_ids" t-as="activity">
-                <div class="border rounded p-2 mb-2 bg-light" style="background:#e9f7ef">
-                  <strong><t t-esc="activity.summary or activity.activity_type_id.name"/></strong>
-                  <span class="text-muted" style="font-size:0.9em">(<t t-esc="activity.date_deadline"/>)</span>
-                  <div><t t-esc="activity.note or ''"/></div>
+                <div class="card mb-2 shadow-sm" style="border-left: 5px solid #17a2b8;">
+                  <div class="card-body p-2">
+                    <div class="d-flex justify-content-between align-items-center">
+                      <div>
+                        <span class="fw-bold text-info">
+                          <t t-esc="activity.activity_type_id.name"/>
+                        </span>
+                        <span class="text-muted ms-2" style="font-size:0.95em;">
+                          <i class="fa fa-calendar"></i> <t t-esc="activity.date_deadline"/>
+                        </span>
+                        <span class="text-muted ms-2" style="font-size:0.95em;">
+                          <i class="fa fa-user"></i> <t t-esc="activity.user_id.name or ''"/>
+                        </span>
+                      </div>
+                    </div>
+                    <div class="mt-1">
+                      <span class="fw-bold"><t t-esc="activity.summary or ''"/></span>
+                    </div>
+                    <div class="text-muted" style="font-size:0.97em;">
+                      <t t-esc="activity.note or ''"/>
+                    </div>
+                  </div>
                 </div>
               </t>
               <form t-att-action="'/my/employee/crm/add_activity/' + str(lead.id)" method="post" class="card p-3 mt-2" style="max-width: 420px;">
