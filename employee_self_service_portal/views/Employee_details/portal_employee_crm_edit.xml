@@ -151,9 +151,10 @@
             </div>
             <div class="mb-4">
               <h4>Log note</h4>
-              <form t-att-action="'/my/employee/crm/log_note/' + str(lead.id)" method="post" class="d-flex mb-2">
+              <form t-att-action="'/my/employee/crm/log_note/' + str(lead.id)" method="post" enctype="multipart/form-data" class="d-flex mb-2 align-items-start gap-2">
                 <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
                 <textarea name="note" class="form-control me-2" rows="2" placeholder="Add a note..."></textarea>
+                <input type="file" name="attachments" multiple="multiple" class="form-control-file me-2" style="max-width:180px;"/>
                 <button type="submit" class="btn btn-secondary">Log note</button>
               </form>
               <div class="mb-2">
@@ -162,6 +163,21 @@
                   <div class="border rounded p-2 mb-2" style="background:#f8f9fa">
                     <strong><t t-esc="msg.author_id.name or 'System'"/> <span class="text-muted" style="font-size:0.9em">(<t t-esc="msg.date"/>)</span></strong>
                     <div><t t-raw="msg.body"/></div>
+                    <t t-if="msg.attachment_ids">
+                      <div class="mt-2">
+                        <span class="fw-bold">Attachments:</span>
+                        <ul class="mb-0 ps-3">
+                          <t t-foreach="msg.attachment_ids" t-as="att">
+                            <li>
+                              <a t-att-href="'/web/content/' + str(att.id) + '?download=true'" target="_blank">
+                                <t t-esc="att.name"/>
+                              </a>
+                              <span class="text-muted" style="font-size:0.85em">(<t t-esc="att.file_size"/> bytes)</span>
+                            </li>
+                          </t>
+                        </ul>
+                      </div>
+                    </t>
                   </div>
                 </t>
               </div>
