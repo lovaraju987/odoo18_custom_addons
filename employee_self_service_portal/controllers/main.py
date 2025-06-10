@@ -59,10 +59,17 @@ class PortalEmployee(http.Controller):
         if not employee:
             return request.redirect(MY_EMPLOYEE_URL)
         try:
-            request.env[HR_ATTENDANCE_MODEL].sudo().create({
+            in_latitude = post.get('in_latitude')
+            in_longitude = post.get('in_longitude')
+            vals = {
                 'employee_id': employee.id,
                 'check_in': fields.Datetime.now(),
-            })
+            }
+            if in_latitude:
+                vals['in_latitude'] = in_latitude
+            if in_longitude:
+                vals['in_longitude'] = in_longitude
+            request.env[HR_ATTENDANCE_MODEL].sudo().create(vals)
         except Exception as e:
             import logging
             _logger = logging.getLogger(__name__)
@@ -78,7 +85,16 @@ class PortalEmployee(http.Controller):
         last_attendance = request.env[HR_ATTENDANCE_MODEL].sudo().search(
             [('employee_id', '=', employee.id)], order='check_in desc', limit=1)
         if last_attendance and not last_attendance.check_out:
-            last_attendance.check_out = fields.Datetime.now()
+            out_latitude = post.get('out_latitude')
+            out_longitude = post.get('out_longitude')
+            vals = {
+                'check_out': fields.Datetime.now(),
+            }
+            if out_latitude:
+                vals['out_latitude'] = out_latitude
+            if out_longitude:
+                vals['out_longitude'] = out_longitude
+            last_attendance.sudo().write(vals)
         return request.redirect(MY_EMPLOYEE_URL + '/attendance')
     
     @http.route(MY_EMPLOYEE_URL + '/attendance', type='http', auth='user', website=True)
