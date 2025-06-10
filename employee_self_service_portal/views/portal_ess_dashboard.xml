@@ -32,15 +32,6 @@
                         </a>
                     </div>
                     <div class="col-md-4 mb-4">
-                        <a href="/my/employee/tasks" class="card text-center h-100 shadow-sm text-decoration-none">
-                            <div class="card-body">
-                                <i class="fa fa-tasks fa-2x mb-2"></i>
-                                <h5 class="card-title">Tasks</h5>
-                                <p class="card-text">View your assigned tasks and projects.</p>
-                            </div>
-                        </a>
-                    </div>
-                    <div class="col-md-4 mb-4">
                         <a href="/my/employee/crm" class="card text-center h-100 shadow-sm text-decoration-none">
                             <div class="card-body">
                                 <i class="fa fa-briefcase fa-2x mb-2"></i>
