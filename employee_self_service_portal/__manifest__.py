@@ -22,6 +22,7 @@
         "views/employee_details/portal_employee_profile_bank.xml",
         "views/employee_details/portal_employee_profile_base.xml",
         "views/employee_details/portal_employee_tasks.xml",  # Added tasks template
+        "views/employee_details/portal_employee_crm.xml",  # CRM portal template
     ],
     "installable": True,
     "application": True,

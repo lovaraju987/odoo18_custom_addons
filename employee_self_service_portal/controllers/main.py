@@ -159,3 +159,15 @@ class PortalEmployee(http.Controller):
             'employee': employee,
             'tasks': tasks,
         })
+
+    @http.route('/my/employee/crm', type='http', auth='user', website=True)
+    def portal_employee_crm(self, **kwargs):
+        employee = self._get_employee()
+        user = request.env.user
+        leads = request.env['crm.lead'].sudo().search([
+            ('user_id', '=', user.id)
+        ], order='priority desc, date_deadline asc')
+        return request.render('employee_self_service_portal.portal_employee_crm', {
+            'employee': employee,
+            'leads': leads,
+        })
