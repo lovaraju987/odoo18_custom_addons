@@ -290,12 +290,16 @@ class PortalEmployee(http.Controller):
         partners = request.env['res.partner'].sudo().search([], limit=50)
         all_tags = request.env[CRM_TAG_MODEL].sudo().search([])
         salespersons = request.env['res.users'].sudo().search([('active', '=', True)], limit=100)
+        activity_types = request.env['mail.activity.type'].sudo().search([])
+        default_activity_type_id = request.env.ref('mail.mail_activity_data_todo').id if request.env.ref('mail.mail_activity_data_todo', raise_if_not_found=False) else (activity_types and activity_types[0].id or False)
         return request.render('employee_self_service_portal.portal_employee_crm_edit', {
             'lead': lead,
             'stages': stages,
             'all_tags': all_tags,
             'partners': partners,
             'salespersons': salespersons,
+            'activity_types': activity_types,
+            'default_activity_type_id': default_activity_type_id,
         })
 
     @http.route('/my/employee/crm/delete/<int:lead_id>', type='http', auth='user', website=True, methods=['POST'])
@@ -362,12 +366,22 @@ class PortalEmployee(http.Controller):
         summary = post.get('summary')
         date_deadline = post.get('date_deadline')
         note = post.get('note')
+        activity_type_id = post.get('activity_type_id')
+        assigned_user_id = post.get('assigned_user_id')
         if lead and summary and date_deadline and lead.user_id.id == user.id:
+            activity_type_xmlid = None
+            if activity_type_id:
+                activity_type = request.env['mail.activity.type'].sudo().browse(int(activity_type_id))
+                external_ids = activity_type.get_external_id()
+                activity_type_xmlid = external_ids.get(activity_type.id)
+            if not activity_type_xmlid:
+                activity_type_xmlid = 'mail.mail_activity_data_todo'
+            assigned_uid = int(assigned_user_id) if assigned_user_id else user.id
             lead.activity_schedule(
-                'mail.mail_activity_data_todo',  # Default type
+                activity_type_xmlid,
                 summary=summary,
                 note=note,
                 date_deadline=date_deadline,
-                user_id=user.id
+                user_id=assigned_uid
             )
         return request.redirect(f'/my/employee/crm/edit/{lead_id}')
