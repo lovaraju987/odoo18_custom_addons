@@ -385,3 +385,63 @@ class PortalEmployee(http.Controller):
                 user_id=assigned_uid
             )
         return request.redirect(f'/my/employee/crm/edit/{lead_id}')
+
+    @http.route('/my/employee/crm/activity_done/<int:activity_id>', type='http', auth='user', website=True, methods=['POST'])
+    def portal_employee_crm_activity_done(self, activity_id, **post):
+        activity = request.env['mail.activity'].sudo().browse(activity_id)
+        lead_id = int(request.params.get('lead_id', 0))
+        lead = request.env['crm.lead'].sudo().browse(lead_id)
+        user = request.env.user
+        # Security: Only allow if user owns the lead
+        if activity and lead and lead.user_id.id == user.id and activity.res_model == 'crm.lead' and activity.res_id == lead.id:
+            try:
+                activity.action_done()
+            except Exception:
+                pass
+        return request.redirect(f'/my/employee/crm/edit/{lead_id}')
+
+    @http.route('/my/employee/crm/activity_delete/<int:activity_id>', type='http', auth='user', website=True, methods=['POST'])
+    def portal_employee_crm_activity_delete(self, activity_id, **post):
+        activity = request.env['mail.activity'].sudo().browse(activity_id)
+        lead_id = int(request.params.get('lead_id', 0))
+        lead = request.env['crm.lead'].sudo().browse(lead_id)
+        user = request.env.user
+        if activity and lead and lead.user_id.id == user.id and activity.res_model == 'crm.lead' and activity.res_id == lead.id:
+            try:
+                activity.sudo().unlink()
+            except Exception:
+                pass
+        return request.redirect(f'/my/employee/crm/edit/{lead_id}')
+
+    @http.route('/my/employee/crm/activity_edit/<int:activity_id>', type='http', auth='user', website=True, methods=['GET', 'POST'])
+    def portal_employee_crm_activity_edit(self, activity_id, **post):
+        activity = request.env['mail.activity'].sudo().browse(activity_id)
+        lead_id = int(request.params.get('lead_id', 0))
+        lead = request.env['crm.lead'].sudo().browse(lead_id)
+        user = request.env.user
+        if not (activity and lead and lead.user_id.id == user.id and activity.res_model == 'crm.lead' and activity.res_id == lead.id):
+            return request.redirect(f'/my/employee/crm/edit/{lead_id}')
+        if request.httprequest.method == 'POST':
+            vals = {}
+            if post.get('summary') is not None:
+                vals['summary'] = post.get('summary')
+            if post.get('date_deadline') is not None:
+                vals['date_deadline'] = post.get('date_deadline')
+            if post.get('note') is not None:
+                vals['note'] = post.get('note')
+            if post.get('activity_type_id'):
+                vals['activity_type_id'] = int(post.get('activity_type_id'))
+            if post.get('user_id'):
+                vals['user_id'] = int(post.get('user_id'))
+            if vals:
+                activity.sudo().write(vals)
+            return request.redirect(f'/my/employee/crm/edit/{lead_id}')
+        # GET: render a simple edit form (reuse activity_types and salespersons from lead edit)
+        activity_types = request.env['mail.activity.type'].sudo().search([])
+        salespersons = request.env['res.users'].sudo().search([('active', '=', True)], limit=100)
+        return request.render('employee_self_service_portal.portal_employee_crm_activity_edit', {
+            'activity': activity,
+            'lead': lead,
+            'activity_types': activity_types,
+            'salespersons': salespersons,
+        })

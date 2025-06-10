@@ -152,6 +152,17 @@
                           <i class="fa fa-user"></i> <t t-esc="activity.user_id.name or ''"/>
                         </span>
                       </div>
+                      <div class="btn-group btn-group-sm" role="group">
+                        <form t-att-action="'/my/employee/crm/activity_done/' + str(activity.id) + '?lead_id=' + str(lead.id)" method="post" style="display:inline;">
+                          <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
+                          <button type="submit" class="btn btn-success" title="Mark as Done"><i class="fa fa-check"></i></button>
+                        </form>
+                        <a t-att-href="'/my/employee/crm/activity_edit/' + str(activity.id) + '?lead_id=' + str(lead.id)" class="btn btn-warning" title="Edit"><i class="fa fa-pencil"></i></a>
+                        <form t-att-action="'/my/employee/crm/activity_delete/' + str(activity.id) + '?lead_id=' + str(lead.id)" method="post" style="display:inline;">
+                          <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
+                          <button type="submit" class="btn btn-danger" title="Delete" onclick="return confirm('Are you sure you want to delete this activity?');"><i class="fa fa-trash"></i></button>
+                        </form>
+                      </div>
                     </div>
                     <div class="mt-1">
                       <span class="fw-bold"><t t-esc="activity.summary or ''"/></span>
