@@ -1,0 +1,39 @@
+<odoo>
+  <template id="portal_employee_crm_create" name="Create CRM Lead">
+    <t t-call="portal.portal_layout">
+      <div class="o_portal container my-4">
+        <h2>Create New Lead / Opportunity</h2>
+        <form action="/my/employee/crm/create" method="post" class="card p-3">
+          <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
+          <div class="mb-2">
+            <label>Name</label>
+            <input type="text" name="name" class="form-control" required="required"/>
+          </div>
+          <div class="mb-2">
+            <label>Customer</label>
+            <select name="partner_id" class="form-control">
+              <option value="">Select</option>
+              <t t-foreach="partners" t-as="partner">
+                <option t-att-value="partner.id"><t t-esc="partner.name"/></option>
+              </t>
+            </select>
+          </div>
+          <div class="mb-2">
+            <label>Email</label>
+            <input type="email" name="email_from" class="form-control"/>
+          </div>
+          <div class="mb-2">
+            <label>Phone</label>
+            <input type="text" name="phone" class="form-control"/>
+          </div>
+          <div class="mb-2">
+            <label>Expected Revenue</label>
+            <input type="number" name="expected_revenue" class="form-control" step="0.01"/>
+          </div>
+          <button type="submit" class="btn btn-primary mt-3">Create</button>
+          <a href="/my/employee/crm" class="btn btn-secondary mt-3">Cancel</a>
+        </form>
+      </div>
+    </t>
+  </template>
+</odoo>

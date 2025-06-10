@@ -23,6 +23,8 @@
         "views/employee_details/portal_employee_profile_base.xml",
         "views/employee_details/portal_employee_tasks.xml",  # Added tasks template
         "views/employee_details/portal_employee_crm.xml",  # CRM portal template
+        "views/employee_details/portal_employee_crm_create.xml",  # CRM create form
+        "views/employee_details/portal_employee_crm_edit.xml",    # CRM edit form
     ],
     "installable": True,
     "application": True,

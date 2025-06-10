@@ -20,4 +20,14 @@
         <field name="perm_create" eval="False"/>
         <field name="perm_unlink" eval="False"/>
     </record>
+    <record id="rule_crm_lead_portal_user" model="ir.rule">
+        <field name="name">Portal: Manage Own CRM Leads</field>
+        <field name="model_id" ref="crm.model_crm_lead"/>
+        <field name="groups" eval="[(4, ref('base.group_portal'))]"/>
+        <field name="domain_force">[('user_id', '=', user.id)]</field>
+        <field name="perm_read" eval="True"/>
+        <field name="perm_write" eval="True"/>
+        <field name="perm_create" eval="True"/>
+        <field name="perm_unlink" eval="False"/>
+    </record>
 </odoo>
