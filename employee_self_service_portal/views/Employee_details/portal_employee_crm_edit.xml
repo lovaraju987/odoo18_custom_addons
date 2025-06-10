@@ -97,6 +97,33 @@
               });
             </script>
           </div>
+          <div class="mb-2">
+            <label>Salesperson</label>
+            <select name="user_id" class="form-control js-salesperson-select">
+              <option value="">Select</option>
+              <t t-foreach="salespersons" t-as="salesperson">
+                <option t-att-value="salesperson.id" t-att-selected="lead.user_id and salesperson.id == lead.user_id.id and 'selected' or None">
+                  <t t-esc="salesperson.name"/>
+                </option>
+              </t>
+            </select>
+            <small class="form-text text-muted">Search and select a salesperson.</small>
+            <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+            <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+            <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+            <script type="text/javascript">
+              $(document).ready(function() {
+                var salespersonSelect = $('select.js-salesperson-select');
+                if (salespersonSelect.length) {
+                  salespersonSelect.select2({
+                    width: '100%',
+                    placeholder: 'Search for a salesperson',
+                    allowClear: true
+                  });
+                }
+              });
+            </script>
+          </div>
 
           <button type="submit" class="btn btn-primary mt-3">Save</button>
           <a href="/my/employee/crm" class="btn btn-secondary mt-3">Cancel</a>

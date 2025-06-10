@@ -239,10 +239,13 @@ class PortalEmployee(http.Controller):
         partners = request.env['res.partner'].sudo().search([], limit=50)
         stages = request.env['crm.stage'].sudo().search([])
         all_tags = request.env[CRM_TAG_MODEL].sudo().search([])
+        # Show all users (internal and portal) as salespersons
+        salespersons = request.env['res.users'].sudo().search([('active', '=', True)], limit=100)
         return request.render('employee_self_service_portal.portal_employee_crm_create', {
             'partners': partners,
             'stages': stages,
             'all_tags': all_tags,
+            'salespersons': salespersons,
         })
 
     @http.route('/my/employee/crm/edit/<int:lead_id>', type='http', auth='user', website=True, methods=['GET', 'POST'])
@@ -289,11 +292,13 @@ class PortalEmployee(http.Controller):
         stages = request.env['crm.stage'].sudo().search([])
         partners = request.env['res.partner'].sudo().search([], limit=50)
         all_tags = request.env[CRM_TAG_MODEL].sudo().search([])
+        salespersons = request.env['res.users'].sudo().search([('active', '=', True)], limit=100)
         return request.render('employee_self_service_portal.portal_employee_crm_edit', {
             'lead': lead,
             'stages': stages,
             'all_tags': all_tags,
             'partners': partners,
+            'salespersons': salespersons,
         })
 
     @http.route('/my/employee/crm/delete/<int:lead_id>', type='http', auth='user', website=True, methods=['POST'])
