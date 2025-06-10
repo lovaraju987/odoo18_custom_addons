@@ -1,6 +1,7 @@
 # controllers/main.py
 from odoo import http, fields
 from odoo.http import request
+import html
 
 # Constants for model names and URLs
 CRM_TAG_MODEL = 'crm.tag'
@@ -370,13 +371,17 @@ class PortalEmployee(http.Controller):
         assigned_user_id = post.get('assigned_user_id')
         if lead and summary and date_deadline and lead.user_id.id == user.id:
             activity_type_xmlid = None
+            activity_type_name = ''
             if activity_type_id:
                 activity_type = request.env['mail.activity.type'].sudo().browse(int(activity_type_id))
                 external_ids = activity_type.get_external_id()
                 activity_type_xmlid = external_ids.get(activity_type.id)
+                activity_type_name = activity_type.name
             if not activity_type_xmlid:
                 activity_type_xmlid = 'mail.mail_activity_data_todo'
+                activity_type_name = 'To Do'
             assigned_uid = int(assigned_user_id) if assigned_user_id else user.id
+            assigned_user = request.env['res.users'].sudo().browse(assigned_uid)
             lead.activity_schedule(
                 activity_type_xmlid,
                 summary=summary,
@@ -384,6 +389,11 @@ class PortalEmployee(http.Controller):
                 date_deadline=date_deadline,
                 user_id=assigned_uid
             )
+            # Log in chatter, escape note
+            msg = f"Activity created: <b>{activity_type_name}</b> - <b>{summary}</b> (Assigned to: {assigned_user.name}, Due: {date_deadline})"
+            if note:
+                msg += f"<br/>Note: {html.escape(note)}"
+            lead.message_post(body=msg)
         return request.redirect(f'/my/employee/crm/edit/{lead_id}')
 
     @http.route('/my/employee/crm/activity_done/<int:activity_id>', type='http', auth='user', website=True, methods=['POST'])
@@ -396,19 +406,6 @@ class PortalEmployee(http.Controller):
         if activity and lead and lead.user_id.id == user.id and activity.res_model == 'crm.lead' and activity.res_id == lead.id:
             try:
                 activity.action_done()
-            except Exception:
-                pass
-        return request.redirect(f'/my/employee/crm/edit/{lead_id}')
-
-    @http.route('/my/employee/crm/activity_delete/<int:activity_id>', type='http', auth='user', website=True, methods=['POST'])
-    def portal_employee_crm_activity_delete(self, activity_id, **post):
-        activity = request.env['mail.activity'].sudo().browse(activity_id)
-        lead_id = int(request.params.get('lead_id', 0))
-        lead = request.env['crm.lead'].sudo().browse(lead_id)
-        user = request.env.user
-        if activity and lead and lead.user_id.id == user.id and activity.res_model == 'crm.lead' and activity.res_id == lead.id:
-            try:
-                activity.sudo().unlink()
             except Exception:
                 pass
         return request.redirect(f'/my/employee/crm/edit/{lead_id}')
@@ -435,6 +432,13 @@ class PortalEmployee(http.Controller):
                 vals['user_id'] = int(post.get('user_id'))
             if vals:
                 activity.sudo().write(vals)
+                # Log in chatter, escape note
+                activity_type_name = activity.activity_type_id.name or ''
+                assigned_user = activity.user_id
+                msg = f"Activity updated: <b>{activity_type_name}</b> - <b>{activity.summary}</b> (Assigned to: {assigned_user.name}, Due: {activity.date_deadline})"
+                if activity.note:
+                    msg += f"<br/>Note: {html.escape(activity.note)}"
+                lead.message_post(body=msg)
             return request.redirect(f'/my/employee/crm/edit/{lead_id}')
         # GET: render a simple edit form (reuse activity_types and salespersons from lead edit)
         activity_types = request.env['mail.activity.type'].sudo().search([])
@@ -445,3 +449,25 @@ class PortalEmployee(http.Controller):
             'activity_types': activity_types,
             'salespersons': salespersons,
         })
+
+    @http.route('/my/employee/crm/activity_delete/<int:activity_id>', type='http', auth='user', website=True, methods=['POST'])
+    def portal_employee_crm_activity_delete(self, activity_id, **post):
+        activity = request.env['mail.activity'].sudo().browse(activity_id)
+        lead_id = int(request.params.get('lead_id', 0))
+        lead = request.env['crm.lead'].sudo().browse(lead_id)
+        user = request.env.user
+        if activity and lead and lead.user_id.id == user.id and activity.res_model == 'crm.lead' and activity.res_id == lead.id:
+            try:
+                activity_type_name = activity.activity_type_id.name or ''
+                summary = activity.summary or ''
+                assigned_user = activity.user_id
+                due = activity.date_deadline or ''
+                note = activity.note or ''
+                msg = f"Activity deleted: <b>{activity_type_name}</b> - <b>{summary}</b> (Assigned to: {assigned_user.name}, Due: {due})"
+                if note:
+                    msg += f"<br/>Note: {html.escape(note)}"
+                activity.sudo().unlink()
+                lead.message_post(body=msg)
+            except Exception:
+                pass
+        return request.redirect(f'/my/employee/crm/edit/{lead_id}')
