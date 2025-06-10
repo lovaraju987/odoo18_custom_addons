@@ -40,6 +40,15 @@
                             </div>
                         </a>
                     </div>
+                    <div class="col-md-4 mb-4">
+                        <a href="/my/employee/crm" class="card text-center h-100 shadow-sm text-decoration-none">
+                            <div class="card-body">
+                                <i class="fa fa-briefcase fa-2x mb-2"></i>
+                                <h5 class="card-title">CRM</h5>
+                                <p class="card-text">View your assigned leads and opportunities.</p>
+                            </div>
+                        </a>
+                    </div>
                     <!-- Add more sections as needed: Leaves, Timesheets, Expenses, Announcements -->
                 </div>
             </div>

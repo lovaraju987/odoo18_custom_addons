@@ -1,0 +1,42 @@
+<odoo>
+  <template id="portal_employee_crm" name="My CRM Leads">
+    <t t-call="portal.portal_layout">
+      <div class="o_portal container my-4">
+        <h2>My CRM Leads &amp; Opportunities</h2>
+        <t t-if="not leads">
+          <div class="alert alert-info">No leads or opportunities assigned to you.</div>
+        </t>
+        <t t-if="leads">
+          <table class="table table-striped">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Stage</th>
+                <th>Customer</th>
+                <th>Email</th>
+                <th>Phone</th>
+                <th>Expected Revenue</th>
+                <th>Deadline</th>
+                <th>Priority</th>
+              </tr>
+            </thead>
+            <tbody>
+              <t t-foreach="leads" t-as="lead">
+                <tr>
+                  <td><t t-esc="lead.name"/></td>
+                  <td><t t-esc="lead.stage_id.name"/></td>
+                  <td><t t-esc="lead.partner_id.name or ''"/></td>
+                  <td><t t-esc="lead.email_from or ''"/></td>
+                  <td><t t-esc="lead.phone or ''"/></td>
+                  <td><t t-esc="lead.expected_revenue or 0.0"/></td>
+                  <td><t t-esc="lead.date_deadline or '-'"/></td>
+                  <td><t t-esc="lead.priority or ''"/></td>
+                </tr>
+              </t>
+            </tbody>
+          </table>
+        </t>
+      </div>
+    </t>
+  </template>
+</odoo>
