@@ -99,7 +99,7 @@
             <select name="user_id" class="form-control js-salesperson-select">
               <option value="">Select</option>
               <t t-foreach="salespersons" t-as="salesperson">
-                <option t-att-value="salesperson.id">
+                <option t-att-value="salesperson.id" t-att-selected="salesperson.id == current_user_id and 'selected' or None">
                   <t t-esc="salesperson.name"/>
                 </option>
               </t>

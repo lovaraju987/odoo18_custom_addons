@@ -241,11 +241,13 @@ class PortalEmployee(http.Controller):
         all_tags = request.env[CRM_TAG_MODEL].sudo().search([])
         # Show all users (internal and portal) as salespersons
         salespersons = request.env['res.users'].sudo().search([('active', '=', True)], limit=100)
+        current_user_id = request.env.user.id
         return request.render('employee_self_service_portal.portal_employee_crm_create', {
             'partners': partners,
             'stages': stages,
             'all_tags': all_tags,
             'salespersons': salespersons,
+            'current_user_id': current_user_id,
         })
 
     @http.route('/my/employee/crm/edit/<int:lead_id>', type='http', auth='user', website=True, methods=['GET', 'POST'])
