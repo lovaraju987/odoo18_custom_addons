@@ -2,6 +2,5 @@
     <menuitem id="menu_portal_root" name="My Portal" sequence="10"/>
     <menuitem id="menu_portal_employee" name="My Profile" parent="menu_portal_root" action="action_portal_employee"/>
     <menuitem id="menu_portal_attendance" name="My Attendance" parent="menu_portal_root" action="action_portal_attendance"/>
-    <menuitem id="menu_portal_tasks" name="My Tasks" parent="menu_portal_root" action="action_portal_tasks"/>
     <menuitem id="menu_portal_crm" name="My CRM" parent="menu_portal_root" action="action_portal_crm"/>
 </odoo>

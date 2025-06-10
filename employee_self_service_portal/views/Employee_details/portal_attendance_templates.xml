@@ -2,26 +2,180 @@
     <template id="portal_attendance" name="My Attendance">
         <t t-call="portal.portal_layout">
             <div class="o_portal">
-                <h2>Attendance Records</h2>
+                <h2>Attendance</h2>
+                <div id="geo-error" class="alert alert-warning d-none" role="alert" style="margin-bottom: 1rem;">
+                    Unable to get your location. Please allow location access in your browser to record attendance location.
+                    <button type="button" class="btn-close float-end" aria-label="Close" onclick="this.parentElement.classList.add('d-none')"></button>
+                </div>
+                <div class="mb-3 d-flex gap-2">
+                    <form id="checkin-form" action="/my/employee/attendance/checkin" method="post" style="display:inline;">
+                        <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
+                        <input type="hidden" name="in_latitude" id="in_latitude" />
+                        <input type="hidden" name="in_longitude" id="in_longitude" />
+                        <button type="submit" class="btn btn-success" t-att-disabled="today_att and not today_att.check_out">Check In</button>
+                    </form>
+                    <form id="checkout-form" action="/my/employee/attendance/checkout" method="post" style="display:inline;">
+                        <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
+                        <input type="hidden" name="out_latitude" id="out_latitude" />
+                        <input type="hidden" name="out_longitude" id="out_longitude" />
+                        <button type="submit" class="btn btn-danger" t-att-disabled="not today_att or today_att.check_out">Check Out</button>
+                    </form>
+                </div>
+                <t t-if="today_att">
+                    <div class="card mb-3 border-info">
+                        <div class="card-body">
+                            <h5 class="card-title mb-2">Today's Attendance</h5>
+                            <div class="row">
+                                <div class="col-md-3"><b>Check-In:</b> <t t-esc="today_att.check_in"/></div>
+                                <div class="col-md-3"><b>Check-Out:</b> <t t-esc="today_att.check_out or '-'"/></div>
+                                <div class="col-md-3"><b>Worked Hours:</b> <t t-esc="today_att.worked_hours or '-'"/></div>
+                            </div>
+                            <div class="mt-2">
+                                <t t-if="today_att.check_out">
+                                    <span class="badge bg-success">Checked Out</span>
+                                </t>
+                                <t t-elif="today_att.check_in">
+                                    <span class="badge bg-warning text-dark">Checked In</span>
+                                </t>
+                                <t t-else="">
+                                    <span class="badge bg-secondary">No Attendance</span>
+                                </t>
+                            </div>
+                        </div>
+                    </div>
+                </t>
+                <h4>Recent Attendances</h4>
                 <table class="table table-striped">
                     <thead>
                         <tr>
-                            <th>Check-In</th>
-                            <th>Check-Out</th>
-                            <th>Duration</th>
+                            <th>Date</th>
+                            <th>Check-In Time</th>
+                            <th>Check-In Location</th>
+                            <th>Check-In Latitude</th>
+                            <th>Check-In Longitude</th>
+                            <th>Check-Out Time</th>
+                            <th>Check-Out Location</th>
+                            <th>Check-Out Latitude</th>
+                            <th>Check-Out Longitude</th>
+                            <th>Worked Hours</th>
                         </tr>
                     </thead>
                     <tbody>
-                      <t t-foreach="attendance_records" t-as="att">
+                      <t t-foreach="attendances" t-as="att">
                         <tr>
-                          <td><t t-esc="att.check_in"/></td>
-                          <td><t t-esc="att.check_out"/></td>
-                          <td><t t-esc="att.duration"/></td>
+                          <!-- Date -->
+                          <td>
+                            <t t-if="att.check_in">
+                              <t t-esc="att.check_in.strftime('%d/%m/%Y')"/>
+                            </t>
+                            <t t-else="">-</t>
+                          </td>
+                          <!-- Check-In Time -->
+                          <td>
+                            <t t-if="att.check_in">
+                              <t t-esc="att.check_in.strftime('%I:%M:%S %p')"/>
+                            </t>
+                            <t t-else="">-</t>
+                          </td>
+                          <!-- Check-In Location -->
+                          <td>
+                            <t t-if="'check_in_location' in att and att.check_in_location">
+                              <t t-esc="att.check_in_location"/>
+                            </t>
+                            <t t-else="">-</t>
+                          </td>
+                          <!-- Check-In Latitude -->
+                          <td>
+                            <t t-if="att.in_latitude">
+                              <t t-esc="att.in_latitude"/>
+                            </t>
+                            <t t-else="">-</t>
+                          </td>
+                          <!-- Check-In Longitude -->
+                          <td>
+                            <t t-if="att.in_longitude">
+                              <t t-esc="att.in_longitude"/>
+                            </t>
+                            <t t-else="">-</t>
+                          </td>
+                          <!-- Check-Out Time -->
+                          <td>
+                            <t t-if="att.check_out">
+                              <t t-esc="att.check_out.strftime('%I:%M:%S %p')"/>
+                            </t>
+                            <t t-else="">-</t>
+                          </td>
+                          <!-- Check-Out Location -->
+                          <td>
+                            <t t-if="'check_out_location' in att and att.check_out_location">
+                              <t t-esc="att.check_out_location"/>
+                            </t>
+                            <t t-else="">-</t>
+                          </td>
+                          <!-- Check-Out Latitude -->
+                          <td>
+                            <t t-if="att.out_latitude">
+                              <t t-esc="att.out_latitude"/>
+                            </t>
+                            <t t-else="">-</t>
+                          </td>
+                          <!-- Check-Out Longitude -->
+                          <td>
+                            <t t-if="att.out_longitude">
+                              <t t-esc="att.out_longitude"/>
+                            </t>
+                            <t t-else="">-</t>
+                          </td>
+                          <!-- Worked Hours (rounded to 2 decimals) -->
+                          <td>
+                            <t t-if="att.worked_hours is not None">
+                              <t t-esc="'%.2f' % att.worked_hours"/>
+                            </t>
+                            <t t-else="">-</t>
+                          </td>
                         </tr>
                       </t>
                     </tbody>
                 </table>
             </div>
+            <script>
+            // Geolocation for Check In
+            const checkinForm = document.getElementById('checkin-form');
+            if (checkinForm) {
+                checkinForm.addEventListener('submit', function(e) {
+                    if (navigator.geolocation) {
+                        e.preventDefault();
+                        navigator.geolocation.getCurrentPosition(function(position) {
+                            document.getElementById('in_latitude').value = position.coords.latitude;
+                            document.getElementById('in_longitude').value = position.coords.longitude;
+                            document.getElementById('geo-error').classList.add('d-none');
+                            checkinForm.submit();
+                        }, function() {
+                            // If denied or failed, show error and do not submit
+                            document.getElementById('geo-error').classList.remove('d-none');
+                        });
+                    }
+                });
+            }
+            // Geolocation for Check Out
+            const checkoutForm = document.getElementById('checkout-form');
+            if (checkoutForm) {
+                checkoutForm.addEventListener('submit', function(e) {
+                    if (navigator.geolocation) {
+                        e.preventDefault();
+                        navigator.geolocation.getCurrentPosition(function(position) {
+                            document.getElementById('out_latitude').value = position.coords.latitude;
+                            document.getElementById('out_longitude').value = position.coords.longitude;
+                            document.getElementById('geo-error').classList.add('d-none');
+                            checkoutForm.submit();
+                        }, function() {
+                            // If denied or failed, show error and do not submit
+                            document.getElementById('geo-error').classList.remove('d-none');
+                        });
+                    }
+                });
+            }
+            </script>
         </t>
     </template>
 </odoo>

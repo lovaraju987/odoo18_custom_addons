@@ -59,10 +59,17 @@ class PortalEmployee(http.Controller):
         if not employee:
             return request.redirect(MY_EMPLOYEE_URL)
         try:
-            request.env[HR_ATTENDANCE_MODEL].sudo().create({
+            in_latitude = post.get('in_latitude')
+            in_longitude = post.get('in_longitude')
+            vals = {
                 'employee_id': employee.id,
                 'check_in': fields.Datetime.now(),
-            })
+            }
+            if in_latitude:
+                vals['in_latitude'] = in_latitude
+            if in_longitude:
+                vals['in_longitude'] = in_longitude
+            request.env[HR_ATTENDANCE_MODEL].sudo().create(vals)
         except Exception as e:
             import logging
             _logger = logging.getLogger(__name__)
@@ -78,18 +85,34 @@ class PortalEmployee(http.Controller):
         last_attendance = request.env[HR_ATTENDANCE_MODEL].sudo().search(
             [('employee_id', '=', employee.id)], order='check_in desc', limit=1)
         if last_attendance and not last_attendance.check_out:
-            last_attendance.check_out = fields.Datetime.now()
+            out_latitude = post.get('out_latitude')
+            out_longitude = post.get('out_longitude')
+            vals = {
+                'check_out': fields.Datetime.now(),
+            }
+            if out_latitude:
+                vals['out_latitude'] = out_latitude
+            if out_longitude:
+                vals['out_longitude'] = out_longitude
+            last_attendance.sudo().write(vals)
         return request.redirect(MY_EMPLOYEE_URL + '/attendance')
     
     @http.route(MY_EMPLOYEE_URL + '/attendance', type='http', auth='user', website=True)
     def portal_attendance_history(self, **kwargs):
+        from datetime import datetime
         employee = request.env[HR_EMPLOYEE_MODEL].sudo().search([('user_id', '=', request.uid)], limit=1)
         attendances = request.env[HR_ATTENDANCE_MODEL].sudo().search([
             ('employee_id', '=', employee.id)
         ], order='check_in desc', limit=20)
+        today_att = None
+        today_str = datetime.now().strftime('%Y-%m-%d')
+        if attendances and attendances[0].check_in:
+            if attendances[0].check_in.strftime('%Y-%m-%d') == today_str:
+                today_att = attendances[0]
         return request.render('employee_self_service_portal.portal_attendance', {
             'attendances': attendances,
             'employee': employee,
+            'today_att': today_att,
         })
 
     @http.route(MY_EMPLOYEE_URL + '/edit', type='http', auth='user', website=True, methods=['GET', 'POST'])
@@ -185,18 +208,6 @@ class PortalEmployee(http.Controller):
         return request.render('employee_self_service_portal.portal_employee_profile_bank', {
             'employee': employee,
             'section': 'bank',
-        })
-
-    @http.route('/my/employee/tasks', type='http', auth='user', website=True)
-    def portal_employee_tasks(self, **kwargs):
-        employee = self._get_employee()
-        user = request.env.user
-        tasks = request.env['project.task'].sudo().search([
-            ('user_ids', 'in', [user.id])
-        ], order='date_deadline asc, priority desc')
-        return request.render('employee_self_service_portal.portal_employee_tasks', {
-            'employee': employee,
-            'tasks': tasks,
         })
 
     @http.route('/my/employee/crm', type='http', auth='user', website=True)
