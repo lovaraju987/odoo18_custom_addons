@@ -83,13 +83,20 @@ class PortalEmployee(http.Controller):
     
     @http.route(MY_EMPLOYEE_URL + '/attendance', type='http', auth='user', website=True)
     def portal_attendance_history(self, **kwargs):
+        from datetime import datetime
         employee = request.env[HR_EMPLOYEE_MODEL].sudo().search([('user_id', '=', request.uid)], limit=1)
         attendances = request.env[HR_ATTENDANCE_MODEL].sudo().search([
             ('employee_id', '=', employee.id)
         ], order='check_in desc', limit=20)
+        today_att = None
+        today_str = datetime.now().strftime('%Y-%m-%d')
+        if attendances and attendances[0].check_in:
+            if attendances[0].check_in.strftime('%Y-%m-%d') == today_str:
+                today_att = attendances[0]
         return request.render('employee_self_service_portal.portal_attendance', {
             'attendances': attendances,
             'employee': employee,
+            'today_att': today_att,
         })
 
     @http.route(MY_EMPLOYEE_URL + '/edit', type='http', auth='user', website=True, methods=['GET', 'POST'])
