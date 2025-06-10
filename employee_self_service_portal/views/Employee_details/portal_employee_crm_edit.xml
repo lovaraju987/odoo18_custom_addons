@@ -11,7 +11,7 @@
           </div>
           <div class="mb-2">
             <label>Customer</label>
-            <select name="partner_id" class="form-control">
+            <select name="partner_id" class="form-control js-partner-select" id="partner_id" disabled="disabled">
               <option value="">Select</option>
               <t t-foreach="partners" t-as="partner">
                 <option t-att-value="partner.id" t-att-selected="lead.partner_id and partner.id == lead.partner_id.id and 'selected' or None">
@@ -19,6 +19,23 @@
                 </option>
               </t>
             </select>
+            <input type="hidden" name="partner_id" t-att-value="lead.partner_id and lead.partner_id.id or ''"/>
+            <small class="form-text text-muted">Customer cannot be changed after creation.</small>
+            <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+            <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+            <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+            <script type="text/javascript">
+              $(document).ready(function() {
+                var partnerSelect = $('select.js-partner-select');
+                if (partnerSelect.length) {
+                  partnerSelect.select2({
+                    width: '100%',
+                    placeholder: 'Search for a customer',
+                    allowClear: true
+                  });
+                }
+              });
+            </script>
           </div>
           <div class="mb-2">
             <label>Stage</label>
