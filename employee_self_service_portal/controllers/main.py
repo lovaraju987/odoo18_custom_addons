@@ -325,8 +325,9 @@ class PortalEmployee(http.Controller):
         _logger.info('ESS Portal: Number of files in attachments: %s', len(files))
         for f in files:
             _logger.info('ESS Portal: File received: filename=%s content_type=%s', getattr(f, 'filename', None), getattr(f, 'content_type', None))
-        if lead and note and lead.user_id.id == user.id:
-            msg = lead.message_post(body=note, message_type='comment', author_id=user.partner_id.id)
+        # Allow log note with or without text, as long as there are files or a note
+        if lead and (note or files) and lead.user_id.id == user.id:
+            msg = lead.message_post(body=note or '', message_type='comment', author_id=user.partner_id.id)
             import base64
             attachment_ids = []
             for file in files:
@@ -350,7 +351,6 @@ class PortalEmployee(http.Controller):
                     })
                     attachment_ids.append(attachment.id)
                     _logger.info('ESS Portal: Created attachment id=%s name=%s res_model=%s res_id=%s', attachment.id, attachment.name, attachment.res_model, attachment.res_id)
-            # Link attachments to the message (Odoo standard way)
             if attachment_ids:
                 msg.sudo().write({'attachment_ids': [(4, att_id) for att_id in attachment_ids]})
         return request.redirect(f'/my/employee/crm/edit/{lead_id}')
