@@ -238,9 +238,11 @@ class PortalEmployee(http.Controller):
                 lead.sudo().write({'tag_ids': [(6, 0, tags.ids)]})
             return request.redirect('/my/employee/crm')
         stages = request.env['crm.stage'].sudo().search([])
+        all_tags = request.env['crm.tag'].sudo().search([])
         return request.render('employee_self_service_portal.portal_employee_crm_edit', {
             'lead': lead,
             'stages': stages,
+            'all_tags': all_tags,
         })
 
     @http.route('/my/employee/crm/delete/<int:lead_id>', type='http', auth='user', website=True, methods=['POST'])
