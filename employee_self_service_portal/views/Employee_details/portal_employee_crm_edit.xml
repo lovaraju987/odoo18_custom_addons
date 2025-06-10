@@ -43,34 +43,28 @@
           </div>
           <div class="mb-2">
             <label>Tags</label>
-            <select name="tag_ids" class="form-control" multiple="multiple">
+            <select name="tag_ids[]" class="form-control" multiple="multiple">
               <t t-foreach="all_tags" t-as="tag">
-                <option t-att-value="tag.id"
-                        t-if="lead.tag_ids and tag.id in [t.id for t in lead.tag_ids]"
-                        selected="selected">
-                  <t t-esc="tag.name"/>
-                </option>
-                <option t-att-value="tag.id"
-                        t-if="not lead.tag_ids or tag.id not in [t.id for t in lead.tag_ids]">
+                <option t-att-value="tag.id" t-att-selected="lead.tag_ids and tag.id in [t.id for t in lead.tag_ids] and 'selected' or None">
                   <t t-esc="tag.name"/>
                 </option>
               </t>
             </select>
-            <small class="form-text text-muted">Hold Ctrl (Windows) or Cmd (Mac) to select multiple tags.</small>
-            <label class="mt-2">Add New Tags</label>
-            <input type="text" name="new_tag_names" class="form-control" placeholder="Comma separated (e.g. Product, Service)"/>
-            <!-- Select2 for searchable tags -->
+            <small class="form-text text-muted">Search, select, or add new tags. Hold Ctrl (Windows) or Cmd (Mac) to select multiple.</small>
+            <!-- Select2 for searchable and creatable tags -->
             <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
             <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
             <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
             <script type="text/javascript">
               document.addEventListener('DOMContentLoaded', function() {
-                var tagSelect = document.querySelector('select[name="tag_ids"]');
+                var tagSelect = document.querySelector('select[name="tag_ids[]"]');
                 if (tagSelect) {
                   $(tagSelect).select2({
                     width: '100%',
-                    placeholder: 'Search or select tags',
-                    allowClear: true
+                    placeholder: 'Search or add tags',
+                    tags: true,
+                    allowClear: true,
+                    tokenSeparators: [',']
                   });
                 }
               });
