@@ -2,44 +2,39 @@
 from odoo import http, fields
 from odoo.http import request
 
+# Constants for model names and URLs
 CRM_TAG_MODEL = 'crm.tag'
 CRM_REDIRECT_URL = '/my/employee/crm'
+HR_EMPLOYEE_MODEL = 'hr.employee'
+HR_ATTENDANCE_MODEL = 'hr.attendance'
+CRM_LEAD_MODEL = 'crm.lead'
+CRM_STAGE_MODEL = 'crm.stage'
+MY_EMPLOYEE_URL = '/my/employee'
 
 def _process_tag_ids(post):
+    """Refactored to reduce cognitive complexity."""
     tag_ids = []
+    # Get tag ids from post (handle both list and string cases)
     if hasattr(post, 'getlist'):
-        tag_ids = post.getlist('tag_ids[]')
-        if not tag_ids:
-            tag_ids = post.getlist('tag_ids')
+        tag_ids = post.getlist('tag_ids[]') or post.getlist('tag_ids')
     else:
-        tag_ids = post.get('tag_ids[]', [])
-        if not tag_ids:
-            tag_ids = post.get('tag_ids', [])
-        # Always treat as list
+        tag_ids = post.get('tag_ids[]', []) or post.get('tag_ids', [])
         if isinstance(tag_ids, str):
-            # Handle comma-separated string (Select2 fallback)
-            if ',' in tag_ids:
-                tag_ids = tag_ids.split(',')
-            else:
-                tag_ids = [tag_ids]
-    # Defensive: if still not a list, wrap
+            tag_ids = tag_ids.split(',') if ',' in tag_ids else [tag_ids]
     if not isinstance(tag_ids, list):
         tag_ids = [tag_ids]
     tag_id_list = []
     for tag in tag_ids or []:
-        if tag in (None, '', []):
+        if not tag:
             continue
         try:
-            tag_id = int(tag)
-            tag_id_list.append(tag_id)
+            tag_id_list.append(int(tag))
         except (ValueError, TypeError):
             tag_rec = request.env[CRM_TAG_MODEL].sudo().search([('name', '=', tag)], limit=1)
             if not tag_rec:
                 tag_rec = request.env[CRM_TAG_MODEL].sudo().create({'name': tag})
             tag_id_list.append(tag_rec.id)
-    # Ensure all are ints (defensive)
     tag_id_list = [int(t) for t in tag_id_list if t]
-    # Debug: print or log the tag_id_list
     import logging
     _logger = logging.getLogger(__name__)
     _logger.info('ESS Portal: tag_id_list to write: %s', tag_id_list)
@@ -47,23 +42,23 @@ def _process_tag_ids(post):
 
 class PortalEmployee(http.Controller):
     def _get_employee(self):
-        return request.env['hr.employee'].sudo().search([('user_id', '=', request.uid)], limit=1)
+        return request.env[HR_EMPLOYEE_MODEL].sudo().search([('user_id', '=', request.uid)], limit=1)
 
-    @http.route('/my/employee', type='http', auth='user', website=True)
+    @http.route(MY_EMPLOYEE_URL, type='http', auth='user', website=True)
     def portal_employee_profile(self, **kw):
-        employee = request.env['hr.employee'].sudo().search([('user_id', '=', request.uid)], limit=1)
+        employee = request.env[HR_EMPLOYEE_MODEL].sudo().search([('user_id', '=', request.uid)], limit=1)
         return request.render('employee_self_service_portal.portal_employee_profile_personal', {
             'employee': employee,
             'section': 'personal',
         })
 
-    @http.route('/my/employee/attendance/checkin', type='http', auth='user', methods=['POST'], website=True)
+    @http.route(MY_EMPLOYEE_URL + '/attendance/checkin', type='http', auth='user', methods=['POST'], website=True)
     def check_in(self, **post):
-        employee = request.env['hr.employee'].sudo().search([('user_id', '=', request.uid)], limit=1)
+        employee = request.env[HR_EMPLOYEE_MODEL].sudo().search([('user_id', '=', request.uid)], limit=1)
         if not employee:
-            return request.redirect('/my/employee')
+            return request.redirect(MY_EMPLOYEE_URL)
         try:
-            request.env['hr.attendance'].sudo().create({
+            request.env[HR_ATTENDANCE_MODEL].sudo().create({
                 'employee_id': employee.id,
                 'check_in': fields.Datetime.now(),
             })
@@ -71,24 +66,24 @@ class PortalEmployee(http.Controller):
             import logging
             _logger = logging.getLogger(__name__)
             _logger.error("Check-in failed: %s", e)
-            return request.redirect('/my/employee')
-        return request.redirect('/my/employee/attendance')
+            return request.redirect(MY_EMPLOYEE_URL)
+        return request.redirect(MY_EMPLOYEE_URL + '/attendance')
 
-    @http.route('/my/employee/attendance/checkout', type='http', auth='user', methods=['POST'], website=True)
+    @http.route(MY_EMPLOYEE_URL + '/attendance/checkout', type='http', auth='user', methods=['POST'], website=True)
     def check_out(self, **post):
-        employee = request.env['hr.employee'].sudo().search([('user_id', '=', request.uid)], limit=1)
+        employee = request.env[HR_EMPLOYEE_MODEL].sudo().search([('user_id', '=', request.uid)], limit=1)
         if not employee:
-            return request.redirect('/my/employee')
-        last_attendance = request.env['hr.attendance'].sudo().search(
+            return request.redirect(MY_EMPLOYEE_URL)
+        last_attendance = request.env[HR_ATTENDANCE_MODEL].sudo().search(
             [('employee_id', '=', employee.id)], order='check_in desc', limit=1)
         if last_attendance and not last_attendance.check_out:
             last_attendance.check_out = fields.Datetime.now()
-        return request.redirect('/my/employee/attendance')
+        return request.redirect(MY_EMPLOYEE_URL + '/attendance')
     
-    @http.route('/my/employee/attendance', type='http', auth='user', website=True)
+    @http.route(MY_EMPLOYEE_URL + '/attendance', type='http', auth='user', website=True)
     def portal_attendance_history(self, **kwargs):
-        employee = request.env['hr.employee'].sudo().search([('user_id', '=', request.uid)], limit=1)
-        attendances = request.env['hr.attendance'].sudo().search([
+        employee = request.env[HR_EMPLOYEE_MODEL].sudo().search([('user_id', '=', request.uid)], limit=1)
+        attendances = request.env[HR_ATTENDANCE_MODEL].sudo().search([
             ('employee_id', '=', employee.id)
         ], order='check_in desc', limit=20)
         return request.render('employee_self_service_portal.portal_attendance', {
@@ -96,11 +91,11 @@ class PortalEmployee(http.Controller):
             'employee': employee,
         })
 
-    @http.route('/my/employee/edit', type='http', auth='user', website=True, methods=['GET', 'POST'])
+    @http.route(MY_EMPLOYEE_URL + '/edit', type='http', auth='user', website=True, methods=['GET', 'POST'])
     def portal_employee_edit(self, **post):
-        employee = request.env['hr.employee'].sudo().search([('user_id', '=', request.uid)], limit=1)
+        employee = request.env[HR_EMPLOYEE_MODEL].sudo().search([('user_id', '=', request.uid)], limit=1)
         if not employee:
-            return request.redirect('/my/employee')
+            return request.redirect(MY_EMPLOYEE_URL)
         if http.request.httprequest.method == 'POST':
             vals = {}
             # Personal Details
@@ -122,7 +117,7 @@ class PortalEmployee(http.Controller):
             vals = {k: v for k, v in vals.items() if v is not None}
             if vals:
                 employee.sudo().write(vals)
-            return request.redirect('/my/employee')
+            return request.redirect(MY_EMPLOYEE_URL)
         return request.render('employee_self_service_portal.portal_employee_edit', {
             'employee': employee,
         })
@@ -131,7 +126,7 @@ class PortalEmployee(http.Controller):
     def portal_ess_dashboard(self, **kwargs):
         return request.render('employee_self_service_portal.portal_ess_dashboard')
 
-    @http.route('/my/employee/personal', type='http', auth='user', website=True, methods=['GET', 'POST'])
+    @http.route(MY_EMPLOYEE_URL + '/personal', type='http', auth='user', website=True, methods=['GET', 'POST'])
     def portal_employee_personal(self, **post):
         employee = self._get_employee()
         if request.httprequest.method == 'POST':
@@ -149,7 +144,7 @@ class PortalEmployee(http.Controller):
             'section': 'personal',
         })
 
-    @http.route('/my/employee/experience', type='http', auth='user', website=True, methods=['GET', 'POST'])
+    @http.route(MY_EMPLOYEE_URL + '/experience', type='http', auth='user', website=True, methods=['GET', 'POST'])
     def portal_employee_experience(self, **post):
         employee = self._get_employee()
         if request.httprequest.method == 'POST':
@@ -163,7 +158,7 @@ class PortalEmployee(http.Controller):
             'section': 'experience',
         })
 
-    @http.route('/my/employee/certification', type='http', auth='user', website=True, methods=['GET', 'POST'])
+    @http.route(MY_EMPLOYEE_URL + '/certification', type='http', auth='user', website=True, methods=['GET', 'POST'])
     def portal_employee_certification(self, **post):
         employee = self._get_employee()
         if request.httprequest.method == 'POST':
@@ -176,7 +171,7 @@ class PortalEmployee(http.Controller):
             'section': 'certification',
         })
 
-    @http.route('/my/employee/bank', type='http', auth='user', website=True, methods=['GET', 'POST'])
+    @http.route(MY_EMPLOYEE_URL + '/bank', type='http', auth='user', website=True, methods=['GET', 'POST'])
     def portal_employee_bank(self, **post):
         employee = self._get_employee()
         if request.httprequest.method == 'POST':
@@ -252,7 +247,7 @@ class PortalEmployee(http.Controller):
 
     @http.route('/my/employee/crm/edit/<int:lead_id>', type='http', auth='user', website=True, methods=['GET', 'POST'])
     def portal_employee_crm_edit(self, lead_id, **post):
-        lead = request.env['crm.lead'].sudo().browse(lead_id)
+        lead = request.env[CRM_LEAD_MODEL].sudo().browse(lead_id)
         user = request.env.user
         if not lead or lead.user_id.id != user.id:
             return request.redirect(CRM_REDIRECT_URL)
@@ -266,13 +261,13 @@ class PortalEmployee(http.Controller):
             }
             # Convert probability and expected_revenue to float if present
             prob = post.get('probability')
-            if prob is not None and prob != '':
+            if prob:
                 try:
                     vals['probability'] = float(prob)
                 except Exception:
                     pass
             exp_rev = post.get('expected_revenue')
-            if exp_rev is not None and exp_rev != '':
+            if exp_rev:
                 try:
                     vals['expected_revenue'] = float(exp_rev)
                 except Exception:
@@ -282,7 +277,7 @@ class PortalEmployee(http.Controller):
             if stage_id:
                 try:
                     stage_id_int = int(stage_id)
-                    stage = request.env['crm.stage'].sudo().browse(stage_id_int)
+                    stage = request.env[CRM_STAGE_MODEL].sudo().browse(stage_id_int)
                     if stage.exists():
                         vals['stage_id'] = stage_id_int
                 except Exception:
@@ -291,7 +286,7 @@ class PortalEmployee(http.Controller):
             tag_id_list = _process_tag_ids(post)
             lead.sudo().write({'tag_ids': [(6, 0, tag_id_list)]})
             return request.redirect(CRM_REDIRECT_URL)
-        stages = request.env['crm.stage'].sudo().search([])
+        stages = request.env[CRM_STAGE_MODEL].sudo().search([])
         partners = request.env['res.partner'].sudo().search([], limit=50)
         all_tags = request.env[CRM_TAG_MODEL].sudo().search([])
         salespersons = request.env['res.users'].sudo().search([('active', '=', True)], limit=100)
@@ -313,11 +308,51 @@ class PortalEmployee(http.Controller):
 
     @http.route('/my/employee/crm/log_note/<int:lead_id>', type='http', auth='user', website=True, methods=['POST'])
     def portal_employee_crm_log_note(self, lead_id, **post):
-        lead = request.env['crm.lead'].sudo().browse(lead_id)
+        import logging
+        _logger = logging.getLogger(__name__)
+        lead = request.env[CRM_LEAD_MODEL].sudo().browse(lead_id)
         user = request.env.user
         note = post.get('note')
-        if lead and note and lead.user_id.id == user.id:
-            lead.message_post(body=note, message_type='comment', author_id=user.partner_id.id)
+        file_keys = list(request.httprequest.files.keys())
+        _logger.info('ESS Portal: Received file keys: %s', file_keys)
+        files = []
+        if hasattr(request.httprequest.files, 'getlist'):
+            files = request.httprequest.files.getlist('attachments')
+        elif 'attachments' in request.httprequest.files:
+            file = request.httprequest.files['attachments']
+            if file:
+                files = [file]
+        _logger.info('ESS Portal: Number of files in attachments: %s', len(files))
+        for f in files:
+            _logger.info('ESS Portal: File received: filename=%s content_type=%s', getattr(f, 'filename', None), getattr(f, 'content_type', None))
+        # Allow log note with or without text, as long as there are files or a note
+        if lead and (note or files) and lead.user_id.id == user.id:
+            msg = lead.message_post(body=note or '', message_type='comment', author_id=user.partner_id.id)
+            import base64
+            attachment_ids = []
+            for file in files:
+                try:
+                    file.seek(0)
+                except Exception:
+                    pass
+                file_content = file.read()
+                if file_content:
+                    if isinstance(file_content, str):
+                        file_content = file_content.encode('utf-8')
+                    encoded_content = base64.b64encode(file_content).decode('utf-8')
+                    attachment = request.env['ir.attachment'].sudo().create({
+                        'name': file.filename,
+                        'datas': encoded_content,
+                        'res_model': 'crm.lead',
+                        'res_id': lead.id,
+                        'mimetype': file.mimetype,
+                        'type': 'binary',
+                        'public': True,
+                    })
+                    attachment_ids.append(attachment.id)
+                    _logger.info('ESS Portal: Created attachment id=%s name=%s res_model=%s res_id=%s', attachment.id, attachment.name, attachment.res_model, attachment.res_id)
+            if attachment_ids:
+                msg.sudo().write({'attachment_ids': [(4, att_id) for att_id in attachment_ids]})
         return request.redirect(f'/my/employee/crm/edit/{lead_id}')
 
     @http.route('/my/employee/crm/add_activity/<int:lead_id>', type='http', auth='user', website=True, methods=['POST'])
