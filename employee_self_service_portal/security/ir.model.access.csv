@@ -2,3 +2,4 @@ id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
 access_hr_employee_portal_user,hr.employee.portal.user.access,hr.model_hr_employee,base.group_portal,1,1,0,0
 access_hr_attendance_portal_user,hr.attendance.portal.user.access,hr_attendance.model_hr_attendance,base.group_portal,1,1,0,0
 access_project_task_portal_user,project.task.portal.user.access,project.model_project_task,base.group_portal,1,0,0,0
+access_crm_lead_portal_user,crm.lead.portal.user.access,crm.model_crm_lead,base.group_portal,1,1,1,1

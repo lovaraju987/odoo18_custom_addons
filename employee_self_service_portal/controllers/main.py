@@ -171,3 +171,57 @@ class PortalEmployee(http.Controller):
             'employee': employee,
             'leads': leads,
         })
+
+    @http.route('/my/employee/crm/create', type='http', auth='user', website=True, methods=['GET', 'POST'])
+    def portal_employee_crm_create(self, **post):
+        user = request.env.user
+        if request.httprequest.method == 'POST':
+            vals = {
+                'name': post.get('name'),
+                'partner_id': post.get('partner_id') or False,
+                'email_from': post.get('email_from'),
+                'phone': post.get('phone'),
+                'expected_revenue': post.get('expected_revenue') or 0.0,
+                'user_id': user.id,
+                'stage_id': post.get('stage_id') or False,
+                'description': post.get('description'),
+            }
+            request.env['crm.lead'].sudo().create(vals)
+            return request.redirect('/my/employee/crm')
+        partners = request.env['res.partner'].sudo().search([], limit=50)
+        stages = request.env['crm.stage'].sudo().search([])
+        return request.render('employee_self_service_portal.portal_employee_crm_create', {
+            'partners': partners,
+            'stages': stages,
+        })
+
+    @http.route('/my/employee/crm/edit/<int:lead_id>', type='http', auth='user', website=True, methods=['GET', 'POST'])
+    def portal_employee_crm_edit(self, lead_id, **post):
+        lead = request.env['crm.lead'].sudo().browse(lead_id)
+        user = request.env.user
+        if not lead or lead.user_id.id != user.id:
+            return request.redirect('/my/employee/crm')
+        if request.httprequest.method == 'POST':
+            vals = {
+                'name': post.get('name'),
+                'stage_id': post.get('stage_id'),
+                'expected_revenue': post.get('expected_revenue'),
+                'email_from': post.get('email_from'),
+                'phone': post.get('phone'),
+                'description': post.get('description'),
+            }
+            lead.sudo().write({k: v for k, v in vals.items() if v is not None})
+            return request.redirect('/my/employee/crm')
+        stages = request.env['crm.stage'].sudo().search([])
+        return request.render('employee_self_service_portal.portal_employee_crm_edit', {
+            'lead': lead,
+            'stages': stages,
+        })
+
+    @http.route('/my/employee/crm/delete/<int:lead_id>', type='http', auth='user', website=True, methods=['POST'])
+    def portal_employee_crm_delete(self, lead_id, **post):
+        lead = request.env['crm.lead'].sudo().browse(lead_id)
+        user = request.env.user
+        if lead and lead.user_id.id == user.id:
+            lead.sudo().unlink()
+        return request.redirect('/my/employee/crm')

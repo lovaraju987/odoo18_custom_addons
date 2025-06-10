@@ -23,4 +23,16 @@
             </field>
         </field>
     </record>
+
+        <!-- Inherit Project Form View to Allow Portal Users as Project Manager -->
+    <record id="project_project_view_form_inherit_portal" model="ir.ui.view">
+        <field name="name">project.project.form.inherit.portal.manager</field>
+        <field name="model">project.project</field>
+        <field name="inherit_id" ref="project.edit_project"/>
+        <field name="arch" type="xml">
+            <field name="user_id" position="attributes">
+                <attribute name="domain">[]</attribute>
+            </field>
+        </field>
+    </record>
 </odoo>

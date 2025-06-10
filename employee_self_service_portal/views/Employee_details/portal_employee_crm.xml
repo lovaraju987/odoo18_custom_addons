@@ -3,6 +3,9 @@
     <t t-call="portal.portal_layout">
       <div class="o_portal container my-4">
         <h2>My CRM Leads &amp; Opportunities</h2>
+        <div class="mb-3">
+          <a href="/my/employee/crm/create" class="btn btn-success">Create New Lead</a>
+        </div>
         <t t-if="not leads">
           <div class="alert alert-info">No leads or opportunities assigned to you.</div>
         </t>
@@ -18,6 +21,7 @@
                 <th>Expected Revenue</th>
                 <th>Deadline</th>
                 <th>Priority</th>
+                <th>Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -31,6 +35,13 @@
                   <td><t t-esc="lead.expected_revenue or 0.0"/></td>
                   <td><t t-esc="lead.date_deadline or '-'"/></td>
                   <td><t t-esc="lead.priority or ''"/></td>
+                  <td>
+                    <a t-att-href="'/my/employee/crm/edit/' + str(lead.id)" class="btn btn-sm btn-primary">Edit</a>
+                    <form t-att-action="'/my/employee/crm/delete/' + str(lead.id)" method="post" style="display:inline;">
+                      <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
+                      <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure you want to delete this lead?');">Delete</button>
+                    </form>
+                  </td>
                 </tr>
               </t>
             </tbody>
