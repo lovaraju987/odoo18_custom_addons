@@ -25,6 +25,7 @@
         "views/employee_details/portal_employee_crm.xml",  # CRM portal template
         "views/employee_details/portal_employee_crm_create.xml",  # CRM create form
         "views/employee_details/portal_employee_crm_edit.xml",    # CRM edit form
+        "views/employee_details/portal_employee_crm_activity_edit.xml",  # Activity edit form for CRM
     ],
     "installable": True,
     "application": True,

@@ -1,0 +1,43 @@
+<odoo>
+  <template id="portal_employee_crm_activity_edit" name="Edit Activity">
+    <t t-call="portal.portal_layout">
+      <div class="o_portal container my-4">
+        <h4>Edit Activity</h4>
+        <form t-att-action="'/my/employee/crm/activity_edit/' + str(activity.id) + '?lead_id=' + str(lead.id)" method="post" class="card p-3" style="max-width: 420px;">
+          <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
+          <div class="mb-2">
+            <label for="activity_type_id">Activity Type</label>
+            <select name="activity_type_id" id="activity_type_id" class="form-control">
+              <t t-foreach="activity_types" t-as="atype">
+                <option t-att-value="atype.id" t-att-selected="atype.id == activity.activity_type_id.id"> <t t-esc="atype.name"/> </option>
+              </t>
+            </select>
+          </div>
+          <div class="mb-2">
+            <label for="summary">Summary</label>
+            <input type="text" name="summary" id="summary" class="form-control" t-att-value="activity.summary or ''" required="required"/>
+          </div>
+          <div class="mb-2">
+            <label for="date_deadline">Due Date</label>
+            <input type="date" name="date_deadline" id="date_deadline" class="form-control" t-att-value="activity.date_deadline" required="required"/>
+          </div>
+          <div class="mb-2">
+            <label for="user_id">Assigned To</label>
+            <select name="user_id" id="user_id" class="form-control">
+              <option value="">Me</option>
+              <t t-foreach="salespersons" t-as="salesperson">
+                <option t-att-value="salesperson.id" t-att-selected="salesperson.id == activity.user_id.id"> <t t-esc="salesperson.name"/> </option>
+              </t>
+            </select>
+          </div>
+          <div class="mb-2">
+            <label for="note">Note</label>
+            <textarea name="note" id="note" class="form-control" rows="2"><t t-esc="activity.note or ''"/></textarea>
+          </div>
+          <button type="submit" class="btn btn-primary w-100">Save</button>
+          <a t-att-href="'/my/employee/crm/edit/' + str(lead.id)" class="btn btn-secondary w-100 mt-2">Cancel</a>
+        </form>
+      </div>
+    </t>
+  </template>
+</odoo>
