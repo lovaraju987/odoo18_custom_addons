@@ -310,3 +310,29 @@ class PortalEmployee(http.Controller):
         if lead and lead.user_id.id == user.id:
             lead.sudo().unlink()
         return request.redirect('/my/employee/crm')
+
+    @http.route('/my/employee/crm/log_note/<int:lead_id>', type='http', auth='user', website=True, methods=['POST'])
+    def portal_employee_crm_log_note(self, lead_id, **post):
+        lead = request.env['crm.lead'].sudo().browse(lead_id)
+        user = request.env.user
+        note = post.get('note')
+        if lead and note and lead.user_id.id == user.id:
+            lead.message_post(body=note, message_type='comment', author_id=user.partner_id.id)
+        return request.redirect(f'/my/employee/crm/edit/{lead_id}')
+
+    @http.route('/my/employee/crm/add_activity/<int:lead_id>', type='http', auth='user', website=True, methods=['POST'])
+    def portal_employee_crm_add_activity(self, lead_id, **post):
+        lead = request.env['crm.lead'].sudo().browse(lead_id)
+        user = request.env.user
+        summary = post.get('summary')
+        date_deadline = post.get('date_deadline')
+        note = post.get('note')
+        if lead and summary and date_deadline and lead.user_id.id == user.id:
+            lead.activity_schedule(
+                'mail.mail_activity_data_todo',  # Default type
+                summary=summary,
+                note=note,
+                date_deadline=date_deadline,
+                user_id=user.id
+            )
+        return request.redirect(f'/my/employee/crm/edit/{lead_id}')
