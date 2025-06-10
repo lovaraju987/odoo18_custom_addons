@@ -33,6 +33,33 @@
             <label>Description</label>
             <textarea name="description" class="form-control"><t t-esc="lead.description or ''"/></textarea>
           </div>
+          <div class="mb-2">
+            <label>Probability (%)</label>
+            <input type="number" name="probability" class="form-control" min="0" max="100" step="0.01" t-att-value="lead.probability"/>
+          </div>
+          <div class="mb-2">
+            <label>Expected Closing</label>
+            <input type="date" name="date_deadline" class="form-control" t-att-value="lead.date_deadline"/>
+          </div>
+          <div class="mb-2">
+            <label>Tags</label>
+            <select name="tag_ids" class="form-control" multiple="multiple" style="height: 100px;">
+              <t t-foreach="all_tags" t-as="tag">
+                <option t-att-value="tag.id"
+                        t-if="lead.tag_ids and tag.id in [t.id for t in lead.tag_ids]"
+                        selected="selected">
+                  <t t-esc="tag.name"/>
+                </option>
+                <option t-att-value="tag.id"
+                        t-if="not lead.tag_ids or tag.id not in [t.id for t in lead.tag_ids]">
+                  <t t-esc="tag.name"/>
+                </option>
+              </t>
+            </select>
+            <small class="form-text text-muted">Hold Ctrl (Windows) or Cmd (Mac) to select multiple tags.</small>
+            <label class="mt-2">Add New Tags</label>
+            <input type="text" name="new_tag_names" class="form-control" placeholder="Comma separated (e.g. Product, Service)"/>
+          </div>
           <button type="submit" class="btn btn-primary mt-3">Save</button>
           <a href="/my/employee/crm" class="btn btn-secondary mt-3">Cancel</a>
         </form>

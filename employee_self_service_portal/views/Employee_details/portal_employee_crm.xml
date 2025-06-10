@@ -21,6 +21,9 @@
                 <th>Expected Revenue</th>
                 <th>Deadline</th>
                 <th>Priority</th>
+                <th>Probability</th>
+                <th>Expected Closing</th>
+                <th>Tags</th>
                 <th>Actions</th>
               </tr>
             </thead>
@@ -35,6 +38,12 @@
                   <td><t t-esc="lead.expected_revenue or 0.0"/></td>
                   <td><t t-esc="lead.date_deadline or '-'"/></td>
                   <td><t t-esc="lead.priority or ''"/></td>
+                  <td><t t-esc="lead.probability or 0.0"/>%</td>
+                  <td><t t-esc="lead.date_deadline or '-'"/></td>
+                  <td>
+                    <t t-set="tag_str" t-value="', '.join([tag.name for tag in lead.tag_ids]) if lead.tag_ids else ''"/>
+                    <t t-esc="tag_str"/>
+                  </td>
                   <td>
                     <a t-att-href="'/my/employee/crm/edit/' + str(lead.id)" class="btn btn-sm btn-primary">Edit</a>
                     <form t-att-action="'/my/employee/crm/delete/' + str(lead.id)" method="post" style="display:inline;">
