@@ -30,6 +30,18 @@
             <label>Expected Revenue</label>
             <input type="number" name="expected_revenue" class="form-control" step="0.01"/>
           </div>
+          <div class="mb-2">
+            <label>Stage</label>
+            <select name="stage_id" class="form-control">
+              <t t-foreach="stages" t-as="stage">
+                <option t-att-value="stage.id"><t t-esc="stage.name"/></option>
+              </t>
+            </select>
+          </div>
+          <div class="mb-2">
+            <label>Description</label>
+            <textarea name="description" class="form-control"></textarea>
+          </div>
           <button type="submit" class="btn btn-primary mt-3">Create</button>
           <a href="/my/employee/crm" class="btn btn-secondary mt-3">Cancel</a>
         </form>

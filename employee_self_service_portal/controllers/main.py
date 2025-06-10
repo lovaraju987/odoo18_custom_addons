@@ -183,12 +183,16 @@ class PortalEmployee(http.Controller):
                 'phone': post.get('phone'),
                 'expected_revenue': post.get('expected_revenue') or 0.0,
                 'user_id': user.id,
+                'stage_id': post.get('stage_id') or False,
+                'description': post.get('description'),
             }
             request.env['crm.lead'].sudo().create(vals)
             return request.redirect('/my/employee/crm')
         partners = request.env['res.partner'].sudo().search([], limit=50)
+        stages = request.env['crm.stage'].sudo().search([])
         return request.render('employee_self_service_portal.portal_employee_crm_create', {
             'partners': partners,
+            'stages': stages,
         })
 
     @http.route('/my/employee/crm/edit/<int:lead_id>', type='http', auth='user', website=True, methods=['GET', 'POST'])
@@ -204,6 +208,7 @@ class PortalEmployee(http.Controller):
                 'expected_revenue': post.get('expected_revenue'),
                 'email_from': post.get('email_from'),
                 'phone': post.get('phone'),
+                'description': post.get('description'),
             }
             lead.sudo().write({k: v for k, v in vals.items() if v is not None})
             return request.redirect('/my/employee/crm')
@@ -212,3 +217,11 @@ class PortalEmployee(http.Controller):
             'lead': lead,
             'stages': stages,
         })
+
+    @http.route('/my/employee/crm/delete/<int:lead_id>', type='http', auth='user', website=True, methods=['POST'])
+    def portal_employee_crm_delete(self, lead_id, **post):
+        lead = request.env['crm.lead'].sudo().browse(lead_id)
+        user = request.env.user
+        if lead and lead.user_id.id == user.id:
+            lead.sudo().unlink()
+        return request.redirect('/my/employee/crm')

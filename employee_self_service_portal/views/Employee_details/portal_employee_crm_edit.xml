@@ -29,6 +29,10 @@
             <label>Expected Revenue</label>
             <input type="number" name="expected_revenue" class="form-control" step="0.01" t-att-value="lead.expected_revenue"/>
           </div>
+          <div class="mb-2">
+            <label>Description</label>
+            <textarea name="description" class="form-control"><t t-esc="lead.description or ''"/></textarea>
+          </div>
           <button type="submit" class="btn btn-primary mt-3">Save</button>
           <a href="/my/employee/crm" class="btn btn-secondary mt-3">Cancel</a>
         </form>
