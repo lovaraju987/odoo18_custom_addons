@@ -185,8 +185,21 @@ class PortalEmployee(http.Controller):
                 'user_id': user.id,
                 'stage_id': post.get('stage_id') or False,
                 'description': post.get('description'),
+                'probability': post.get('probability') or 0.0,
+                'date_deadline': post.get('date_deadline') or False,
             }
-            request.env['crm.lead'].sudo().create(vals)
+            lead = request.env['crm.lead'].sudo().create(vals)
+            # Handle tags (many2many)
+            tag_names = post.get('tag_names')
+            if tag_names:
+                tag_list = [name.strip() for name in tag_names.split(',') if name.strip()]
+                tags = request.env['crm.tag'].sudo().search([('name', 'in', tag_list)])
+                # Create missing tags
+                existing_names = set(tags.mapped('name'))
+                for name in tag_list:
+                    if name not in existing_names:
+                        tags += request.env['crm.tag'].sudo().create({'name': name})
+                lead.sudo().write({'tag_ids': [(6, 0, tags.ids)]})
             return request.redirect('/my/employee/crm')
         partners = request.env['res.partner'].sudo().search([], limit=50)
         stages = request.env['crm.stage'].sudo().search([])
@@ -209,13 +222,27 @@ class PortalEmployee(http.Controller):
                 'email_from': post.get('email_from'),
                 'phone': post.get('phone'),
                 'description': post.get('description'),
+                'probability': post.get('probability'),
+                'date_deadline': post.get('date_deadline'),
             }
             lead.sudo().write({k: v for k, v in vals.items() if v is not None})
+            # Handle tags (many2many)
+            tag_names = post.get('tag_names')
+            if tag_names is not None:
+                tag_list = [name.strip() for name in tag_names.split(',') if name.strip()]
+                tags = request.env['crm.tag'].sudo().search([('name', 'in', tag_list)])
+                existing_names = set(tags.mapped('name'))
+                for name in tag_list:
+                    if name not in existing_names:
+                        tags += request.env['crm.tag'].sudo().create({'name': name})
+                lead.sudo().write({'tag_ids': [(6, 0, tags.ids)]})
             return request.redirect('/my/employee/crm')
         stages = request.env['crm.stage'].sudo().search([])
+        all_tags = request.env['crm.tag'].sudo().search([])
         return request.render('employee_self_service_portal.portal_employee_crm_edit', {
             'lead': lead,
             'stages': stages,
+            'all_tags': all_tags,
         })
 
     @http.route('/my/employee/crm/delete/<int:lead_id>', type='http', auth='user', website=True, methods=['POST'])
