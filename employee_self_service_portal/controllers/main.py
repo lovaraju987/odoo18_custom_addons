@@ -17,7 +17,11 @@ def _process_tag_ids(post):
             tag_ids = post.get('tag_ids', [])
         # Always treat as list
         if isinstance(tag_ids, str):
-            tag_ids = [tag_ids]
+            # Handle comma-separated string (Select2 fallback)
+            if ',' in tag_ids:
+                tag_ids = tag_ids.split(',')
+            else:
+                tag_ids = [tag_ids]
     # Defensive: if still not a list, wrap
     if not isinstance(tag_ids, list):
         tag_ids = [tag_ids]
@@ -33,6 +37,12 @@ def _process_tag_ids(post):
             if not tag_rec:
                 tag_rec = request.env[CRM_TAG_MODEL].sudo().create({'name': tag})
             tag_id_list.append(tag_rec.id)
+    # Ensure all are ints (defensive)
+    tag_id_list = [int(t) for t in tag_id_list if t]
+    # Debug: print or log the tag_id_list
+    import logging
+    _logger = logging.getLogger(__name__)
+    _logger.info('ESS Portal: tag_id_list to write: %s', tag_id_list)
     return tag_id_list
 
 class PortalEmployee(http.Controller):
@@ -223,8 +233,8 @@ class PortalEmployee(http.Controller):
             }
             lead = request.env['crm.lead'].sudo().create(vals)
             tag_id_list = _process_tag_ids(post)
-            if tag_id_list:
-                lead.sudo().write({'tag_ids': [(6, 0, tag_id_list)]})
+            # Always update tag_ids, even if empty (to allow clearing all tags)
+            lead.sudo().write({'tag_ids': [(6, 0, tag_id_list)]})
             return request.redirect(CRM_REDIRECT_URL)
         partners = request.env['res.partner'].sudo().search([], limit=50)
         stages = request.env['crm.stage'].sudo().search([])
@@ -277,11 +287,13 @@ class PortalEmployee(http.Controller):
             lead.sudo().write({'tag_ids': [(6, 0, tag_id_list)]})
             return request.redirect(CRM_REDIRECT_URL)
         stages = request.env['crm.stage'].sudo().search([])
+        partners = request.env['res.partner'].sudo().search([], limit=50)
         all_tags = request.env[CRM_TAG_MODEL].sudo().search([])
         return request.render('employee_self_service_portal.portal_employee_crm_edit', {
             'lead': lead,
             'stages': stages,
             'all_tags': all_tags,
+            'partners': partners,
         })
 
     @http.route('/my/employee/crm/delete/<int:lead_id>', type='http', auth='user', website=True, methods=['POST'])

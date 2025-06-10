@@ -70,8 +70,7 @@
                     width: '100%',
                     placeholder: 'Search or add tags',
                     tags: true,
-                    allowClear: true,
-                    tokenSeparators: [',']
+                    allowClear: true
                   });
                 }
               });
