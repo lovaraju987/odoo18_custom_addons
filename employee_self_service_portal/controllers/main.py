@@ -2,6 +2,39 @@
 from odoo import http, fields
 from odoo.http import request
 
+CRM_TAG_MODEL = 'crm.tag'
+CRM_REDIRECT_URL = '/my/employee/crm'
+
+def _process_tag_ids(post):
+    tag_ids = []
+    if hasattr(post, 'getlist'):
+        tag_ids = post.getlist('tag_ids[]')
+        if not tag_ids:
+            tag_ids = post.getlist('tag_ids')
+    else:
+        tag_ids = post.get('tag_ids[]', [])
+        if not tag_ids:
+            tag_ids = post.get('tag_ids', [])
+        # Always treat as list
+        if isinstance(tag_ids, str):
+            tag_ids = [tag_ids]
+    # Defensive: if still not a list, wrap
+    if not isinstance(tag_ids, list):
+        tag_ids = [tag_ids]
+    tag_id_list = []
+    for tag in tag_ids or []:
+        if tag in (None, '', []):
+            continue
+        try:
+            tag_id = int(tag)
+            tag_id_list.append(tag_id)
+        except (ValueError, TypeError):
+            tag_rec = request.env[CRM_TAG_MODEL].sudo().search([('name', '=', tag)], limit=1)
+            if not tag_rec:
+                tag_rec = request.env[CRM_TAG_MODEL].sudo().create({'name': tag})
+            tag_id_list.append(tag_rec.id)
+    return tag_id_list
+
 class PortalEmployee(http.Controller):
     def _get_employee(self):
         return request.env['hr.employee'].sudo().search([('user_id', '=', request.uid)], limit=1)
@@ -189,23 +222,17 @@ class PortalEmployee(http.Controller):
                 'date_deadline': post.get('date_deadline') or False,
             }
             lead = request.env['crm.lead'].sudo().create(vals)
-            # Handle tags (many2many)
-            tag_names = post.get('tag_names')
-            if tag_names:
-                tag_list = [name.strip() for name in tag_names.split(',') if name.strip()]
-                tags = request.env['crm.tag'].sudo().search([('name', 'in', tag_list)])
-                # Create missing tags
-                existing_names = set(tags.mapped('name'))
-                for name in tag_list:
-                    if name not in existing_names:
-                        tags += request.env['crm.tag'].sudo().create({'name': name})
-                lead.sudo().write({'tag_ids': [(6, 0, tags.ids)]})
-            return request.redirect('/my/employee/crm')
+            tag_id_list = _process_tag_ids(post)
+            if tag_id_list:
+                lead.sudo().write({'tag_ids': [(6, 0, tag_id_list)]})
+            return request.redirect(CRM_REDIRECT_URL)
         partners = request.env['res.partner'].sudo().search([], limit=50)
         stages = request.env['crm.stage'].sudo().search([])
+        all_tags = request.env[CRM_TAG_MODEL].sudo().search([])
         return request.render('employee_self_service_portal.portal_employee_crm_create', {
             'partners': partners,
             'stages': stages,
+            'all_tags': all_tags,
         })
 
     @http.route('/my/employee/crm/edit/<int:lead_id>', type='http', auth='user', website=True, methods=['GET', 'POST'])
@@ -213,32 +240,44 @@ class PortalEmployee(http.Controller):
         lead = request.env['crm.lead'].sudo().browse(lead_id)
         user = request.env.user
         if not lead or lead.user_id.id != user.id:
-            return request.redirect('/my/employee/crm')
+            return request.redirect(CRM_REDIRECT_URL)
         if request.httprequest.method == 'POST':
             vals = {
                 'name': post.get('name'),
-                'stage_id': post.get('stage_id'),
-                'expected_revenue': post.get('expected_revenue'),
                 'email_from': post.get('email_from'),
                 'phone': post.get('phone'),
                 'description': post.get('description'),
-                'probability': post.get('probability'),
                 'date_deadline': post.get('date_deadline'),
             }
+            # Convert probability and expected_revenue to float if present
+            prob = post.get('probability')
+            if prob is not None and prob != '':
+                try:
+                    vals['probability'] = float(prob)
+                except Exception:
+                    pass
+            exp_rev = post.get('expected_revenue')
+            if exp_rev is not None and exp_rev != '':
+                try:
+                    vals['expected_revenue'] = float(exp_rev)
+                except Exception:
+                    pass
+            # Validate stage_id
+            stage_id = post.get('stage_id')
+            if stage_id:
+                try:
+                    stage_id_int = int(stage_id)
+                    stage = request.env['crm.stage'].sudo().browse(stage_id_int)
+                    if stage.exists():
+                        vals['stage_id'] = stage_id_int
+                except Exception:
+                    pass
             lead.sudo().write({k: v for k, v in vals.items() if v is not None})
-            # Handle tags (many2many)
-            tag_names = post.get('tag_names')
-            if tag_names is not None:
-                tag_list = [name.strip() for name in tag_names.split(',') if name.strip()]
-                tags = request.env['crm.tag'].sudo().search([('name', 'in', tag_list)])
-                existing_names = set(tags.mapped('name'))
-                for name in tag_list:
-                    if name not in existing_names:
-                        tags += request.env['crm.tag'].sudo().create({'name': name})
-                lead.sudo().write({'tag_ids': [(6, 0, tags.ids)]})
-            return request.redirect('/my/employee/crm')
+            tag_id_list = _process_tag_ids(post)
+            lead.sudo().write({'tag_ids': [(6, 0, tag_id_list)]})
+            return request.redirect(CRM_REDIRECT_URL)
         stages = request.env['crm.stage'].sudo().search([])
-        all_tags = request.env['crm.tag'].sudo().search([])
+        all_tags = request.env[CRM_TAG_MODEL].sudo().search([])
         return request.render('employee_self_service_portal.portal_employee_crm_edit', {
             'lead': lead,
             'stages': stages,
