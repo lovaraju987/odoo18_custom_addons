@@ -133,23 +133,6 @@
           </div>
           <div class="col-md-5">
             <div class="mb-4">
-              <h4>Log note</h4>
-              <form t-att-action="'/my/employee/crm/log_note/' + str(lead.id)" method="post" class="d-flex mb-2">
-                <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
-                <textarea name="note" class="form-control me-2" rows="2" placeholder="Add a note..."></textarea>
-                <button type="submit" class="btn btn-secondary">Log note</button>
-              </form>
-              <div class="mb-2">
-                <h5>Notes</h5>
-                <t t-foreach="lead.message_ids" t-as="msg">
-                  <div class="border rounded p-2 mb-2" style="background:#f8f9fa">
-                    <strong><t t-esc="msg.author_id.name or 'System'"/> <span class="text-muted" style="font-size:0.9em">(<t t-esc="msg.date"/>)</span></strong>
-                    <div><t t-raw="msg.body"/></div>
-                  </div>
-                </t>
-              </div>
-            </div>
-            <div class="mb-4">
               <h4>Activities</h4>
               <t t-foreach="lead.activity_ids" t-as="activity">
                 <div class="border rounded p-2 mb-2" style="background:#e9f7ef">
@@ -166,6 +149,24 @@
                 <button type="submit" class="btn btn-info">Add Activity</button>
               </form>
             </div>
+            <div class="mb-4">
+              <h4>Log note</h4>
+              <form t-att-action="'/my/employee/crm/log_note/' + str(lead.id)" method="post" class="d-flex mb-2">
+                <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
+                <textarea name="note" class="form-control me-2" rows="2" placeholder="Add a note..."></textarea>
+                <button type="submit" class="btn btn-secondary">Log note</button>
+              </form>
+              <div class="mb-2">
+                <h5>Notes</h5>
+                <t t-foreach="lead.message_ids" t-as="msg">
+                  <div class="border rounded p-2 mb-2" style="background:#f8f9fa">
+                    <strong><t t-esc="msg.author_id.name or 'System'"/> <span class="text-muted" style="font-size:0.9em">(<t t-esc="msg.date"/>)</span></strong>
+                    <div><t t-raw="msg.body"/></div>
+                  </div>
+                </t>
+              </div>
+            </div>
+
           </div>
         </div>
       </div>
