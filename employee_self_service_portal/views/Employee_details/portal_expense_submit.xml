@@ -1,0 +1,69 @@
+<odoo>
+    <template id="portal_expense_submit" name="Submit Expense">
+        <t t-call="portal.portal_layout">
+            <div class="o_portal">
+                <h2>Submit Expense</h2>
+                <form action="/my/employee/expenses/submit" method="post" enctype="multipart/form-data" class="form-horizontal">
+                    <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
+                    <div class="form-group row">
+                        <label class="col-sm-2 col-form-label">Date</label>
+                        <div class="col-sm-4">
+                            <input type="date" name="date" class="form-control" required="required"/>
+                        </div>
+                    </div>
+                    <div class="form-group row">
+                        <label class="col-sm-2 col-form-label">Description</label>
+                        <div class="col-sm-6">
+                            <input type="text" name="name" class="form-control" required="required"/>
+                        </div>
+                    </div>
+                    <div class="form-group row">
+                        <label class="col-sm-2 col-form-label">Amount</label>
+                        <div class="col-sm-4">
+                            <input type="number" name="total_amount" class="form-control" step="0.01" min="0" required="required"/>
+                        </div>
+                    </div>
+                    <div class="form-group row">
+                        <label class="col-sm-2 col-form-label">Category</label>
+                        <div class="col-sm-6">
+                            <select name="category_id" class="form-control" required="required">
+                                <option value="">Select Category</option>
+                                <t t-foreach="categories" t-as="cat">
+                                    <option t-att-value="cat.id"><t t-esc="cat.display_name"/></option>
+                                </t>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group row">
+                        <label class="col-sm-2 col-form-label">Attachment</label>
+                        <div class="col-sm-6">
+                            <input type="file" name="attachment" class="form-control"/>
+                        </div>
+                    </div>
+                    <div class="form-group row">
+                        <label class="col-sm-2 col-form-label">Notes</label>
+                        <div class="col-sm-6">
+                            <textarea name="notes" class="form-control" rows="2" placeholder="Enter additional details (optional)"></textarea>
+                        </div>
+                    </div>
+                    <div class="form-group row">
+                        <div class="col-sm-6 offset-sm-2">
+                            <button type="submit" class="btn btn-primary">Submit</button>
+                            <a href="/my/employee/expenses" class="btn btn-secondary ml-2">Cancel</a>
+                        </div>
+                    </div>
+                </form>
+                <t t-if="error">
+                    <div class="alert alert-danger mt-3">
+                        <t t-esc="error"/>
+                    </div>
+                </t>
+                <t t-if="success">
+                    <div class="alert alert-success mt-3">
+                        <t t-esc="success"/>
+                    </div>
+                </t>
+            </div>
+        </t>
+    </template>
+</odoo>

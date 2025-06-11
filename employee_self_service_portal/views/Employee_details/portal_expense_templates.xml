@@ -1,0 +1,72 @@
+<odoo>
+    <template id="portal_expense" name="My Expenses">
+        <t t-call="portal.portal_layout">
+            <div class="o_portal">
+                <h2>Expenses</h2>
+                <a href="/my/employee/expenses/submit" class="btn btn-primary mb-3">Submit New Expense</a>
+                <div class="o_portal_search_panel mb-3">
+                    <form method="get" action="/my/employee/expenses" class="form-inline" style="display: flex; flex-wrap: wrap; align-items: center; gap: 1rem;">
+                        <div class="form-group">
+                            <label for="filter_status" class="mr-1">Status</label>
+                            <select name="status" id="filter_status" class="form-control">
+                                <option value="" t-att-selected="selected_status == ''">All</option>
+                                <option value="draft" t-att-selected="selected_status == 'draft'">Draft</option>
+                                <option value="submit" t-att-selected="selected_status == 'submit'">Submitted</option>
+                                <option value="approve" t-att-selected="selected_status == 'approve'">Approved</option>
+                                <option value="refuse" t-att-selected="selected_status == 'refuse'">Refused</option>
+                                <option value="cancel" t-att-selected="selected_status == 'cancel'">Withdrawn</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="filter_category" class="mr-1">Category</label>
+                            <select name="category" id="filter_category" class="form-control">
+                                <option value="" t-att-selected="selected_category == ''">All</option>
+                                <t t-foreach="categories" t-as="cat">
+                                    <option t-att-value="cat.id" t-att-selected="cat.id == selected_category"> <t t-esc="cat.display_name"/> </option>
+                                </t>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="filter_date" class="mr-1">Date</label>
+                            <input type="date" name="date" id="filter_date" class="form-control" t-att-value="selected_date"/>
+                        </div>
+                        <button type="submit" class="btn btn-primary" style="height: 38px; align-self: flex-end;">Filter</button>
+                    </form>
+                </div>
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Description</th>
+                            <th>Amount</th>
+                            <th>Status</th>
+                            <th>Category</th>
+                            <th>Notes</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <t t-foreach="expenses" t-as="exp">
+                            <tr>
+                                <td><t t-esc="exp.date"/></td>
+                                <td><t t-esc="exp.name"/></td>
+                                <td><t t-esc="'%.2f' % exp.total_amount"/></td>
+                                <td><t t-esc="exp.state.capitalize()"/></td>
+                                <td><t t-esc="exp.product_id.display_name if exp.product_id else ''"/></td>
+                                <td><t t-esc="exp.description or ''"/></td>
+                                <td>
+                                    <t t-if="exp.sheet_id and exp.sheet_id.state == 'submit'">
+                                        <form t-att-action="'/my/employee/expenses/withdraw/%d' % exp.id" method="post" style="display:inline;">
+                                            <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
+                                            <button type="submit" class="btn btn-sm btn-warning">Withdraw</button>
+                                        </form>
+                                    </t>
+                                </td>
+                            </tr>
+                        </t>
+                    </tbody>
+                </table>
+            </div>
+        </t>
+    </template>
+</odoo>

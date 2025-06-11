@@ -514,3 +514,94 @@ class PortalEmployee(http.Controller):
             except Exception:
                 pass
         return request.redirect(f'/my/employee/crm/edit/{lead_id}')
+
+    @http.route(MY_EMPLOYEE_URL + '/expenses', type='http', auth='user', website=True)
+    def portal_expense_history(self, **kwargs):
+        employee = request.env[HR_EMPLOYEE_MODEL].sudo().search([('user_id', '=', request.uid)], limit=1)
+        domain = [('employee_id', '=', employee.id)]
+        # Filtering logic
+        status = kwargs.get('status')
+        if status:
+            if status == 'withdrawn' or status == 'cancel':
+                domain += [('sheet_id.state', '=', 'cancel')]
+            else:
+                domain += [('sheet_id.state', '=', status)]
+        category = kwargs.get('category')
+        if category:
+            domain += [('product_id', '=', int(category))]
+        date = kwargs.get('date')
+        if date:
+            domain += [('date', '=', date)]
+        expenses = request.env['hr.expense'].sudo().search(domain, order='date desc', limit=50)
+        categories = request.env['product.product'].sudo().search([('can_be_expensed', '=', True)])
+        return request.render('employee_self_service_portal.portal_expense', {
+            'expenses': expenses,
+            'employee': employee,
+            'categories': categories,
+            'selected_status': status or '',
+            'selected_category': category or '',  # Pass as string
+            'selected_date': date or '',
+        })
+
+    @http.route(MY_EMPLOYEE_URL + '/expenses/submit', type='http', auth='user', website=True, methods=['GET', 'POST'])
+    def portal_expense_submit(self, **post):
+        employee = request.env[HR_EMPLOYEE_MODEL].sudo().search([('user_id', '=', request.uid)], limit=1)
+        # Use product_id as category (many2one to product.product, can_be_expensed=True)
+        categories = request.env['product.product'].sudo().search([('can_be_expensed', '=', True)])
+        error = None
+        success = None
+        if request.httprequest.method == 'POST':
+            name = post.get('name')
+            date = post.get('date')
+            total_amount = post.get('total_amount')
+            category_id = post.get('category_id')
+            notes = post.get('notes')  # Get notes from form
+            attachment = request.httprequest.files.get('attachment')
+            if not (name and date and total_amount and category_id):
+                error = 'All fields except attachment are required.'
+            else:
+                try:
+                    vals = {
+                        'name': name,
+                        'date': date,
+                        'employee_id': employee.id,
+                        'total_amount': float(total_amount),
+                        'product_id': int(category_id),
+                        'description': notes,  # Save notes to description field
+                    }
+                    expense = request.env['hr.expense'].sudo().create(vals)
+                    # Find or create an open expense report for this employee
+                    sheet = request.env['hr.expense.sheet'].sudo().search([
+                        ('employee_id', '=', employee.id),
+                        ('state', '=', 'draft')
+                    ], limit=1)
+                    if not sheet:
+                        sheet = request.env['hr.expense.sheet'].sudo().create({
+                            'name': 'Expense Report',  # Required field
+                            'employee_id': employee.id,
+                            'expense_line_ids': [(4, expense.id)],
+                        })
+                    else:
+                        sheet.write({'expense_line_ids': [(4, expense.id)]})
+                    # Submit the report (send to manager)
+                    if sheet.state == 'draft':
+                        sheet.action_submit_sheet()
+                    success = 'Expense submitted successfully.'
+                except Exception as e:
+                    error = 'Error submitting expense: %s' % str(e)
+        return request.render('employee_self_service_portal.portal_expense_submit', {
+            'employee': employee,
+            'categories': categories,
+            'error': error,
+            'success': success,
+        })
+
+    @http.route(MY_EMPLOYEE_URL + '/expenses/withdraw/<int:expense_id>', type='http', auth='user', website=True, methods=['POST'])
+    def portal_expense_withdraw(self, expense_id, **post):
+        expense = request.env['hr.expense'].sudo().browse(expense_id)
+        employee = request.env[HR_EMPLOYEE_MODEL].sudo().search([('user_id', '=', request.uid)], limit=1)
+        # Only allow withdraw if expense is in submitted state and belongs to the current employee
+        if expense and expense.employee_id.id == employee.id and expense.sheet_id and expense.sheet_id.state == 'submit':
+            # Set the report to cancelled (withdraw)
+            expense.sheet_id.write({'state': 'cancel'})
+        return request.redirect(MY_EMPLOYEE_URL + '/expenses')

@@ -3,4 +3,5 @@
     <menuitem id="menu_portal_employee" name="My Profile" parent="menu_portal_root" action="action_portal_employee"/>
     <menuitem id="menu_portal_attendance" name="My Attendance" parent="menu_portal_root" action="action_portal_attendance"/>
     <menuitem id="menu_portal_crm" name="My CRM" parent="menu_portal_root" action="action_portal_crm"/>
+    <menuitem id="menu_portal_expense" name="Expenses" parent="menu_portal_employee" sequence="40"/>
 </odoo>
