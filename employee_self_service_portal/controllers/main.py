@@ -529,14 +529,17 @@ class PortalEmployee(http.Controller):
     @http.route(MY_EMPLOYEE_URL + '/expenses/submit', type='http', auth='user', website=True, methods=['GET', 'POST'])
     def portal_expense_submit(self, **post):
         employee = request.env[HR_EMPLOYEE_MODEL].sudo().search([('user_id', '=', request.uid)], limit=1)
+        # Use product_id as category (many2one to product.product, can_be_expensed=True)
+        categories = request.env['product.product'].sudo().search([('can_be_expensed', '=', True)])
         error = None
         success = None
         if request.httprequest.method == 'POST':
             name = post.get('name')
             date = post.get('date')
             total_amount = post.get('total_amount')
+            category_id = post.get('category_id')
             attachment = request.httprequest.files.get('attachment')
-            if not (name and date and total_amount):
+            if not (name and date and total_amount and category_id):
                 error = 'All fields except attachment are required.'
             else:
                 try:
@@ -545,6 +548,7 @@ class PortalEmployee(http.Controller):
                         'date': date,
                         'employee_id': employee.id,
                         'total_amount': float(total_amount),
+                        'product_id': int(category_id),
                     }
                     expense = request.env['hr.expense'].sudo().create(vals)
                     if attachment and attachment.filename:
@@ -562,6 +566,7 @@ class PortalEmployee(http.Controller):
                     error = 'Error submitting expense: %s' % str(e)
         return request.render('employee_self_service_portal.portal_expense_submit', {
             'employee': employee,
+            'categories': categories,
             'error': error,
             'success': success,
         })
