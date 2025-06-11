@@ -538,6 +538,9 @@ class PortalEmployee(http.Controller):
             'expenses': expenses,
             'employee': employee,
             'categories': categories,
+            'selected_status': status or '',
+            'selected_category': category or '',  # Pass as string
+            'selected_date': date or '',
         })
 
     @http.route(MY_EMPLOYEE_URL + '/expenses/submit', type='http', auth='user', website=True, methods=['GET', 'POST'])
