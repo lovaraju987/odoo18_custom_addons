@@ -1,9 +1,17 @@
 # __manifest__.py
 {
-    "name": "Employee Self Service Portal",
+    "name": "Employee Self Service Portal MLR",
     "version": "1.0",
     "depends": ["portal", "hr", "hr_attendance", "om_hr_payroll", "hr_holidays"],
     "category": "Human Resources",
+    "author": "Lovaraju Mylapalli",
+    "website": "https://www.mlr.com",
+    "description": """
+        Employee Self Service Portal MLR
+        =================================
+        This module provides a portal for employees to manage their personal information, attendance, and other HR-related tasks.
+    """,
+    "images": ["static/description/banner.png"],
     "summary": "Allow employees to access and manage their information via portal access.",
     "data": [
         "security/ir.model.access.csv",
