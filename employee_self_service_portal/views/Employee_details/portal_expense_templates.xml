@@ -1,0 +1,29 @@
+<odoo>
+    <template id="portal_expense" name="My Expenses">
+        <t t-call="portal.portal_layout">
+            <div class="o_portal">
+                <h2>Expenses</h2>
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Description</th>
+                            <th>Amount</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <t t-foreach="expenses" t-as="exp">
+                            <tr>
+                                <td><t t-esc="exp.date"/></td>
+                                <td><t t-esc="exp.name"/></td>
+                                <td><t t-esc="'%.2f' % exp.total_amount"/></td>
+                                <td><t t-esc="exp.state.capitalize()"/></td>
+                            </tr>
+                        </t>
+                    </tbody>
+                </table>
+            </div>
+        </t>
+    </template>
+</odoo>

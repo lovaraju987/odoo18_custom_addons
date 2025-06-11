@@ -33,6 +33,7 @@
         "views/employee_details/portal_employee_crm_create.xml",  # CRM create form
         "views/employee_details/portal_employee_crm_edit.xml",    # CRM edit form
         "views/employee_details/portal_employee_crm_activity_edit.xml",  # Activity edit form for CRM
+        "views/employee_details/portal_expense_templates.xml",
     ],
     "installable": True,
     "application": True,

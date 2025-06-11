@@ -514,3 +514,14 @@ class PortalEmployee(http.Controller):
             except Exception:
                 pass
         return request.redirect(f'/my/employee/crm/edit/{lead_id}')
+
+    @http.route(MY_EMPLOYEE_URL + '/expenses', type='http', auth='user', website=True)
+    def portal_expense_history(self, **kwargs):
+        employee = request.env[HR_EMPLOYEE_MODEL].sudo().search([('user_id', '=', request.uid)], limit=1)
+        expenses = request.env['hr.expense'].sudo().search([
+            ('employee_id', '=', employee.id)
+        ], order='date desc', limit=50)
+        return request.render('employee_self_service_portal.portal_expense', {
+            'expenses': expenses,
+            'employee': employee,
+        })
