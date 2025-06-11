@@ -525,3 +525,43 @@ class PortalEmployee(http.Controller):
             'expenses': expenses,
             'employee': employee,
         })
+
+    @http.route(MY_EMPLOYEE_URL + '/expenses/submit', type='http', auth='user', website=True, methods=['GET', 'POST'])
+    def portal_expense_submit(self, **post):
+        employee = request.env[HR_EMPLOYEE_MODEL].sudo().search([('user_id', '=', request.uid)], limit=1)
+        error = None
+        success = None
+        if request.httprequest.method == 'POST':
+            name = post.get('name')
+            date = post.get('date')
+            total_amount = post.get('total_amount')
+            attachment = request.httprequest.files.get('attachment')
+            if not (name and date and total_amount):
+                error = 'All fields except attachment are required.'
+            else:
+                try:
+                    vals = {
+                        'name': name,
+                        'date': date,
+                        'employee_id': employee.id,
+                        'total_amount': float(total_amount),
+                    }
+                    expense = request.env['hr.expense'].sudo().create(vals)
+                    if attachment and attachment.filename:
+                        file_content = attachment.read()
+                        request.env['ir.attachment'].sudo().create({
+                            'name': attachment.filename,
+                            'datas': file_content.encode('base64') if hasattr(file_content, 'encode') else file_content,
+                            'res_model': 'hr.expense',
+                            'res_id': expense.id,
+                            'mimetype': attachment.mimetype,
+                            'type': 'binary',
+                        })
+                    success = 'Expense submitted successfully.'
+                except Exception as e:
+                    error = 'Error submitting expense: %s' % str(e)
+        return request.render('employee_self_service_portal.portal_expense_submit', {
+            'employee': employee,
+            'error': error,
+            'success': success,
+        })

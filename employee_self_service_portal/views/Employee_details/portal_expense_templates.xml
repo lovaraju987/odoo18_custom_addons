@@ -3,6 +3,7 @@
         <t t-call="portal.portal_layout">
             <div class="o_portal">
                 <h2>Expenses</h2>
+                <a href="/my/employee/expenses/submit" class="btn btn-primary mb-3">Submit New Expense</a>
                 <table class="table table-striped">
                     <thead>
                         <tr>
