@@ -551,16 +551,21 @@ class PortalEmployee(http.Controller):
                         'product_id': int(category_id),
                     }
                     expense = request.env['hr.expense'].sudo().create(vals)
-                    if attachment and attachment.filename:
-                        file_content = attachment.read()
-                        request.env['ir.attachment'].sudo().create({
-                            'name': attachment.filename,
-                            'datas': file_content.encode('base64') if hasattr(file_content, 'encode') else file_content,
-                            'res_model': 'hr.expense',
-                            'res_id': expense.id,
-                            'mimetype': attachment.mimetype,
-                            'type': 'binary',
+                    # Find or create an open expense report for this employee
+                    sheet = request.env['hr.expense.sheet'].sudo().search([
+                        ('employee_id', '=', employee.id),
+                        ('state', '=', 'draft')
+                    ], limit=1)
+                    if not sheet:
+                        sheet = request.env['hr.expense.sheet'].sudo().create({
+                            'employee_id': employee.id,
+                            'expense_line_ids': [(4, expense.id)],
                         })
+                    else:
+                        sheet.write({'expense_line_ids': [(4, expense.id)]})
+                    # Submit the report (send to manager)
+                    if sheet.state == 'draft':
+                        sheet.action_submit_sheet()
                     success = 'Expense submitted successfully.'
                 except Exception as e:
                     error = 'Error submitting expense: %s' % str(e)
