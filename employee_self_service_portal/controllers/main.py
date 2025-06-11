@@ -61,6 +61,7 @@ class PortalEmployee(http.Controller):
         try:
             in_latitude = post.get('in_latitude')
             in_longitude = post.get('in_longitude')
+            check_in_location = post.get('check_in_location')
             vals = {
                 'employee_id': employee.id,
                 'check_in': fields.Datetime.now(),
@@ -69,6 +70,8 @@ class PortalEmployee(http.Controller):
                 vals['in_latitude'] = in_latitude
             if in_longitude:
                 vals['in_longitude'] = in_longitude
+            if check_in_location:
+                vals['check_in_location'] = check_in_location
             request.env[HR_ATTENDANCE_MODEL].sudo().create(vals)
         except Exception as e:
             import logging
@@ -87,6 +90,7 @@ class PortalEmployee(http.Controller):
         if last_attendance and not last_attendance.check_out:
             out_latitude = post.get('out_latitude')
             out_longitude = post.get('out_longitude')
+            check_out_location = post.get('check_out_location')
             vals = {
                 'check_out': fields.Datetime.now(),
             }
@@ -94,7 +98,15 @@ class PortalEmployee(http.Controller):
                 vals['out_latitude'] = out_latitude
             if out_longitude:
                 vals['out_longitude'] = out_longitude
+            if check_out_location:
+                vals['check_out_location'] = check_out_location
             last_attendance.sudo().write(vals)
+            # Debug log to check values after checkout
+            import logging
+            _logger = logging.getLogger(__name__)
+            # Re-browse the record to get updated computed fields
+            updated_attendance = request.env[HR_ATTENDANCE_MODEL].sudo().browse(last_attendance.id)
+            _logger.info(f"Attendance Debug: check_in={updated_attendance.check_in}, check_out={updated_attendance.check_out}, worked_hours={updated_attendance.worked_hours}")
         return request.redirect(MY_EMPLOYEE_URL + '/attendance')
     
     @http.route(MY_EMPLOYEE_URL + '/attendance', type='http', auth='user', website=True)

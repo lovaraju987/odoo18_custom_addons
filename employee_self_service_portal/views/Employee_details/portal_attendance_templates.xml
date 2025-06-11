@@ -12,12 +12,14 @@
                         <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
                         <input type="hidden" name="in_latitude" id="in_latitude" />
                         <input type="hidden" name="in_longitude" id="in_longitude" />
+                        <input type="hidden" name="check_in_location" id="check_in_location" />
                         <button type="submit" class="btn btn-success" t-att-disabled="today_att and not today_att.check_out">Check In</button>
                     </form>
                     <form id="checkout-form" action="/my/employee/attendance/checkout" method="post" style="display:inline;">
                         <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
                         <input type="hidden" name="out_latitude" id="out_latitude" />
                         <input type="hidden" name="out_longitude" id="out_longitude" />
+                        <input type="hidden" name="check_out_location" id="check_out_location" />
                         <button type="submit" class="btn btn-danger" t-att-disabled="not today_att or today_att.check_out">Check Out</button>
                     </form>
                 </div>
@@ -51,12 +53,8 @@
                             <th>Date</th>
                             <th>Check-In Time</th>
                             <th>Check-In Location</th>
-                            <th>Check-In Latitude</th>
-                            <th>Check-In Longitude</th>
                             <th>Check-Out Time</th>
                             <th>Check-Out Location</th>
-                            <th>Check-Out Latitude</th>
-                            <th>Check-Out Longitude</th>
                             <th>Worked Hours</th>
                         </tr>
                     </thead>
@@ -84,20 +82,6 @@
                             </t>
                             <t t-else="">-</t>
                           </td>
-                          <!-- Check-In Latitude -->
-                          <td>
-                            <t t-if="att.in_latitude">
-                              <t t-esc="att.in_latitude"/>
-                            </t>
-                            <t t-else="">-</t>
-                          </td>
-                          <!-- Check-In Longitude -->
-                          <td>
-                            <t t-if="att.in_longitude">
-                              <t t-esc="att.in_longitude"/>
-                            </t>
-                            <t t-else="">-</t>
-                          </td>
                           <!-- Check-Out Time -->
                           <td>
                             <t t-if="att.check_out">
@@ -109,20 +93,6 @@
                           <td>
                             <t t-if="'check_out_location' in att and att.check_out_location">
                               <t t-esc="att.check_out_location"/>
-                            </t>
-                            <t t-else="">-</t>
-                          </td>
-                          <!-- Check-Out Latitude -->
-                          <td>
-                            <t t-if="att.out_latitude">
-                              <t t-esc="att.out_latitude"/>
-                            </t>
-                            <t t-else="">-</t>
-                          </td>
-                          <!-- Check-Out Longitude -->
-                          <td>
-                            <t t-if="att.out_longitude">
-                              <t t-esc="att.out_longitude"/>
                             </t>
                             <t t-else="">-</t>
                           </td>
@@ -139,43 +109,103 @@
                 </table>
             </div>
             <script>
-            // Geolocation for Check In
-            const checkinForm = document.getElementById('checkin-form');
-            if (checkinForm) {
-                checkinForm.addEventListener('submit', function(e) {
-                    if (navigator.geolocation) {
+            <![CDATA[
+            document.addEventListener('DOMContentLoaded', function() {
+                console.log("Attendance JS loaded");
+                // Helper: Reverse geocode using Nominatim (OpenStreetMap)
+                function reverseGeocode(lat, lon, callback) {
+                    fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`)
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data && data.display_name) {
+                                callback(data.display_name);
+                            } else {
+                                callback('');
+                            }
+                        })
+                        .catch(() => callback(''));
+                }
+                // Geolocation for Check In
+                const checkinForm = document.getElementById('checkin-form');
+                if (checkinForm) {
+                    checkinForm.addEventListener('submit', function(e) {
+                        console.log("Check-in handler triggered");
                         e.preventDefault();
-                        navigator.geolocation.getCurrentPosition(function(position) {
-                            document.getElementById('in_latitude').value = position.coords.latitude;
-                            document.getElementById('in_longitude').value = position.coords.longitude;
-                            document.getElementById('geo-error').classList.add('d-none');
-                            checkinForm.submit();
-                        }, function() {
-                            // If denied or failed, show error and do not submit
+                        if (navigator.geolocation) {
+                            navigator.geolocation.getCurrentPosition(function(position) {
+                                document.getElementById('in_latitude').value = position.coords.latitude;
+                                document.getElementById('in_longitude').value = position.coords.longitude;
+                                document.getElementById('geo-error').classList.add('d-none');
+                                reverseGeocode(position.coords.latitude, position.coords.longitude, function(address) {
+                                    document.getElementById('check_in_location').value = address;
+                                    checkinForm.submit();
+                                });
+                            }, function() {
+                                document.getElementById('geo-error').classList.remove('d-none');
+                            });
+                        } else {
                             document.getElementById('geo-error').classList.remove('d-none');
-                        });
-                    }
-                });
-            }
-            // Geolocation for Check Out
-            const checkoutForm = document.getElementById('checkout-form');
-            if (checkoutForm) {
-                checkoutForm.addEventListener('submit', function(e) {
-                    if (navigator.geolocation) {
+                        }
+                    });
+                } else {
+                    console.log("Check-in form not found");
+                }
+                // Geolocation for Check Out
+                const checkoutForm = document.getElementById('checkout-form');
+                if (checkoutForm) {
+                    checkoutForm.addEventListener('submit', function(e) {
+                        console.log("Check-out handler triggered");
                         e.preventDefault();
-                        navigator.geolocation.getCurrentPosition(function(position) {
-                            document.getElementById('out_latitude').value = position.coords.latitude;
-                            document.getElementById('out_longitude').value = position.coords.longitude;
-                            document.getElementById('geo-error').classList.add('d-none');
-                            checkoutForm.submit();
-                        }, function() {
-                            // If denied or failed, show error and do not submit
+                        if (navigator.geolocation) {
+                            navigator.geolocation.getCurrentPosition(function(position) {
+                                document.getElementById('out_latitude').value = position.coords.latitude;
+                                document.getElementById('out_longitude').value = position.coords.longitude;
+                                document.getElementById('geo-error').classList.add('d-none');
+                                reverseGeocode(position.coords.latitude, position.coords.longitude, function(address) {
+                                    document.getElementById('check_out_location').value = address;
+                                    checkoutForm.submit();
+                                });
+                            }, function() {
+                                document.getElementById('geo-error').classList.remove('d-none');
+                            });
+                        } else {
                             document.getElementById('geo-error').classList.remove('d-none');
-                        });
-                    }
-                });
-            }
+                        }
+                    });
+                } else {
+                    console.log("Check-out form not found");
+                }
+            });
+            ]]>
             </script>
         </t>
     </template>
+
+    <record id="view_hr_attendance_tree_inherit_ess" model="ir.ui.view">
+        <field name="name">hr.attendance.tree.ess.location</field>
+        <field name="model">hr.attendance</field>
+        <field name="inherit_id" ref="hr_attendance.view_attendance_tree"/>
+        <field name="arch" type="xml">
+            <field name="check_in" position="after">
+                <field name="check_in_location"/>
+            </field>
+            <field name="check_out" position="after">
+                <field name="check_out_location"/>
+            </field>
+        </field>
+    </record>
+
+    <record id="view_hr_attendance_form_inherit_ess" model="ir.ui.view">
+        <field name="name">hr.attendance.form.ess.location</field>
+        <field name="model">hr.attendance</field>
+        <field name="inherit_id" ref="hr_attendance.hr_attendance_view_form"/>
+        <field name="arch" type="xml">
+            <field name="check_in" position="after">
+                <field name="check_in_location"/>
+            </field>
+            <field name="check_out" position="after">
+                <field name="check_out_location"/>
+            </field>
+        </field>
+    </record>
 </odoo>
