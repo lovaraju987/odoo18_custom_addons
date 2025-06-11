@@ -582,6 +582,6 @@ class PortalEmployee(http.Controller):
         employee = request.env[HR_EMPLOYEE_MODEL].sudo().search([('user_id', '=', request.uid)], limit=1)
         # Only allow withdraw if expense is in submitted state and belongs to the current employee
         if expense and expense.employee_id.id == employee.id and expense.sheet_id and expense.sheet_id.state == 'submit':
-            # Set the report back to draft (withdraw)
-            expense.sheet_id.write({'state': 'draft'})
+            # Set the report to cancelled (withdraw)
+            expense.sheet_id.write({'state': 'cancel'})
         return request.redirect(MY_EMPLOYEE_URL + '/expenses')
