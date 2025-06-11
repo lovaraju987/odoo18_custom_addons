@@ -538,6 +538,7 @@ class PortalEmployee(http.Controller):
             date = post.get('date')
             total_amount = post.get('total_amount')
             category_id = post.get('category_id')
+            notes = post.get('notes')  # Get notes from form
             attachment = request.httprequest.files.get('attachment')
             if not (name and date and total_amount and category_id):
                 error = 'All fields except attachment are required.'
@@ -549,6 +550,7 @@ class PortalEmployee(http.Controller):
                         'employee_id': employee.id,
                         'total_amount': float(total_amount),
                         'product_id': int(category_id),
+                        'description': notes,  # Save notes to description field
                     }
                     expense = request.env['hr.expense'].sudo().create(vals)
                     # Find or create an open expense report for this employee
@@ -558,6 +560,7 @@ class PortalEmployee(http.Controller):
                     ], limit=1)
                     if not sheet:
                         sheet = request.env['hr.expense.sheet'].sudo().create({
+                            'name': 'Expense Report',  # Required field
                             'employee_id': employee.id,
                             'expense_line_ids': [(4, expense.id)],
                         })

@@ -12,6 +12,7 @@
                             <th>Amount</th>
                             <th>Status</th>
                             <th>Category</th>
+                            <th>Notes</th>
                             <th></th>
                         </tr>
                     </thead>
@@ -23,6 +24,7 @@
                                 <td><t t-esc="'%.2f' % exp.total_amount"/></td>
                                 <td><t t-esc="exp.state.capitalize()"/></td>
                                 <td><t t-esc="exp.product_id.display_name if exp.product_id else ''"/></td>
+                                <td><t t-esc="exp.description or ''"/></td>
                                 <td>
                                     <t t-if="exp.sheet_id and exp.sheet_id.state == 'submit'">
                                         <form t-att-action="'/my/employee/expenses/withdraw/%d' % exp.id" method="post" style="display:inline;">
