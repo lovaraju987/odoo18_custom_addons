@@ -518,12 +518,26 @@ class PortalEmployee(http.Controller):
     @http.route(MY_EMPLOYEE_URL + '/expenses', type='http', auth='user', website=True)
     def portal_expense_history(self, **kwargs):
         employee = request.env[HR_EMPLOYEE_MODEL].sudo().search([('user_id', '=', request.uid)], limit=1)
-        expenses = request.env['hr.expense'].sudo().search([
-            ('employee_id', '=', employee.id)
-        ], order='date desc', limit=50)
+        domain = [('employee_id', '=', employee.id)]
+        # Filtering logic
+        status = kwargs.get('status')
+        if status:
+            if status == 'withdrawn' or status == 'cancel':
+                domain += [('sheet_id.state', '=', 'cancel')]
+            else:
+                domain += [('sheet_id.state', '=', status)]
+        category = kwargs.get('category')
+        if category:
+            domain += [('product_id', '=', int(category))]
+        date = kwargs.get('date')
+        if date:
+            domain += [('date', '=', date)]
+        expenses = request.env['hr.expense'].sudo().search(domain, order='date desc', limit=50)
+        categories = request.env['product.product'].sudo().search([('can_be_expensed', '=', True)])
         return request.render('employee_self_service_portal.portal_expense', {
             'expenses': expenses,
             'employee': employee,
+            'categories': categories,
         })
 
     @http.route(MY_EMPLOYEE_URL + '/expenses/submit', type='http', auth='user', website=True, methods=['GET', 'POST'])
