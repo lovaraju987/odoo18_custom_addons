@@ -46,6 +46,22 @@
                         </div>
                     </div>
                 </t>
+                <h4>Attendance Details</h4>
+                <form method="get" action="/my/employee/attendance" class="mb-3 d-flex gap-2 align-items-center">
+                    <label for="month" class="me-2">Month:</label>
+                    <select name="month" id="month" class="form-select w-auto me-2">
+                        <t t-foreach="months" t-as="m">
+                            <option t-att-value="m['value']" t-att-selected="m['value'] == selected_month"> <t t-esc="m['name']"/> </option>
+                        </t>
+                    </select>
+                    <label for="year" class="me-2">Year:</label>
+                    <select name="year" id="year" class="form-select w-auto me-2">
+                        <t t-foreach="years" t-as="y">
+                            <option t-att-value="y" t-att-selected="y == selected_year"> <t t-esc="y"/> </option>
+                        </t>
+                    </select>
+                    <button type="submit" class="btn btn-dark">Filter</button>
+                </form>
                 <h4>Recent Attendances</h4>
                 <table class="table table-striped">
                     <thead>
