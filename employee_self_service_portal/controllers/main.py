@@ -101,6 +101,12 @@ class PortalEmployee(http.Controller):
             if check_out_location:
                 vals['check_out_location'] = check_out_location
             last_attendance.sudo().write(vals)
+            # Debug log to check values after checkout
+            import logging
+            _logger = logging.getLogger(__name__)
+            # Re-browse the record to get updated computed fields
+            updated_attendance = request.env[HR_ATTENDANCE_MODEL].sudo().browse(last_attendance.id)
+            _logger.info(f"Attendance Debug: check_in={updated_attendance.check_in}, check_out={updated_attendance.check_out}, worked_hours={updated_attendance.worked_hours}")
         return request.redirect(MY_EMPLOYEE_URL + '/attendance')
     
     @http.route(MY_EMPLOYEE_URL + '/attendance', type='http', auth='user', website=True)
