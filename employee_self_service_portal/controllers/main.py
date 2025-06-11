@@ -113,18 +113,38 @@ class PortalEmployee(http.Controller):
     def portal_attendance_history(self, **kwargs):
         from datetime import datetime
         employee = request.env[HR_EMPLOYEE_MODEL].sudo().search([('user_id', '=', request.uid)], limit=1)
-        attendances = request.env[HR_ATTENDANCE_MODEL].sudo().search([
-            ('employee_id', '=', employee.id)
-        ], order='check_in desc', limit=20)
+        now = datetime.now()
+        # Use current month/year as default if not provided
+        month = int(kwargs.get('month', now.month))
+        year = int(kwargs.get('year', now.year))
+        domain = [('employee_id', '=', employee.id)]
+        if month and year:
+            from calendar import monthrange
+            start_date = datetime(year, month, 1)
+            end_date = datetime(year, month, monthrange(year, month)[1], 23, 59, 59)
+            domain += [('check_in', '>=', start_date.strftime('%Y-%m-%d 00:00:00')),
+                       ('check_in', '<=', end_date.strftime('%Y-%m-%d 23:59:59'))]
+        attendances = request.env[HR_ATTENDANCE_MODEL].sudo().search(
+            domain, order='check_in desc', limit=20)
         today_att = None
-        today_str = datetime.now().strftime('%Y-%m-%d')
+        today_str = now.strftime('%Y-%m-%d')
         if attendances and attendances[0].check_in:
             if attendances[0].check_in.strftime('%Y-%m-%d') == today_str:
                 today_att = attendances[0]
+        # For dropdowns
+        current_year = now.year
+        years = list(range(current_year - 5, current_year + 2))
+        months = [
+            {'value': i, 'name': datetime(2000, i, 1).strftime('%B')} for i in range(1, 13)
+        ]
         return request.render('employee_self_service_portal.portal_attendance', {
             'attendances': attendances,
             'employee': employee,
             'today_att': today_att,
+            'selected_month': month,
+            'selected_year': year,
+            'years': years,
+            'months': months,
         })
 
     @http.route(MY_EMPLOYEE_URL + '/edit', type='http', auth='user', website=True, methods=['GET', 'POST'])
