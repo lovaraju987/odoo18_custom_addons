@@ -8,7 +8,6 @@ Feature	Description
 🗓 Leaves	Apply and track leave status
 📊 Timesheets	View submitted hours
 📢 Announcements	See internal communications
-📋 Tasks	Assigned tasks or projects
 💰 Expenses	Submit and track reimbursements
 ________________________________________
 ✅ How You Can Build a Similar ESS Portal for Free
@@ -25,7 +24,6 @@ Attendance	hr_attendance	Button: Check-in / Check-out
 View Payslips	hr_payslip	List/filter payslips by employee_id
 Leave Requests	hr_holidays	Show approved leaves
 Timesheet View (optional)	project_timesheet	Display read-only timesheets
-Task Overview (optional)	project	List assigned tasks from project.task
 Expense Requests (optional)	hr_expense	Submit/view expenses linked to employee
 ________________________________________
 🧱 Technical Steps
