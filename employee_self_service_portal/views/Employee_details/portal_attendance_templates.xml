@@ -53,12 +53,8 @@
                             <th>Date</th>
                             <th>Check-In Time</th>
                             <th>Check-In Location</th>
-                            <th>Check-In Latitude</th>
-                            <th>Check-In Longitude</th>
                             <th>Check-Out Time</th>
                             <th>Check-Out Location</th>
-                            <th>Check-Out Latitude</th>
-                            <th>Check-Out Longitude</th>
                             <th>Worked Hours</th>
                         </tr>
                     </thead>
@@ -86,20 +82,6 @@
                             </t>
                             <t t-else="">-</t>
                           </td>
-                          <!-- Check-In Latitude -->
-                          <td>
-                            <t t-if="att.in_latitude">
-                              <t t-esc="att.in_latitude"/>
-                            </t>
-                            <t t-else="">-</t>
-                          </td>
-                          <!-- Check-In Longitude -->
-                          <td>
-                            <t t-if="att.in_longitude">
-                              <t t-esc="att.in_longitude"/>
-                            </t>
-                            <t t-else="">-</t>
-                          </td>
                           <!-- Check-Out Time -->
                           <td>
                             <t t-if="att.check_out">
@@ -111,20 +93,6 @@
                           <td>
                             <t t-if="'check_out_location' in att and att.check_out_location">
                               <t t-esc="att.check_out_location"/>
-                            </t>
-                            <t t-else="">-</t>
-                          </td>
-                          <!-- Check-Out Latitude -->
-                          <td>
-                            <t t-if="att.out_latitude">
-                              <t t-esc="att.out_latitude"/>
-                            </t>
-                            <t t-else="">-</t>
-                          </td>
-                          <!-- Check-Out Longitude -->
-                          <td>
-                            <t t-if="att.out_longitude">
-                              <t t-esc="att.out_longitude"/>
                             </t>
                             <t t-else="">-</t>
                           </td>
@@ -219,13 +187,9 @@
         <field name="inherit_id" ref="hr_attendance.view_attendance_tree"/>
         <field name="arch" type="xml">
             <field name="check_in" position="after">
-                <field name="in_latitude"/>
-                <field name="in_longitude"/>
                 <field name="check_in_location"/>
             </field>
             <field name="check_out" position="after">
-                <field name="out_latitude"/>
-                <field name="out_longitude"/>
                 <field name="check_out_location"/>
             </field>
         </field>
@@ -237,13 +201,9 @@
         <field name="inherit_id" ref="hr_attendance.hr_attendance_view_form"/>
         <field name="arch" type="xml">
             <field name="check_in" position="after">
-                <field name="in_latitude"/>
-                <field name="in_longitude"/>
                 <field name="check_in_location"/>
             </field>
             <field name="check_out" position="after">
-                <field name="out_latitude"/>
-                <field name="out_longitude"/>
                 <field name="check_out_location"/>
             </field>
         </field>
