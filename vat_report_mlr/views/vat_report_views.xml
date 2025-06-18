@@ -1,0 +1,25 @@
+<odoo>
+    <record id="view_vat_return_report_wizard" model="ir.ui.view">
+        <field name="name">vat.return.report.form</field>
+        <field name="model">vat.return.report</field>
+        <field name="arch" type="xml">
+            <form string="VAT Return Report">
+                <group>
+                    <field name="date_from"/>
+                    <field name="date_to"/>
+                </group>
+                <footer>
+                    <button name="print_report" type="object" string="Print Report" class="btn-primary"/>
+                    <button string="Cancel" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+    <record id="action_vat_return_report" model="ir.actions.act_window">
+        <field name="name">VAT Return Report</field>
+        <field name="res_model">vat.return.report</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+    <menuitem id="menu_vat_return_report" name="VAT Return Report" parent="account.menu_finance_reports" action="action_vat_return_report"/>
+</odoo>
