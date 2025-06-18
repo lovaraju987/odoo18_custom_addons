@@ -9,7 +9,8 @@
                     <field name="date_to"/>
                 </group>
                 <footer>
-                    <button name="print_report" type="object" string="Print Report" class="btn-primary"/>
+                    <button name="print_report" type="object" string="Print PDF" class="btn-primary"/>
+                    <button name="export_excel_report" type="object" string="Export Excel" class="btn-secondary"/>
                     <button string="Cancel" class="btn-secondary" special="cancel"/>
                 </footer>
             </form>
@@ -21,5 +22,5 @@
         <field name="view_mode">form</field>
         <field name="target">new</field>
     </record>
-    <menuitem id="menu_vat_return_report" name="VAT Return Report" parent="account.menu_finance_reports" action="action_vat_return_report"/>
+    <menuitem id="menu_vat_return_report" name="UAE VAT-201" parent="account.menu_finance_reports" action="action_vat_return_report"/>
 </odoo>
