@@ -3,7 +3,14 @@
     "version": "18.0.1.0.0",
     "category": "Accounting",
     "summary": "Custom UAE VAT-201 Excel report for Odoo 18",
-    "author": "Your Company",
+    "description": """
+        This module provides a custom VAT return report for the UAE, formatted as an Excel file.
+        It is designed to meet the requirements of the UAE Federal Tax Authority (FTA) for VAT reporting.
+    """,
+    "website": "https://github.com/lovaraju987",
+    "maintainers": ["lovaraju mylapalli"],
+    "images": ["static/description/banner.png"],  
+    "author": "Lovaraju Mylapalli",
     "depends": [
         "account",
         "mail"
