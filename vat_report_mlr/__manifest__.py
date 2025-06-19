@@ -2,9 +2,12 @@
     "name": "VAT Return Report (MLR)",
     "version": "18.0.1.0.0",
     "category": "Accounting",
-    "summary": "Custom VAT return report for Odoo 18",
+    "summary": "Custom UAE VAT-201 Excel report for Odoo 18",
     "author": "Your Company",
-    "depends": ["account"],
+    "depends": [
+        "account",
+        "mail"
+    ],
     "data": [
         "security/ir.model.access.csv",
         "views/vat_report_views.xml",
