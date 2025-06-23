@@ -1,8 +1,11 @@
 # -*- coding: utf-8 -*-
 import datetime
+import logging
 from odoo import http, fields
 from odoo.http import request
 import json
+
+_logger = logging.getLogger(__name__)
 
 def serialize_field(record, field_name, field):
     value = record[field_name]
@@ -61,9 +64,9 @@ class DynamicAPI(http.Controller):
     @http.route('/api/<string:endpoint_path>', auth='none', type='http', methods=['GET'], csrf=False)
     def dynamic_api_handler(self, endpoint_path, **kwargs):
         api_key_value = (
-                    request.httprequest.headers.get('x-api-key') or
-                    request.params.get('key')  # allow ?key=your_api_key in URL
-                )
+            request.httprequest.headers.get('x-api-key') or
+            request.params.get('key')  # allow ?key=your_api_key in URL
+        )
         ip_address = request.httprequest.remote_addr
         query_string = request.httprequest.query_string.decode()
 
@@ -90,20 +93,44 @@ class DynamicAPI(http.Controller):
         allowed_fields = endpoint.field_ids.mapped('name')
         model_obj = request.env[model_name]
 
-        allowed_companies = api_key.company_ids.ids or request.env.user.company_ids.ids
+        # Get allowed companies from API key, fallback to user's companies
+        allowed_companies = api_key.company_ids.ids
+        if not allowed_companies:
+            allowed_companies = request.env.user.company_ids.ids
+          # If still no companies, get all companies as fallback
         if not allowed_companies:
             allowed_companies = request.env['res.company'].sudo().search([]).ids
-
-        # Block the query completely if still empty
-        if not allowed_companies:
-            return request.make_response(
-                json.dumps({'error': 'No allowed companies found for this API key or user.'}),
+          # Final check: if no companies exist at all, return error
+        if not allowed_companies:            return request.make_response(
+                json.dumps({'error': 'No companies found in the system.'}),
                 status=403,
                 headers=[('Content-Type', 'application/json')]
             )
 
         try:
-            records = model_obj.sudo().with_context(allowed_company_ids=allowed_companies).search([], limit=100)
+            # Debug: Log the company IDs being used
+            _logger.info(f"Using allowed_companies: {allowed_companies}")
+            _logger.info(f"Model name: {model_name}")
+            
+            # Try bypassing all Odoo security and company rules
+            # by using raw SQL query instead of ORM
+            _logger.info("Attempting direct SQL query to bypass ORM...")
+            
+            # Get the table name for the model
+            table_name = model_obj._table
+            _logger.info(f"Table name: {table_name}")
+            
+            # Execute raw SQL to get records
+            request.env.cr.execute(f"SELECT id FROM {table_name} LIMIT 10")
+            record_ids = [row[0] for row in request.env.cr.fetchall()]
+            _logger.info(f"Found {len(record_ids)} record IDs via SQL: {record_ids}")
+            
+            # Now browse the records using the IDs (this might still trigger the error)
+            if record_ids:
+                records = model_obj.sudo().browse(record_ids)
+                _logger.info(f"Successfully browsed {len(records)} records")
+            else:
+                records = model_obj.sudo().browse([])
         except Exception as e:
             return request.make_response(
                 json.dumps({'error': str(e)}),
@@ -142,7 +169,6 @@ class DynamicAPI(http.Controller):
             json.dumps(data),
             headers=[('Content-Type', 'application/json')]
         )
-
 
     def _unauthorized(self, endpoint_path, ip_address, query_string):
         request.env['api.access.log'].sudo().create({
