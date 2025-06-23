@@ -1,0 +1,35 @@
+<!-- api_management/views/res_api_endpoint_wizard_views.xml -->
+<odoo>
+  <!-- Wizard Form View -->
+  <record id="view_api_endpoint_wizard_form" model="ir.ui.view">
+    <field name="name">res.api.endpoint.wizard.form</field>
+    <field name="model">res.api.endpoint.wizard</field>
+    <field name="arch" type="xml">
+      <form string="Create API Endpoint">
+        <group>
+          <field name="api_key_id" invisible="1"/>
+          <field name="model_id"
+                 domain="[('id', 'in', allowed_model_ids_domain)]"/>
+          <field name="url_path"/>
+          <field name="field_ids" widget="many2many_tags"/>
+        </group>
+        <footer>
+          <button string="Cancel" class="btn-secondary" special="cancel"/>
+          <button string="Create"
+                  type="object"
+                  name="action_create_endpoint"
+                  class="btn-primary"/>
+        </footer>
+      </form>
+    </field>
+  </record>
+
+  <!-- Wizard Action -->
+  <record id="action_open_api_endpoint_wizard" model="ir.actions.act_window">
+    <field name="name">Add API Endpoint</field>
+    <field name="res_model">res.api.endpoint.wizard</field>
+    <field name="view_mode">form</field>
+    <field name="view_id" ref="view_api_endpoint_wizard_form"/>
+    <field name="target">new</field>
+  </record>
+</odoo>
