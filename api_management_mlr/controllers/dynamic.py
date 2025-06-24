@@ -97,15 +97,33 @@ class DynamicAPI(http.Controller):
         allowed_companies = api_key.company_ids.ids
         if not allowed_companies:
             allowed_companies = request.env.user.company_ids.ids
-          # If still no companies, get all companies as fallback
         if not allowed_companies:
             allowed_companies = request.env['res.company'].sudo().search([]).ids
-          # Final check: if no companies exist at all, return error
-        if not allowed_companies:            return request.make_response(
+        if not allowed_companies:
+            return request.make_response(
                 json.dumps({'error': 'No companies found in the system.'}),
                 status=403,
                 headers=[('Content-Type', 'application/json')]
             )
+        # Optional: filter allowed companies via URL (?companies=1,2 or repeated params)
+        raw_vals = request.httprequest.args.getlist('companies') or []
+        _logger.debug(f"Raw companies params: {raw_vals}")
+        if raw_vals:
+            comps = []
+            for val in raw_vals:
+                for part in val.split(','):
+                    try:
+                        comps.append(int(part.strip()))
+                    except Exception:
+                        pass
+            requested = list(set(comps))
+            _logger.info(f"Requested companies: {requested}")
+            subset = [c for c in requested if c in allowed_companies]
+            if subset:
+                allowed_companies = subset
+                _logger.info(f"Filtering to companies: {allowed_companies}")
+            else:
+                _logger.warning("No requested companies in allowed list; ignoring filter")
 
         try:
             # Debug: Log the company IDs being used
@@ -127,7 +145,7 @@ class DynamicAPI(http.Controller):
             has_company_ids = 'company_ids' in model_fields and model_fields['company_ids'].type == 'many2many'
             if has_company_id:
                 placeholders = ','.join(['%s'] * len(allowed_companies))
-                sql = f"SELECT id FROM {table_name} WHERE company_id IN ({placeholders}) LIMIT 10"
+                sql = f"SELECT id FROM {table_name} WHERE company_id IN ({placeholders})"
                 params = tuple(allowed_companies)
             elif has_company_ids:
                 m2m = model_fields['company_ids']
@@ -137,11 +155,11 @@ class DynamicAPI(http.Controller):
                 placeholders = ','.join(['%s'] * len(allowed_companies))
                 sql = (f"SELECT t.id FROM {table_name} t "
                        f"JOIN {rel_table} rel ON rel.{col1} = t.id "
-                       f"WHERE rel.{col2} IN ({placeholders}) LIMIT 10")
+                       f"WHERE rel.{col2} IN ({placeholders})")
                 params = tuple(allowed_companies)
             else:
                 _logger.warning(f"Model {model_name} has no company filter; returning unfiltered IDs")
-                sql = f"SELECT id FROM {table_name} LIMIT 10"
+                sql = f"SELECT id FROM {table_name}"
                 params = ()
             request.env.cr.execute(sql, params)
             record_ids = [row[0] for row in request.env.cr.fetchall()]
