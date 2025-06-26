@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        <record id="mail_activity_wfh_req" model="mail.activity.type">
+            <field name="name">Work From Home Request</field>
+            <field name="icon">fa-desktop</field>
+            <field name="res_model">wfh.request</field>
+        </record>
+
+        <record id="mail_activity_wfh_second_req" model="mail.activity.type">
+            <field name="name">Work From Home Second Approve</field>
+            <field name="icon">fa-desktop</field>
+            <field name="res_model">wfh.request</field>
+        </record>
+    </data>
+</odoo>

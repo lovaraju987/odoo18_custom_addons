@@ -1,0 +1,52 @@
+<odoo>
+  <data>
+    <record id="wfh_type_tree_view" model="ir.ui.view">
+            <field name="name">wfh.type.list.view</field>
+            <field name="model">wfh.type</field>
+            <field name="arch" type="xml">
+                <list string="Appointees Type">
+                    <field name="name"/>
+                </list>
+            </field>
+        </record>
+
+        <record id="wfh_type_form_view" model="ir.ui.view">
+            <field name="name">wfh.type.form.view</field>
+            <field name="model">wfh.type</field>
+            <field name="arch" type="xml">
+                <form string="Appointees Type">
+                    <sheet>
+                        <div class="oe_title">
+                            <label for="name"/>
+                            <h1><field name="name" /></h1>
+                        </div>
+                        <group>
+                            <group string="Work From Home Requests">
+                                <field name="approval" string="Approval" widget="radio"/>
+                                <field name="user_id" domain="[('share', '=', False)]" invisible="approval == 'by_manager'"/>
+                            </group>
+                            <group string="Monthly Limit">
+                                <field name="monthly_limit" />
+                            </group>
+                        </group>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <record model="ir.actions.act_window" id="action_wfh_type">
+            <field name="name">Work From Home Type</field>
+            <field name="type">ir.actions.act_window</field>
+            <field name="res_model">wfh.type</field>
+            <field name="view_mode">list,form</field>
+        </record>
+
+        <menuitem name="Work From Home Type"
+                  action="action_wfh_type"
+                  id="menu_wfh_type"
+                  parent="hr_holidays.menu_hr_holidays_configuration"
+                  sequence="1"/>
+
+        
+    </data>
+</odoo>
