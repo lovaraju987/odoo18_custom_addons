@@ -1,0 +1,14 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_kpi_report_admin,kpi.report.admin,model_kpi_report,kpi_tracking.group_kpi_admin,1,1,1,1
+access_kpi_report_manager,kpi.report.manager,model_kpi_report,kpi_tracking.group_kpi_manager,1,1,1,0
+access_kpi_report_user,kpi.report.user,model_kpi_report,kpi_tracking.group_kpi_user,1,0,0,0
+access_kpi_group_admin,kpi.group.admin,model_kpi_report_group,kpi_tracking.group_kpi_admin,1,1,1,1
+access_kpi_group_manager,kpi.group.manager,model_kpi_report_group,kpi_tracking.group_kpi_manager,1,0,0,0
+access_kpi_group_user,kpi.group.user,model_kpi_report_group,kpi_tracking.group_kpi_user,1,0,0,0
+access_kpi_submission_admin,kpi.submission.admin,model_kpi_report_submission,kpi_tracking.group_kpi_admin,1,1,1,1
+access_kpi_submission_manager,kpi.submission.manager,model_kpi_report_submission,kpi_tracking.group_kpi_manager,1,0,1,0
+access_kpi_submission_user,kpi.submission.user,model_kpi_report_submission,kpi_tracking.group_kpi_user,1,0,0,0
+access_kpi_group_submission_admin,kpi.group.submission.admin,model_kpi_report_group_submission,kpi_tracking.group_kpi_admin,1,1,1,1
+access_kpi_group_submission_manager,kpi.group.submission.manager,model_kpi_report_group_submission,kpi_tracking.group_kpi_manager,1,0,0,0
+access_kpi_group_submission_user,kpi.group.submission.user,model_kpi_report_group_submission,kpi_tracking.group_kpi_user,1,0,0,0
+

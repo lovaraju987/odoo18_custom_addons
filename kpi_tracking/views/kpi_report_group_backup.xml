@@ -1,0 +1,143 @@
+<odoo>    
+    <record id="view_kpi_report_group_form" model="ir.ui.view">
+        <field n                                            <page string="Group Submission History">
+                            <field name="group_submission_ids" context="{'default_report_id': id}">
+                                <list> <page string="All Submissions">
+                            <field name="submission_ids" context="{'default_report_id': id}">
+                                <list>="name">kpi.report.group.form</field>
+        <field name="model">kpi.report.group</field>
+        <field name="arch" type="xml">
+            <form>
+                <sheet>
+                    <group>
+                        <button name="action_send_reminder_emails"
+                                string="Send Reminder Emails"
+                                type="object"
+                                class="btn-primary"
+                                groups="kpi_tracking.group_kpi_manager,kpi_tracking.group_kpi_admin"/>
+                        <button name="action_refresh_all_kpis"
+                                    string="Refresh All KPIs"
+                                    type="object"
+                                    class="btn btn-success"
+                                    icon="fa-refresh"/>
+                    </group>
+                    <group>
+                        <field name="name"/>
+                        <field name="department"/>
+                        <field name="assigned_employee_ids" widget="many2many_tags" options="{'no_create': True}"/>
+                        <field name="description"/>
+                        <field name="group_achievement_percent" readonly="1"/>
+                        <field name="score_label" widget="badge" options="{'color_field': 'score_color'}"/>
+                        <!-- <field name="score_color" invisible="1"/> -->
+                    </group>
+                    <notebook>
+                        <page string="KPIs">
+                            <!-- <field name="kpi_ids">
+                                <list editable="bottom">
+                                    <field name="name"/>
+                                    <field name="department"/>
+                                    <field name="kpi_type"/>
+                                    <field name="report_type"/>
+                                    <field name="value" readonly="1"/>
+                                    <field name="last_submitted"/>
+                                </list>
+                            </field> -->
+                            <field name="kpi_ids" context="{'default_report_id': id}" mode="list,form">
+                                <list decoration-success="achievement_percent &gt; 100"
+                                                    decoration-warning="achievement_percent &gt; 50 and achievement_percent &lt; 100"
+                                                    decoration-danger="achievement_percent &lt; 50">
+                                    <field name="name"/>
+                                    <field name="last_submitted"/>
+                                    <field name="department"/>
+                                    <field name="kpi_type"/>
+                                    <field name="report_type"/>
+                                    <field name="priority_weight"/>
+                                    <field name="kpi_direction"/>
+                                    <field name="value" readonly="1"/>
+                                    <field name="target_unit_display" readonly="1"/>
+                                    <field name="achievement_percent" widget="progressbar"/>
+                                    <field name="score_label" widget="badge" options="{'color_field': 'score_color'}"/>
+                                    <!-- <field name="score_color" invisible="1"/> -->
+
+                                </list>
+                                <form>
+                                    <group>
+                                        <field name="name"/>
+                                        <field name="assigned_user_ids" widget="many2many_tags" options="{'no_create': True}"/>
+                                        <field name="report_id" readonly="1"/>
+                                        <field name="kpi_type"/>
+                                        <field name="report_type"/>
+                                        <field name="department"/>
+                                        <field name="priority_weight"/>
+                                        <field name="manual_value"
+                                                groups="kpi_tracking.group_kpi_admin,kpi_tracking.group_kpi_manager"
+                                                readonly="kpi_type != 'manual'"/>
+                                        <field name="target_type"/>
+                                        <field name="target_value"/>
+                                        <field name="kpi_direction"/>
+                                        <field name="target_unit_display" readonly="1"/>
+                                        <field name="value" readonly="1"/>
+                                    </group>
+                                    <group string="Auto Tracking">
+                                        <field name="source_model_id"/>
+                                        <field name="filter_field"/>
+                                        <field name="filter_type"/>
+                                        <field name="source_domain"/>
+                                        <field name="formula_field"/>
+                                        <field name="count_a" readonly="1"/>
+                                        <field name="count_b" readonly="1"/>
+                                        <field name="formula_notes"/>
+                                        <field name="domain_test_result" readonly="1"/>
+                                        <button name="action_test_domain" string="Test Domain" type="object" class="btn btn-primary"/>
+                                    </group>
+                                </form>
+                            </field>
+                        </page>
+                        <page string="All Submissions">
+                            <field name="submission_ids" context="{'default_report_id': id}">
+                                <list>
+                                    <field name="date" string="Submitted On"/>                
+                                    <field name="report_id"/>
+                                    <field name="kpi_id"/>
+                                    <field name="user_id"/>
+                                    <field name="priority_weight"/>
+                                    <field name="kpi_direction"/>
+                                    <field name="value"/>
+                                    <field name="target_unit_display" readonly="1"/>
+                                    <field name="achievement_percent" widget="progressbar"/> 
+                                    <field name="score_label" widget="badge" options="{'color_field': 'score_color'}"/>  
+                                    <!-- <field name="score_color" invisible="1"/>                    -->
+                                    <field name="note"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page string="Group Submission History">
+                            <field name="group_submission_ids" context="{'default_report_id': id}">
+                                <list>
+                                    <field name="date" string="Submitted At"/>
+                                    <field name="value"/>
+                                    <field name="score_label" widget="badge" options="{'color_field': 'score_color'}"/>
+                                    <!-- <field name="score_color" invisible="1"/> -->
+                                    <field name="user_id"/>
+                                    <field name="note"/>
+                                </list>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_kpi_report_group" model="ir.actions.act_window">
+        <field name="name">Report Groups</field>
+        <field name="res_model">kpi.report.group</field>
+        <field name="view_mode">list,form,graph,pivot</field>
+    </record>
+
+    <menuitem id="menu_kpi_group_list"
+              name="Report Groups"
+              parent="menu_kpi_root"
+              action="action_kpi_report_group"
+              sequence="40"/>
+</odoo>
