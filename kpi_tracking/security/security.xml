@@ -1,0 +1,16 @@
+<odoo>
+  <record id="group_kpi_admin" model="res.groups">
+    <field name="name">KPI Admin</field>
+    <field name="category_id" ref="base.module_category_tools"/>
+  </record>
+
+  <record id="group_kpi_manager" model="res.groups">
+    <field name="name">KPI Manager</field>
+    <field name="category_id" ref="base.module_category_tools"/>
+  </record>
+
+  <record id="group_kpi_user" model="res.groups">
+    <field name="name">KPI User</field>
+    <field name="category_id" ref="base.module_category_tools"/>
+  </record>
+</odoo>

@@ -1,0 +1,36 @@
+<odoo>
+    <record id="view_kpi_submission_tree" model="ir.ui.view">
+        <field name="name">kpi.report.submission.list</field>
+        <field name="model">kpi.report.submission</field>
+        <field name="arch" type="xml">
+            <list decoration-success="achievement_percent &gt; 100"
+                                                    decoration-warning="achievement_percent &gt; 50 and achievement_percent &lt; 100"
+                                                    decoration-danger="achievement_percent &lt; 50">
+                <field name="date" string="Submitted On"/>                
+                <field name="report_id"/>
+                <field name="kpi_id"/>
+                <field name="user_id"/>
+                <field name="kpi_type"/>
+                <field name="report_type"/>
+                <field name="department"/>
+                <field name="priority_weight"/>
+                <field name="kpi_direction"/>
+                <field name="value"/>
+                <field name="target_unit_display" readonly="1"/>
+                <field name="achievement_percent" widget="progressbar"/>  
+                <field name="score_label" widget="badge" options="{'color_field': 'score_color'}"/>  
+                <!-- <field name="score_color" invisible="1"/>    -->
+                <field name="note"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="action_kpi_submission" model="ir.actions.act_window">
+        <field name="name">KPI Submissions</field>
+        <field name="res_model">kpi.report.submission</field>
+        <field name="view_mode">list</field>
+    </record>
+
+    <menuitem id="menu_kpi_submission" name="Submissions"
+              parent="menu_kpi_root" action="action_kpi_submission" sequence="50"/>
+</odoo>

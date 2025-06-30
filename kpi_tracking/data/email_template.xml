@@ -1,0 +1,15 @@
+<odoo>
+  <record id="kpi_manual_entry_email_template" model="mail.template">
+    <field name="name">KPI Manual Entry Reminder</field>
+    <field name="model_id" ref="model_kpi_report"/>
+    <field name="subject">Reminder to Update KPI: ${object.name}</field>
+    <field name="body_html"><![CDATA[
+      <p>Hello ${user.name},</p>
+      <p>This is a reminder to update your manual KPI: <strong>${object.name}</strong>.</p>
+      <p>Please log in and update the value as soon as possible.</p>
+    ]]></field>
+    <field name="email_from">kpi@yourcompany.com</field>
+    <field name="email_to">${user.email}</field>
+    <field name="auto_delete" eval="True"/>
+  </record>
+</odoo>
