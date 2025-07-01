@@ -22,6 +22,18 @@ class Project(models.Model):
         help="Whether to enforce strict allocation-based timesheet limits for this project"
     )
 
+    @api.onchange('allow_billable')
+    def _onchange_allow_billable(self):
+        """Auto-set project type based on allow_billable field"""
+        if self.allow_billable and not self.project_type:
+            # Set to Client Billable when allow_billable is True and project type not already set
+            self.project_type = 'client_billable'
+            self.enforce_allocation_limits = True
+        elif not self.allow_billable and self.project_type == 'client_billable':
+            # Clear Client Billable type when allow_billable is False
+            self.project_type = False
+            self.enforce_allocation_limits = False
+
 # Extend the existing Sale Line Employee Map to add allocation percentage
 class ProjectSaleLineEmployeeMap(models.Model):
     _inherit = "project.sale.line.employee.map"
