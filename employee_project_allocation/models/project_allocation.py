@@ -27,6 +27,40 @@ class ProjectSaleLineEmployeeMap(models.Model):
             else:
                 record.allocated_hours = 0.0
 
+    @api.model
+    def create(self, vals):
+        """Override create to auto-distribute percentages when new employee is added"""
+        record = super().create(vals)
+        if record.project_id:
+            self._auto_distribute_percentages(record.project_id)
+        return record
+
+    def unlink(self):
+        """Override unlink to auto-distribute percentages when employee is removed"""
+        projects = self.mapped('project_id')
+        result = super().unlink()
+        for project in projects:
+            self._auto_distribute_percentages(project)
+        return result
+
+    def _auto_distribute_percentages(self, project):
+        """Automatically distribute equal percentages among all employees in a project"""
+        if not project:
+            return
+            
+        # Get all allocation records for this project
+        all_allocations = self.search([('project_id', '=', project.id)])
+        
+        if not all_allocations:
+            return
+            
+        # Calculate equal percentage for each employee
+        equal_percentage = 100.0 / len(all_allocations)
+        
+        # Update all allocations with equal percentage
+        for allocation in all_allocations:
+            allocation.allocation_percentage = equal_percentage
+
     @api.constrains('allocation_percentage')
     def _check_total_allocation_percentage(self):
         """Ensure total allocation percentage for a project doesn't exceed 100%"""
