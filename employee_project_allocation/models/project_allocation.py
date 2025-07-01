@@ -53,11 +53,41 @@ class ProjectSaleLineEmployeeMap(models.Model):
         
         if not all_allocations:
             return
-            
-        # Calculate equal percentage for each employee
-        equal_percentage = 100.0 / len(all_allocations)
         
-        # Update all allocations with equal percentage
+        project_total_hours = project.allocated_hours or 0.0
+        
+        # Check if any employee has logged hours that would conflict with equal distribution
+        equal_percentage = 100.0 / len(all_allocations)
+        equal_hours = (equal_percentage / 100.0) * project_total_hours
+        
+        conflicts = []
+        for allocation in all_allocations:
+            # Get logged hours for this employee
+            logged_hours = sum(self.env['account.analytic.line'].search([
+                ('employee_id', '=', allocation.employee_id.id),
+                ('project_id', '=', project.id)
+            ]).mapped('unit_amount'))
+            
+            if logged_hours > equal_hours and project_total_hours > 0:
+                required_percentage = (logged_hours / project_total_hours) * 100.0
+                conflicts.append({
+                    'employee': allocation.employee_id.name,
+                    'logged_hours': logged_hours,
+                    'required_percentage': required_percentage
+                })
+        
+        # If there are conflicts, don't auto-distribute and show a helpful message
+        if conflicts:
+            conflict_details = "\n".join([
+                f"- {c['employee']}: {c['logged_hours']:.2f} hrs (needs {c['required_percentage']:.1f}%)"
+                for c in conflicts
+            ])
+            
+            # Instead of raising an error, we could just not auto-distribute
+            # and let managers handle it manually
+            return
+        
+        # If no conflicts, proceed with equal distribution
         for allocation in all_allocations:
             allocation.allocation_percentage = equal_percentage
 
@@ -76,6 +106,41 @@ class ProjectSaleLineEmployeeMap(models.Model):
                 raise exceptions.ValidationError(
                     f"Total allocation percentage for project '{record.project_id.name}' "
                     f"cannot exceed 100%. Current total: {total_percentage:.1f}%"
+                )
+
+    @api.constrains('allocation_percentage')
+    def _check_allocation_vs_logged_hours(self):
+        """Ensure allocation percentage is not reduced below already logged hours"""
+        for record in self:
+            if not record.project_id or not record.employee_id or not record.allocation_percentage:
+                continue
+                
+            project = record.project_id
+            employee = record.employee_id
+            
+            # Calculate new allocated hours based on new percentage
+            project_total_hours = project.allocated_hours or 0.0
+            new_allocated_hours = (record.allocation_percentage / 100.0) * project_total_hours
+            
+            # Get already logged hours for this employee on this project
+            logged_hours = sum(self.env['account.analytic.line'].search([
+                ('employee_id', '=', employee.id),
+                ('project_id', '=', project.id)
+            ]).mapped('unit_amount'))
+            
+            if logged_hours > new_allocated_hours:
+                # Calculate what percentage would be needed for current logged hours
+                if project_total_hours > 0:
+                    required_percentage = (logged_hours / project_total_hours) * 100.0
+                else:
+                    required_percentage = 0.0
+                    
+                raise exceptions.ValidationError(
+                    f"Cannot reduce {employee.name}'s allocation to {record.allocation_percentage:.1f}% "
+                    f"({new_allocated_hours:.2f} hrs) on project '{project.name}'. "
+                    f"Employee has already logged {logged_hours:.2f} hours "
+                    f"(equivalent to {required_percentage:.1f}% of project). "
+                    f"Minimum allocation should be {required_percentage:.1f}%."
                 )
 
 # Extend Timesheet Line to enforce allocation and daily hour limits
