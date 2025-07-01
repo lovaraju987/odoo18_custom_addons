@@ -40,6 +40,30 @@ class ProjectSaleLineEmployeeMap(models.Model):
         store=False
     )
     
+    project_start_date = fields.Date(
+        string="Project Start Date",
+        related="project_id.date_start", 
+        help="Project start date",
+        store=False,
+        readonly=True
+    )
+    
+    project_end_date = fields.Date(
+        string="Project End Date", 
+        related="project_id.date",
+        help="Project expiration/end date", 
+        store=False,
+        readonly=True
+    )
+    
+    project_manager = fields.Many2one(
+        string="Project Manager",
+        related="project_id.user_id",
+        help="Project manager/responsible user",
+        store=False,
+        readonly=True
+    )
+    
     completion_percentage = fields.Float(
         string="Completion %",
         compute="_compute_completion_percentage",
