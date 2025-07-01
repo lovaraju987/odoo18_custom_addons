@@ -16,6 +16,7 @@
                 <field name="allocation_percentage" string="My Allocation %"/>
                 <field name="allocated_hours" string="Allocated Hours" widget="timesheet_uom"/>
                 <field name="logged_hours" string="Logged Hours" widget="timesheet_uom"/>
+                <field name="completion_percentage" string="Completion %" widget="percentage"/>
                 <field name="remaining_hours" string="Remaining Hours" widget="timesheet_uom"/>
                 <field name="project_total_hours" string="Total Project Hours" widget="timesheet_uom"/>
             </list>
@@ -39,6 +40,7 @@
                             <field name="allocation_percentage" readonly="1"/>
                             <field name="allocated_hours" widget="timesheet_uom" readonly="1"/>
                             <field name="logged_hours" widget="timesheet_uom" readonly="1"/>
+                            <field name="completion_percentage" widget="percentage" readonly="1"/>
                             <field name="remaining_hours" widget="timesheet_uom" readonly="1"/>
                         </group>
                     </group>

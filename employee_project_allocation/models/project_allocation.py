@@ -40,6 +40,13 @@ class ProjectSaleLineEmployeeMap(models.Model):
         store=False
     )
     
+    completion_percentage = fields.Float(
+        string="Completion %",
+        compute="_compute_completion_percentage",
+        help="Percentage of allocated hours completed by this employee",
+        store=False
+    )
+    
     @api.depends('allocation_percentage', 'project_id.allocated_hours')
     def _compute_allocated_hours(self):
         for record in self:
@@ -64,6 +71,14 @@ class ProjectSaleLineEmployeeMap(models.Model):
     def _compute_remaining_hours(self):
         for record in self:
             record.remaining_hours = record.allocated_hours - record.logged_hours
+
+    @api.depends('logged_hours', 'allocated_hours')
+    def _compute_completion_percentage(self):
+        for record in self:
+            if record.allocated_hours > 0:
+                record.completion_percentage = record.logged_hours / record.allocated_hours
+            else:
+                record.completion_percentage = 0.0
 
     @api.model
     def create(self, vals):
