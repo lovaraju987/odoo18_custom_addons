@@ -8,6 +8,7 @@
             <!-- Add allocation percentage after the last sale_line_id field in the invoicing tab -->
             <xpath expr="//page[@name='billing_employee_rate']//field[@name='sale_line_employee_ids']//list//field[@name='sale_line_id'][last()]" position="after">
                 <field name="allocation_percentage" string="Allocation %"/>
+                <field name="allocated_hours" string="Allocated Hours" widget="timesheet_uom" readonly="1"/>
             </xpath>
         </field>
     </record>
