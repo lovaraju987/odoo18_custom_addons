@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <record id="view_project_form_inherit_allocation" model="ir.ui.view">
+        <field name="name">project.project.form.inherit.allocation</field>
+        <field name="model">project.project</field>
+        <field name="inherit_id" ref="sale_timesheet.project_project_view_form"/>
+        <field name="arch" type="xml">
+            <!-- Add allocation percentage after the last sale_line_id field in the invoicing tab -->
+            <xpath expr="//page[@name='billing_employee_rate']//field[@name='sale_line_employee_ids']//list//field[@name='sale_line_id'][last()]" position="after">
+                <field name="allocation_percentage" string="Allocation %"/>
+            </xpath>
+        </field>
+    </record>
+</odoo>
