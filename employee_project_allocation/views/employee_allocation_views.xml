@@ -13,6 +13,7 @@
                   decoration-muted="allocated_hours == 0">
                 <field name="project_id" string="Project"/>
                 <field name="project_manager" string="Project Manager"/>
+                <field name="project_type" string="Project Type"/>
                 <field name="sale_line_id" string="Sale Order Item"/>
                 <field name="project_start_date" string="Start Date"/>
                 <field name="project_end_date" string="End Date"/>
@@ -37,6 +38,7 @@
                         <group string="Project Information">
                             <field name="project_id" readonly="1"/>
                             <field name="project_manager" string="Project Manager" readonly="1"/>
+                            <field name="project_type" string="Project Type" readonly="1"/>
                             <field name="sale_line_id" readonly="1"/>
                             <field name="project_start_date" string="Start Date" readonly="1"/>
                             <field name="project_end_date" string="End Date" readonly="1"/>
