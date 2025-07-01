@@ -19,6 +19,58 @@ class ProjectSaleLineEmployeeMap(models.Model):
         store=False
     )
     
+    logged_hours = fields.Float(
+        string="Logged Hours",
+        compute="_compute_logged_hours",
+        help="Total hours already logged by this employee on this project",
+        store=False
+    )
+    
+    remaining_hours = fields.Float(
+        string="Remaining Hours",
+        compute="_compute_remaining_hours",
+        help="Remaining hours available for this employee on this project",
+        store=False
+    )
+    
+    project_total_hours = fields.Float(
+        string="Total Project Hours",
+        related="project_id.allocated_hours",
+        help="Total allocated hours for the entire project",
+        store=False
+    )
+    
+    project_start_date = fields.Date(
+        string="Project Start Date",
+        related="project_id.date_start", 
+        help="Project start date",
+        store=False,
+        readonly=True
+    )
+    
+    project_end_date = fields.Date(
+        string="Project End Date", 
+        related="project_id.date",
+        help="Project expiration/end date", 
+        store=False,
+        readonly=True
+    )
+    
+    project_manager = fields.Many2one(
+        string="Project Manager",
+        related="project_id.user_id",
+        help="Project manager/responsible user",
+        store=False,
+        readonly=True
+    )
+    
+    completion_percentage = fields.Float(
+        string="Completion %",
+        compute="_compute_completion_percentage",
+        help="Percentage of allocated hours completed by this employee",
+        store=False
+    )
+    
     @api.depends('allocation_percentage', 'project_id.allocated_hours')
     def _compute_allocated_hours(self):
         for record in self:
@@ -26,6 +78,31 @@ class ProjectSaleLineEmployeeMap(models.Model):
                 record.allocated_hours = (record.allocation_percentage / 100.0) * record.project_id.allocated_hours
             else:
                 record.allocated_hours = 0.0
+    
+    @api.depends('employee_id', 'project_id')
+    def _compute_logged_hours(self):
+        for record in self:
+            if record.employee_id and record.project_id:
+                logged_hours = sum(self.env['account.analytic.line'].search([
+                    ('employee_id', '=', record.employee_id.id),
+                    ('project_id', '=', record.project_id.id)
+                ]).mapped('unit_amount'))
+                record.logged_hours = logged_hours
+            else:
+                record.logged_hours = 0.0
+    
+    @api.depends('allocated_hours', 'logged_hours')
+    def _compute_remaining_hours(self):
+        for record in self:
+            record.remaining_hours = record.allocated_hours - record.logged_hours
+
+    @api.depends('logged_hours', 'allocated_hours')
+    def _compute_completion_percentage(self):
+        for record in self:
+            if record.allocated_hours > 0:
+                record.completion_percentage = record.logged_hours / record.allocated_hours
+            else:
+                record.completion_percentage = 0.0
 
     @api.model
     def create(self, vals):
@@ -78,11 +155,6 @@ class ProjectSaleLineEmployeeMap(models.Model):
         
         # If there are conflicts, don't auto-distribute and show a helpful message
         if conflicts:
-            conflict_details = "\n".join([
-                f"- {c['employee']}: {c['logged_hours']:.2f} hrs (needs {c['required_percentage']:.1f}%)"
-                for c in conflicts
-            ])
-            
             # Instead of raising an error, we could just not auto-distribute
             # and let managers handle it manually
             return

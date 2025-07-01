@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <!-- Employee Project Allocation List View -->
+    <record id="view_employee_project_allocation_list" model="ir.ui.view">
+        <field name="name">employee.project.allocation.list</field>
+        <field name="model">project.sale.line.employee.map</field>
+        <field name="arch" type="xml">
+            <list string="My Project Allocations" create="false" edit="false" delete="false" 
+                  decoration-info="logged_hours &lt; allocated_hours * 0.3 and allocated_hours &gt; 0"
+                  decoration-warning="logged_hours &gt;= allocated_hours * 0.3 and logged_hours &lt; allocated_hours * 0.7"
+                  decoration-success="logged_hours &gt;= allocated_hours * 0.7 and logged_hours &lt; allocated_hours"
+                  decoration-bf="logged_hours &gt;= allocated_hours and allocated_hours &gt; 0"
+                  decoration-muted="allocated_hours == 0">
+                <field name="project_id" string="Project"/>
+                <field name="project_manager" string="Project Manager"/>
+                <field name="sale_line_id" string="Sale Order Item"/>
+                <field name="project_start_date" string="Start Date"/>
+                <field name="project_end_date" string="End Date"/>
+                <field name="allocation_percentage" string="My Allocation %"/>
+                <field name="allocated_hours" string="Allocated Hours" widget="timesheet_uom"/>
+                <field name="logged_hours" string="Logged Hours" widget="timesheet_uom"/>
+                <field name="completion_percentage" string="Completion %" widget="percentage"/>
+                <field name="remaining_hours" string="Remaining Hours" widget="timesheet_uom"/>
+                <field name="project_total_hours" string="Total Project Hours" widget="timesheet_uom"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- Employee Project Allocation Form View -->
+    <record id="view_employee_project_allocation_form" model="ir.ui.view">
+        <field name="name">employee.project.allocation.form</field>
+        <field name="model">project.sale.line.employee.map</field>
+        <field name="arch" type="xml">
+            <form string="My Project Allocation" create="false" edit="false" delete="false">
+                <sheet>
+                    <group>
+                        <group string="Project Information">
+                            <field name="project_id" readonly="1"/>
+                            <field name="project_manager" string="Project Manager" readonly="1"/>
+                            <field name="sale_line_id" readonly="1"/>
+                            <field name="project_start_date" string="Start Date" readonly="1"/>
+                            <field name="project_end_date" string="End Date" readonly="1"/>
+                            <field name="project_total_hours" string="Total Project Hours" widget="timesheet_uom" readonly="1"/>
+                        </group>
+                        <group string="My Allocation">
+                            <field name="allocation_percentage" readonly="1"/>
+                            <field name="allocated_hours" widget="timesheet_uom" readonly="1"/>
+                            <field name="logged_hours" widget="timesheet_uom" readonly="1"/>
+                            <field name="completion_percentage" widget="percentage" readonly="1"/>
+                            <field name="remaining_hours" widget="timesheet_uom" readonly="1"/>
+                        </group>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- Action for Employee Project Allocations -->
+    <record id="action_employee_project_allocation" model="ir.actions.act_window">
+        <field name="name">My Project Allocations</field>
+        <field name="res_model">project.sale.line.employee.map</field>
+        <field name="view_mode">list,form</field>
+        <field name="view_id" ref="view_employee_project_allocation_list"/>
+        <field name="domain">[('employee_id.user_id', '=', uid)]</field>
+        <field name="context">{'default_employee_id': uid}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                No project allocations found!
+            </p>
+            <p>
+                You will see your project allocations here once a project manager assigns you to projects with allocation percentages.
+            </p>
+        </field>
+    </record>
+
+    <!-- Menu Item for Employees -->
+    <menuitem id="menu_employee_project_allocation"
+              name="My Project Allocations"
+              parent="hr_timesheet.timesheet_menu_root"
+              action="action_employee_project_allocation"
+              sequence="15"
+              groups="hr_timesheet.group_hr_timesheet_user"/>
+
+</odoo>
