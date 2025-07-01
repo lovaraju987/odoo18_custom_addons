@@ -45,6 +45,8 @@ The **Employee Project Allocation** module is a comprehensive Odoo 18 addon that
 #### Key Fields Added
 - `allocation_percentage`: Float field for percentage allocation (0-100%)
 - `allocated_hours`: Computed field showing total hours allocated to employee
+- `logged_hours`: Computed field showing hours already logged by employee
+- `remaining_hours`: Computed field showing remaining available hours
 
 #### Validation Methods
 - `_check_total_allocation_percentage()`: Ensures project total ≤ 100%
@@ -79,6 +81,20 @@ The **Employee Project Allocation** module is a comprehensive Odoo 18 addon that
    - Manually adjust the "Allocation %" for each employee as needed
    - The "Allocated Hours" column updates automatically
    - Ensure total allocation doesn't exceed 100%
+
+### Employee View - My Project Allocations
+
+1. **Access Allocations**
+   - Go to Timesheets → My Project Allocations
+   - View all projects you're allocated to
+
+2. **Information Available**
+   - **Project Name**: Which project you're assigned to
+   - **Allocation %**: Your percentage allocation on the project
+   - **Allocated Hours**: Total hours allocated to you
+   - **Logged Hours**: Hours you've already logged
+   - **Remaining Hours**: Hours still available to log
+   - **Total Project Hours**: Overall project budget
 
 ### Timesheet Entry
 
@@ -162,8 +178,8 @@ Result: Error - "Cannot reduce allocation below logged hours"
 
 ### Access Rights
 - **Project Users**: Can view and edit allocations
-- **Project Managers**: Full access to all allocation features
-- **Employees**: Can view their own allocations (through timesheet interface)
+- **Project Managers**: Full access to all allocation features  
+- **Employees**: Can view their own allocations through "My Project Allocations" menu
 
 ### Data Integrity
 - All validations run at the database level
@@ -201,7 +217,8 @@ employee_project_allocation/
 ├── security/
 │   └── ir.model.access.csv        # Access control rules
 └── views/
-    └── project_project_views.xml   # UI modifications for project form
+    ├── project_project_views.xml   # UI modifications for project form
+    └── employee_allocation_views.xml # Employee allocation views and menu
 ```
 
 ### Key Classes and Methods

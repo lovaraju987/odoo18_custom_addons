@@ -19,6 +19,27 @@ class ProjectSaleLineEmployeeMap(models.Model):
         store=False
     )
     
+    logged_hours = fields.Float(
+        string="Logged Hours",
+        compute="_compute_logged_hours",
+        help="Total hours already logged by this employee on this project",
+        store=False
+    )
+    
+    remaining_hours = fields.Float(
+        string="Remaining Hours",
+        compute="_compute_remaining_hours",
+        help="Remaining hours available for this employee on this project",
+        store=False
+    )
+    
+    project_total_hours = fields.Float(
+        string="Total Project Hours",
+        related="project_id.allocated_hours",
+        help="Total allocated hours for the entire project",
+        store=False
+    )
+    
     @api.depends('allocation_percentage', 'project_id.allocated_hours')
     def _compute_allocated_hours(self):
         for record in self:
@@ -26,6 +47,23 @@ class ProjectSaleLineEmployeeMap(models.Model):
                 record.allocated_hours = (record.allocation_percentage / 100.0) * record.project_id.allocated_hours
             else:
                 record.allocated_hours = 0.0
+    
+    @api.depends('employee_id', 'project_id')
+    def _compute_logged_hours(self):
+        for record in self:
+            if record.employee_id and record.project_id:
+                logged_hours = sum(self.env['account.analytic.line'].search([
+                    ('employee_id', '=', record.employee_id.id),
+                    ('project_id', '=', record.project_id.id)
+                ]).mapped('unit_amount'))
+                record.logged_hours = logged_hours
+            else:
+                record.logged_hours = 0.0
+    
+    @api.depends('allocated_hours', 'logged_hours')
+    def _compute_remaining_hours(self):
+        for record in self:
+            record.remaining_hours = record.allocated_hours - record.logged_hours
 
     @api.model
     def create(self, vals):
@@ -78,11 +116,6 @@ class ProjectSaleLineEmployeeMap(models.Model):
         
         # If there are conflicts, don't auto-distribute and show a helpful message
         if conflicts:
-            conflict_details = "\n".join([
-                f"- {c['employee']}: {c['logged_hours']:.2f} hrs (needs {c['required_percentage']:.1f}%)"
-                for c in conflicts
-            ])
-            
             # Instead of raising an error, we could just not auto-distribute
             # and let managers handle it manually
             return

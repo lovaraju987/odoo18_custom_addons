@@ -10,6 +10,7 @@
     "depends": ["project", "hr_timesheet", "sale_timesheet"],
     "data": [
         "views/project_project_views.xml",
+        "views/employee_allocation_views.xml",
     ],
     "installable": True,
     "application": False,
