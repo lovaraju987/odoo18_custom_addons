@@ -2,6 +2,26 @@
 
 from odoo import models, fields, api, exceptions
 
+# Extend Project model to add project type for flexible timesheet validation
+class Project(models.Model):
+    _inherit = "project.project"
+
+    project_type = fields.Selection([
+        ('client_billable', 'Client Billable'),
+        ('internal_onboarding', 'Internal - Onboarding'),
+        ('internal_kt', 'Internal - Knowledge Transfer'),
+        ('internal_bench', 'Internal - Bench'),
+        ('internal_training', 'Internal - Training'),
+        ('internal_other', 'Internal - Other'),
+    ], string="Project Type", default=False,
+       help="Type of project - affects timesheet validation rules")
+
+    enforce_allocation_limits = fields.Boolean(
+        string="Enforce Allocation Limits",
+        default=False,
+        help="Whether to enforce strict allocation-based timesheet limits for this project"
+    )
+
 # Extend the existing Sale Line Employee Map to add allocation percentage
 class ProjectSaleLineEmployeeMap(models.Model):
     _inherit = "project.sale.line.employee.map"
@@ -60,6 +80,14 @@ class ProjectSaleLineEmployeeMap(models.Model):
         string="Project Manager",
         related="project_id.user_id",
         help="Project manager/responsible user",
+        store=False,
+        readonly=True
+    )
+    
+    project_type = fields.Selection(
+        string="Project Type",
+        related="project_id.project_type",
+        help="Type of project - affects validation rules",
         store=False,
         readonly=True
     )
@@ -170,6 +198,13 @@ class ProjectSaleLineEmployeeMap(models.Model):
             if not record.project_id:
                 continue
             
+            # Skip validation for internal projects that don't enforce allocation limits
+            # Also skip if project type is not set (empty/False)
+            if (not record.project_id.project_type or 
+                (record.project_id.project_type != 'client_billable' and 
+                 not record.project_id.enforce_allocation_limits)):
+                continue
+            
             # Get all allocation records for this project
             all_allocations = self.search([('project_id', '=', record.project_id.id)])
             total_percentage = sum(all_allocations.mapped('allocation_percentage'))
@@ -185,6 +220,13 @@ class ProjectSaleLineEmployeeMap(models.Model):
         """Ensure allocation percentage is not reduced below already logged hours"""
         for record in self:
             if not record.project_id or not record.employee_id or not record.allocation_percentage:
+                continue
+            
+            # Skip validation for internal projects that don't enforce allocation limits
+            # Also skip if project type is not set (empty/False)
+            if (not record.project_id.project_type or 
+                (record.project_id.project_type != 'client_billable' and 
+                 not record.project_id.enforce_allocation_limits)):
                 continue
                 
             project = record.project_id
@@ -227,6 +269,12 @@ class TimesheetLine(models.Model):
 
             project = line.project_id
             emp = line.employee_id
+
+            # Skip allocation validation for projects without type set or internal projects that don't enforce limits
+            if (not project.project_type or 
+                (project.project_type != 'client_billable' and 
+                 not project.enforce_allocation_limits)):
+                continue
 
             # Step 1: Check if the employee has an allocation on this project
             allocation = project.sale_line_employee_ids.filtered(
