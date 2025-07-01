@@ -5,7 +5,12 @@
         <field name="name">employee.project.allocation.list</field>
         <field name="model">project.sale.line.employee.map</field>
         <field name="arch" type="xml">
-            <list string="My Project Allocations" create="false" edit="false" delete="false">
+            <list string="My Project Allocations" create="false" edit="false" delete="false" 
+                  decoration-info="logged_hours &lt; allocated_hours * 0.3 and allocated_hours &gt; 0"
+                  decoration-warning="logged_hours &gt;= allocated_hours * 0.3 and logged_hours &lt; allocated_hours * 0.7"
+                  decoration-success="logged_hours &gt;= allocated_hours * 0.7 and logged_hours &lt; allocated_hours"
+                  decoration-bf="logged_hours &gt;= allocated_hours and allocated_hours &gt; 0"
+                  decoration-muted="allocated_hours == 0">
                 <field name="project_id" string="Project"/>
                 <field name="sale_line_id" string="Sale Order Item"/>
                 <field name="allocation_percentage" string="My Allocation %"/>
