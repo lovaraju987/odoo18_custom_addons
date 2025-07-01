@@ -27,6 +27,23 @@ class ProjectSaleLineEmployeeMap(models.Model):
             else:
                 record.allocated_hours = 0.0
 
+    @api.constrains('allocation_percentage')
+    def _check_total_allocation_percentage(self):
+        """Ensure total allocation percentage for a project doesn't exceed 100%"""
+        for record in self:
+            if not record.project_id:
+                continue
+            
+            # Get all allocation records for this project
+            all_allocations = self.search([('project_id', '=', record.project_id.id)])
+            total_percentage = sum(all_allocations.mapped('allocation_percentage'))
+            
+            if total_percentage > 100.0:
+                raise exceptions.ValidationError(
+                    f"Total allocation percentage for project '{record.project_id.name}' "
+                    f"cannot exceed 100%. Current total: {total_percentage:.1f}%"
+                )
+
 # Extend Timesheet Line to enforce allocation and daily hour limits
 class TimesheetLine(models.Model):
     _inherit = "account.analytic.line"
