@@ -11,6 +11,21 @@ class ProjectSaleLineEmployeeMap(models.Model):
         help="What % of this project is allocated to this employee?",
         default=0.0
     )
+    
+    allocated_hours = fields.Float(
+        string="Allocated Hours",
+        compute="_compute_allocated_hours",
+        help="Total hours allocated to this employee based on allocation percentage",
+        store=False
+    )
+    
+    @api.depends('allocation_percentage', 'project_id.allocated_hours')
+    def _compute_allocated_hours(self):
+        for record in self:
+            if record.allocation_percentage and record.project_id.allocated_hours:
+                record.allocated_hours = (record.allocation_percentage / 100.0) * record.project_id.allocated_hours
+            else:
+                record.allocated_hours = 0.0
 
 # Extend Timesheet Line to enforce allocation and daily hour limits
 class TimesheetLine(models.Model):
