@@ -186,7 +186,7 @@ class TimesheetLine(models.Model):
             if not line.date or not line.employee_id:
                 continue
 
-            DAILY_LIMIT = 9.0  # can be made configurable in settings
+            DAILY_LIMIT = 8.0  # can be made configurable in settings
 
             # Total hours on same day
             total_today = sum(self.search([
