@@ -49,6 +49,7 @@
         'project',
         'mail',
         'portal',
+        'employee_project_allocation',
     ],
     'data': [
         'security/timesheet_approval_security.xml',
