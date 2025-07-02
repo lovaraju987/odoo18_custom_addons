@@ -160,7 +160,7 @@
                     <filter string="My Timesheets" name="my_timesheets" 
                             domain="[('employee_id.user_id', '=', uid)]"/>
                     <filter string="My Team" name="my_team" 
-                            domain="[('manager_id.user_id', '=', uid)]"/>
+                            domain="['|', ('manager_id.user_id', '=', uid), ('employee_id.parent_id.user_id', '=', uid)]"/>
                     
                     <separator/>
                     <filter string="Draft" name="draft" domain="[('state', '=', 'draft')]"/>
