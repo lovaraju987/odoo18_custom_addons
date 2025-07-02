@@ -35,9 +35,10 @@
         </record>
 
         <!-- Timesheet Approval Form View -->
-        <record id="view_timesheet_approval_form" model="ir.ui.view">
-            <field name="name">timesheet.approval.form</field>
+        <record id="view_timesheet_approval_form_fixed" model="ir.ui.view">
+            <field name="name">timesheet.approval.form.fixed</field>
             <field name="model">timesheet.approval</field>
+            <field name="priority">1</field>
             <field name="arch" type="xml">
                 <form string="Timesheet Approval">
                     <header>
@@ -46,10 +47,12 @@
                                 invisible="state != 'draft'"/>
                         <button name="action_approve" string="Approve" 
                                 type="object" class="oe_highlight"
-                                invisible="state != 'submitted'"/>
+                                invisible="state != 'submitted'"
+                                groups="timesheet_approval.group_timesheet_approval_manager,hr.group_hr_manager,base.group_system"/>
                         <button name="action_reject" string="Reject" 
                                 type="object" class="btn-danger"
-                                invisible="state != 'submitted'"/>
+                                invisible="state != 'submitted'"
+                                groups="timesheet_approval.group_timesheet_approval_manager,hr.group_hr_manager,base.group_system"/>
                         <button name="action_reset_to_draft" string="Reset to Draft" 
                                 type="object"
                                 invisible="state != 'rejected'"/>

@@ -138,6 +138,19 @@ class TimesheetApproval(models.Model):
         help="Token for portal access"
     )
     
+    # UI Permission Fields
+    can_approve_ui = fields.Boolean(
+        string='Can Approve (UI)',
+        compute='_compute_can_approve_ui',
+        store=False,
+        help="Whether current user can approve this timesheet (for UI visibility)"
+    )
+    
+    # Alternative method-based permission check
+    def get_can_approve_ui(self):
+        """Get approval permission for UI - alternative to computed field"""
+        return self._can_approve()
+    
     # Company
     company_id = fields.Many2one(
         'res.company',
@@ -161,8 +174,11 @@ class TimesheetApproval(models.Model):
         for record in self:
             if record.employee_id and record.employee_id.parent_id:
                 record.manager_id = record.employee_id.parent_id
+                _logger.debug(f"Computed manager for {record.employee_id.name}: {record.manager_id.name}")
             else:
                 record.manager_id = False
+                if record.employee_id:
+                    _logger.warning(f"No manager found for employee {record.employee_id.name}")
     
     @api.depends('timesheet_line_ids.unit_amount')
     def _compute_summary(self):
@@ -342,31 +358,63 @@ class TimesheetApproval(models.Model):
     
     def _can_approve(self):
         """Check if current user can approve this timesheet"""
+        self.ensure_one()
         user = self.env.user
+        
+        _logger.debug(f"Checking approval permissions for user {user.name} on {self.display_name}")
         
         # System admin can always approve
         if user.has_group('base.group_system'):
+            _logger.debug(f"User {user.name} is system admin - can approve")
             return True
         
         # HR managers can approve
         if user.has_group('hr.group_hr_manager'):
+            _logger.debug(f"User {user.name} is HR manager - can approve")
             return True
+        
+        # Check if user has manager group first
+        if not user.has_group('timesheet_approval.group_timesheet_approval_manager'):
+            _logger.debug(f"User {user.name} is not in manager group - cannot approve")
+            return False
         
         # Manager can approve their team's timesheets
         if self.manager_id and self.manager_id.user_id == user:
+            _logger.debug(f"User {user.name} is assigned manager for {self.employee_id.name} - can approve")
+            return True
+        
+        # Check via employee hierarchy
+        if self.employee_id.parent_id and self.employee_id.parent_id.user_id == user:
+            _logger.debug(f"User {user.name} is parent manager for {self.employee_id.name} - can approve")
             return True
         
         # Project managers can approve timesheets for their projects
         if user.has_group('project.group_project_manager'):
             project_ids = self.timesheet_line_ids.mapped('project_id')
-            managed_projects = self.env['project.project'].search([
-                ('user_id', '=', user.id),
-                ('id', 'in', project_ids.ids)
-            ])
-            if managed_projects:
-                return True
+            if project_ids:
+                managed_projects = self.env['project.project'].search([
+                    ('user_id', '=', user.id),
+                    ('id', 'in', project_ids.ids)
+                ])
+                if managed_projects:
+                    _logger.debug(f"User {user.name} manages projects {managed_projects.mapped('name')} - can approve")
+                    return True
+                else:
+                    _logger.debug(f"User {user.name} doesn't manage any projects in timesheet - cannot approve")
+            else:
+                _logger.debug(f"No projects found in timesheet lines")
         
+        _logger.debug(f"User {user.name} has no approval permissions for {self.display_name}")
         return False
+    
+    def _compute_can_approve_ui(self):
+        """Compute if current user can approve this timesheet for UI purposes"""
+        for record in self:
+            try:
+                record.can_approve_ui = record._can_approve()
+            except Exception as e:
+                _logger.error(f"Error computing can_approve_ui for {record}: {e}")
+                record.can_approve_ui = False
     
     def _load_timesheet_lines(self):
         """Load actual timesheet entries for the period"""

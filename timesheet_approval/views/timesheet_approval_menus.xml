@@ -9,6 +9,7 @@
             <field name="name">My Timesheet Approvals</field>
             <field name="res_model">timesheet.approval</field>
             <field name="view_mode">list,form,kanban</field>
+            <field name="view_id" ref="view_timesheet_approval_form_fixed"/>
             <field name="domain">[('employee_id.user_id', '=', uid)]</field>
             <field name="context">{
                 'default_employee_id': uid,
@@ -30,6 +31,7 @@
             <field name="name">Timesheet Approvals</field>
             <field name="res_model">timesheet.approval</field>
             <field name="view_mode">list,form,kanban</field>
+            <field name="view_id" ref="view_timesheet_approval_form_fixed"/>
             <field name="context">{
                 'search_default_submitted': 1,
                 'search_default_my_team': 1

@@ -3,9 +3,6 @@
 from . import models
 from . import wizard
 from . import reports
+from .post_install_hooks import post_install_hook, uninstall_hook
 
-def post_init_hook(cr, registry):
-    """
-    Post-initialization hook to set up default data and configurations
-    """
-    pass
+
