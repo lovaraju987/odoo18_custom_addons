@@ -249,6 +249,13 @@ class TimesheetApproval(models.Model):
         if not self._can_approve():
             raise UserError(_("You don't have permission to approve this timesheet."))
         
+        # Check configuration for required comments
+        settings = self.env['timesheet.approval.settings']
+        require_comments = settings.get_config_value('require_manager_comments', False)
+        
+        if require_comments and not self.approval_comments:
+            raise UserError(_("Manager comments are required for approval. Please provide comments."))
+        
         self.write({
             'state': 'approved',
             'approval_date': fields.Datetime.now(),
@@ -280,6 +287,13 @@ class TimesheetApproval(models.Model):
         # Check if current user can approve
         if not self._can_approve():
             raise UserError(_("You don't have permission to reject this timesheet."))
+        
+        # Check configuration for required comments
+        settings = self.env['timesheet.approval.settings']
+        require_comments = settings.get_config_value('require_manager_comments', False)
+        
+        if require_comments and not self.approval_comments:
+            raise UserError(_("Manager comments are required for rejection. Please provide rejection comments."))
         
         if not self.approval_comments:
             raise UserError(_("Please provide rejection comments."))
@@ -398,7 +412,24 @@ class TimesheetApproval(models.Model):
         })
     
     def _send_notification_email(self, action):
-        """Send email notifications"""
+        """Send email notifications based on configuration settings"""
+        settings = self.env['timesheet.approval.settings']
+        
+        # Check if email notifications are enabled for this action
+        email_enabled = False
+        if action == 'submit':
+            email_enabled = settings.get_config_value('email_submission_enabled', True)
+        elif action == 'approve':
+            email_enabled = settings.get_config_value('email_approval_enabled', True)
+        elif action == 'reject':
+            email_enabled = settings.get_config_value('email_approval_enabled', True)
+        elif action == 'reminder':
+            email_enabled = settings.get_config_value('email_reminder_enabled', True)
+        
+        if not email_enabled:
+            _logger.info(f"Email notification for '{action}' is disabled in configuration")
+            return
+        
         template_ref = f'timesheet_approval.email_template_timesheet_{action}'
         
         try:
@@ -463,10 +494,20 @@ class TimesheetApproval(models.Model):
         """
         Cron job method to send reminders to managers about pending approvals
         """
-        # Find pending approvals older than 3 days
+        # Check if reminder emails are enabled in configuration
+        settings = self.env['timesheet.approval.settings']
+        reminder_enabled = settings.get_config_value('email_reminder_enabled', True)
+        
+        if not reminder_enabled:
+            return True
+        
+        # Get reminder frequency from configuration
+        reminder_frequency = settings.get_config_value('reminder_frequency_days', 2)
+        
+        # Find pending approvals older than configured frequency
         from datetime import datetime, timedelta
         
-        cutoff_date = datetime.now() - timedelta(days=3)
+        cutoff_date = datetime.now() - timedelta(days=reminder_frequency)
         pending_approvals = self.search([
             ('state', '=', 'submitted'),
             ('submission_date', '<', cutoff_date)

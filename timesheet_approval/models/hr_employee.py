@@ -144,6 +144,13 @@ class HrEmployee(models.Model):
         """
         Cron job method to send reminders to employees who haven't submitted timesheets
         """
+        # Check if reminder emails are enabled in configuration
+        settings = self.env['timesheet.approval.settings']
+        reminder_enabled = settings.get_config_value('email_reminder_enabled', True)
+        
+        if not reminder_enabled:
+            return
+        
         # Find employees who need to submit timesheets
         employees = self.search([
             ('timesheet_approval_required', '=', True),

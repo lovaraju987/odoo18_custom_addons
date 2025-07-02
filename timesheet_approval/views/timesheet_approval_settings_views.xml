@@ -1,0 +1,255 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <!-- Configuration Form View -->
+        <record id="timesheet_approval_settings_view_form" model="ir.ui.view">
+            <field name="name">timesheet.approval.settings.form</field>
+            <field name="model">timesheet.approval.settings</field>
+            <field name="arch" type="xml">
+                <form string="Timesheet Approval Configuration" class="oe_form_configuration">
+                    <header>
+                        <button name="action_test_email_settings" 
+                                string="Test Email Settings" 
+                                type="object" 
+                                class="btn-secondary"
+                                icon="fa-envelope"/>
+                        <button name="action_reset_to_defaults" 
+                                string="Reset to Defaults" 
+                                type="object" 
+                                class="btn-secondary"
+                                icon="fa-refresh"
+                                confirm="Are you sure you want to reset all settings to their default values?"/>
+                    </header>
+                    <sheet>
+                        <div class="row mt16 o_settings_container">
+                            <!-- Deadline Settings -->
+                            <div class="col-12 col-lg-6 o_setting_box">
+                                <div class="o_setting_left_pane">
+                                    <field name="submission_deadline_days"/>
+                                </div>
+                                <div class="o_setting_right_pane">
+                                    <label for="submission_deadline_days"/>
+                                    <div class="text-muted">
+                                        Number of days employees have to submit timesheets after period end
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="col-12 col-lg-6 o_setting_box">
+                                <div class="o_setting_left_pane">
+                                    <field name="approval_deadline_days"/>
+                                </div>
+                                <div class="o_setting_right_pane">
+                                    <label for="approval_deadline_days"/>
+                                    <div class="text-muted">
+                                        Number of days managers have to approve submitted timesheets
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="col-12 col-lg-6 o_setting_box">
+                                <div class="o_setting_left_pane">
+                                    <field name="auto_submission_enabled"/>
+                                </div>
+                                <div class="o_setting_right_pane">
+                                    <label for="auto_submission_enabled"/>
+                                    <div class="text-muted">
+                                        Automatically submit timesheets when deadline approaches
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row mt16 o_settings_container">
+                            <div class="col-12">
+                                <h2>Email Notifications</h2>
+                            </div>
+                            
+                            <div class="col-12 col-lg-6 o_setting_box">
+                                <div class="o_setting_left_pane">
+                                    <field name="email_submission_enabled"/>
+                                </div>
+                                <div class="o_setting_right_pane">
+                                    <label for="email_submission_enabled"/>
+                                    <div class="text-muted">
+                                        Send email notifications when timesheets are submitted
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="col-12 col-lg-6 o_setting_box">
+                                <div class="o_setting_left_pane">
+                                    <field name="email_approval_enabled"/>
+                                </div>
+                                <div class="o_setting_right_pane">
+                                    <label for="email_approval_enabled"/>
+                                    <div class="text-muted">
+                                        Send email notifications when timesheets are approved/rejected
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="col-12 col-lg-6 o_setting_box">
+                                <div class="o_setting_left_pane">
+                                    <field name="email_reminder_enabled"/>
+                                </div>
+                                <div class="o_setting_right_pane">
+                                    <label for="email_reminder_enabled"/>
+                                    <div class="text-muted">
+                                        Send reminder emails for pending submissions and approvals
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="col-12 col-lg-6 o_setting_box">
+                                <div class="o_setting_left_pane">
+                                    <field name="reminder_frequency_days"/>
+                                </div>
+                                <div class="o_setting_right_pane">
+                                    <label for="reminder_frequency_days"/>
+                                    <div class="text-muted">
+                                        How often to send reminder emails (in days)
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row mt16 o_settings_container">
+                            <div class="col-12">
+                                <h2>Approval Workflow</h2>
+                            </div>
+                            
+                            <div class="col-12 col-lg-6 o_setting_box">
+                                <div class="o_setting_left_pane">
+                                    <field name="require_manager_comments"/>
+                                </div>
+                                <div class="o_setting_right_pane">
+                                    <label for="require_manager_comments"/>
+                                    <div class="text-muted">
+                                        Require managers to add comments when approving/rejecting
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="col-12 col-lg-6 o_setting_box">
+                                <div class="o_setting_left_pane">
+                                    <field name="allow_self_approval"/>
+                                </div>
+                                <div class="o_setting_right_pane">
+                                    <label for="allow_self_approval"/>
+                                    <div class="text-muted">
+                                        Allow employees to approve their own timesheets (not recommended)
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="col-12 col-lg-6 o_setting_box">
+                                <div class="o_setting_left_pane">
+                                    <field name="allow_draft_editing"/>
+                                </div>
+                                <div class="o_setting_right_pane">
+                                    <label for="allow_draft_editing"/>
+                                    <div class="text-muted">
+                                        Allow employees to edit timesheets in draft state
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="col-12 col-lg-6 o_setting_box">
+                                <div class="o_setting_left_pane">
+                                    <field name="batch_approval_limit"/>
+                                </div>
+                                <div class="o_setting_right_pane">
+                                    <label for="batch_approval_limit"/>
+                                    <div class="text-muted">
+                                        Maximum number of timesheets that can be processed in batch
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row mt16 o_settings_container">
+                            <div class="col-12">
+                                <h2>Auto-Approval</h2>
+                            </div>
+                            
+                            <div class="col-12 col-lg-6 o_setting_box">
+                                <div class="o_setting_left_pane">
+                                    <field name="auto_approve_standard_hours"/>
+                                </div>
+                                <div class="o_setting_right_pane">
+                                    <label for="auto_approve_standard_hours"/>
+                                    <div class="text-muted">
+                                        Automatically approve timesheets within standard working hours
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="col-12 col-lg-6 o_setting_box" invisible="not auto_approve_standard_hours">>
+                                <div class="o_setting_left_pane">
+                                    <field name="standard_hours_threshold"/>
+                                </div>
+                                <div class="o_setting_right_pane">
+                                    <label for="standard_hours_threshold"/>
+                                    <div class="text-muted">
+                                        Daily hours threshold for auto-approval
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row mt16 o_settings_container">
+                            <div class="col-12">
+                                <h2>Integration Settings</h2>
+                            </div>
+                            
+                            <div class="col-12 col-lg-6 o_setting_box">
+                                <div class="o_setting_left_pane">
+                                    <field name="project_allocation_integration"/>
+                                </div>
+                                <div class="o_setting_right_pane">
+                                    <label for="project_allocation_integration"/>
+                                    <div class="text-muted">
+                                        Validate timesheet entries against project allocations
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="col-12 col-lg-6 o_setting_box">
+                                <div class="o_setting_left_pane">
+                                    <field name="portal_access_enabled"/>
+                                </div>
+                                <div class="o_setting_right_pane">
+                                    <label for="portal_access_enabled"/>
+                                    <div class="text-muted">
+                                        Allow customers to view and approve project timesheets via portal
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <!-- Configuration Action -->
+        <record id="timesheet_approval_settings_action" model="ir.actions.act_window">
+            <field name="name">Timesheet Approval Settings</field>
+            <field name="type">ir.actions.act_window</field>
+            <field name="res_model">timesheet.approval.settings</field>
+            <field name="view_mode">form</field>
+            <field name="target">inline</field>
+            <field name="context">{'module': 'timesheet_approval'}</field>
+        </record>
+
+        <!-- Settings Menu -->
+        <menuitem 
+            id="timesheet_approval_settings_menu"
+            name="Settings"
+            parent="menu_timesheet_approval_config"
+            action="timesheet_approval_settings_action"
+            sequence="10"
+            groups="timesheet_approval.group_timesheet_approval_manager"/>
+
+    </data>
+</odoo>

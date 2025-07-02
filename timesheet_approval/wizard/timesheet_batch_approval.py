@@ -81,6 +81,16 @@ class TimesheetBatchApproval(models.TransientModel):
         if not self.timesheet_approval_ids:
             raise UserError(_("No timesheets selected for processing."))
         
+        # Check batch limit configuration
+        settings = self.env['timesheet.approval.settings']
+        batch_limit = settings.get_config_value('batch_approval_limit', 50)
+        
+        if len(self.timesheet_approval_ids) > batch_limit:
+            raise UserError(_(
+                "Batch limit exceeded. You can process maximum %d timesheets at once. "
+                "Current selection: %d timesheets. Please reduce your selection or contact administrator to increase the limit."
+            ) % (batch_limit, len(self.timesheet_approval_ids)))
+        
         # Validate timesheets can be processed
         valid_timesheets = self.timesheet_approval_ids.filtered(lambda t: t.state == 'submitted')
         
@@ -100,6 +110,11 @@ class TimesheetBatchApproval(models.TransientModel):
                 raise UserError(_(
                     "You don't have permission to approve timesheet for %s."
                 ) % timesheet.employee_id.name)
+        
+        # Check if comments are required based on configuration
+        require_comments = settings.get_config_value('require_manager_comments', False)
+        if require_comments and not self.comments:
+            raise UserError(_("Manager comments are required for batch approval/rejection. Please provide comments."))
         
         # Process timesheets
         processed_count = 0

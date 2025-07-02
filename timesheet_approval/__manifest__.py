@@ -59,6 +59,7 @@
         'views/timesheet_approval_manager_views.xml',
         'views/timesheet_approval_employee_views.xml',
         'views/timesheet_approval_dashboard_views.xml',
+        'views/timesheet_approval_settings_views.xml',
         'views/timesheet_approval_menus.xml',
         'wizard/timesheet_batch_approval_views.xml',
         'wizard/timesheet_submission_views.xml',

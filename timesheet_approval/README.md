@@ -53,6 +53,15 @@ The Timesheet Approval Workflow module addresses the critical need for timesheet
 - **Portal Access**: Client portal integration for project-based approvals
 - **API Ready**: RESTful API endpoints for third-party integrations
 
+### ⚙️ Configuration Management
+- **Administrative UI**: Comprehensive configuration interface for system administrators
+- **Dynamic Settings**: Real-time application of configuration changes across the system
+- **Email Control**: Granular control over notification types and frequency
+- **Workflow Customization**: Configurable approval rules, deadlines, and validation requirements
+- **Auto-Approval**: Intelligent rules for automatic approval of standard timesheet entries
+- **Batch Limits**: Performance management with configurable batch operation limits
+- **Integration Toggles**: Enable/disable specific integration features as needed
+
 ## 📦 Installation
 
 ### Prerequisites
@@ -103,6 +112,12 @@ The Timesheet Approval Workflow module addresses the critical need for timesheet
 3. **Email Configuration**:
    - Ensure outgoing mail server is configured in `Settings` → `Technical` → `Email`
    - Test email notifications with sample submissions
+
+4. **Module Configuration**:
+   - Access the Configuration UI at `Timesheets` → `Timesheet Approvals` → `Configuration` → `Settings`
+   - Configure deadlines, email notifications, and workflow settings
+   - Test email settings using the built-in test functionality
+   - Customize approval rules and batch limits according to your organization's needs
 
 ## 🎮 Usage Guide
 
@@ -188,20 +203,61 @@ The Timesheet Approval Workflow module addresses the critical need for timesheet
    - Monitor system performance and adoption
 
 3. **Configuration Management**:
-   - Customize email templates
-   - Configure approval deadlines
-   - Set up automated reminders
+   - Access comprehensive configuration UI
+   - Customize approval workflow settings
+   - Configure email notifications and deadlines
+   - Set up batch operation limits and auto-approval rules
 
 ## 🔧 Configuration Options
 
-### System Settings
+### Administrative Configuration UI
 
-Access via `Settings` → `Timesheets` → `Approval Settings`:
+The module provides a comprehensive configuration interface accessible to system administrators at:
+**Timesheets** → **Timesheet Approvals** → **Configuration** → **Settings**
 
-- **Approval Deadlines**: Set submission and approval deadlines
-- **Email Notifications**: Enable/disable specific notification types
-- **Batch Approval Limits**: Configure maximum batch sizes
-- **Escalation Rules**: Set up automatic escalation for overdue approvals
+#### Deadline Management
+- **Submission Deadline**: Configure how many days employees have to submit timesheets after period end
+- **Approval Deadline**: Set the number of days managers have to approve submitted timesheets
+- **Auto-Submission**: Enable automatic timesheet submission when deadlines approach
+
+#### Email Notification Control
+- **Submission Notifications**: Toggle email alerts when timesheets are submitted
+- **Approval Notifications**: Control email alerts for approval/rejection actions  
+- **Reminder Notifications**: Enable/disable reminder emails for pending actions
+- **Reminder Frequency**: Configure how often reminder emails are sent (in days)
+
+#### Approval Workflow Settings
+- **Require Manager Comments**: Force managers to provide comments when approving/rejecting
+- **Allow Self Approval**: Enable employees to approve their own timesheets (not recommended)
+- **Allow Draft Editing**: Control whether employees can edit timesheets in draft state
+- **Batch Approval Limit**: Set maximum number of timesheets that can be processed in batch operations
+
+#### Auto-Approval Rules
+- **Auto-approve Standard Hours**: Automatically approve timesheets within standard working hours
+- **Standard Hours Threshold**: Set the daily hours threshold for auto-approval (0-24 hours)
+
+#### Integration Settings
+- **Project Allocation Integration**: Validate timesheet entries against project allocations
+- **Customer Portal Access**: Allow customers to view and approve project timesheets via portal
+
+#### Administrative Tools
+- **Test Email Settings**: Send test emails to verify notification configuration
+- **Reset to Defaults**: Restore all settings to their default values with confirmation
+
+### Dynamic Configuration Application
+
+All configuration settings are applied in real-time throughout the system:
+- Email notifications respect individual toggle settings
+- Batch operations enforce configured limits with validation
+- Approval/rejection processes validate required comments
+- Cron job reminders use configured frequency settings
+
+### Legacy Configuration Access
+
+Advanced users can also access configuration parameters directly via:
+`Settings` → `Technical` → `Parameters` → `System Parameters`
+
+All settings are stored with the prefix `timesheet_approval.` for easy identification.
 
 ### Email Templates
 

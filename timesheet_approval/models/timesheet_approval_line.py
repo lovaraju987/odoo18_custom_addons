@@ -93,13 +93,6 @@ class TimesheetApprovalLine(models.Model):
         help="Manager of the project"
     )
     
-    project_type = fields.Selection(
-        string='Project Type',
-        related='project_id.project_type',
-        store=False,
-        help="Type of project"
-    )
-    
     @api.constrains('unit_amount')
     def _check_unit_amount(self):
         """Validate unit amount"""
