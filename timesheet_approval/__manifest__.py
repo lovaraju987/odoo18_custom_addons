@@ -63,6 +63,7 @@
         'views/timesheet_approval_menus.xml',
         'wizard/timesheet_batch_approval_views.xml',
         'wizard/timesheet_submission_views.xml',
+        'wizard/timesheet_submission_wizard_simple_views.xml',
         'reports/timesheet_approval_reports.xml',
     ],
     'demo': [

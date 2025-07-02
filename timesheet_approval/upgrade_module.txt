@@ -1,0 +1,26 @@
+## Module Upgrade Instructions
+
+### Option 1: Via Odoo Interface
+1. Go to Apps menu in Odoo
+2. Remove the "Apps" filter
+3. Search for "timesheet_approval"
+4. Click "Upgrade" button
+
+### Option 2: Via Command Line (if you have access)
+```bash
+# Navigate to your Odoo installation directory
+# Run the upgrade command
+python odoo-bin -u timesheet_approval -d your_database_name
+```
+
+### Option 3: Via Developer Mode
+1. Enable Developer Mode in Odoo
+2. Go to Settings > Technical > Database Structure > Models
+3. Search for "timesheet.approval"
+4. Click "Update Module List" if needed
+5. Then upgrade via Apps menu
+
+### After Upgrade:
+1. Test timesheet submission
+2. Check Odoo logs for our debug output
+3. Report any remaining issues

@@ -205,14 +205,16 @@ class TimesheetApproval(models.Model):
         if self.state != 'draft':
             raise UserError(_("Only draft timesheets can be submitted."))
         
-        if not self.timesheet_line_ids:
-            raise UserError(_("Cannot submit empty timesheet. Please add timesheet entries."))
-        
         if not self.manager_id:
             raise UserError(_("No manager assigned to this employee. Please contact HR."))
         
-        # Load timesheet lines from actual timesheets
+        # Load timesheet lines from actual timesheets FIRST
         self._load_timesheet_lines()
+        
+        # Now check if we have any timesheet lines after loading
+        if not self.timesheet_line_ids:
+            raise UserError(_("No timesheet entries found for the selected period. "
+                            "Please ensure you have timesheet entries in the date range and try again."))
         
         # Validate all timesheet lines
         self._validate_timesheet_lines()
@@ -371,30 +373,45 @@ class TimesheetApproval(models.Model):
         # Clear existing lines
         self.timesheet_line_ids.unlink()
         
-        # Find timesheet entries in the period
+        # Find all timesheet entries in the period
         timesheet_lines = self.env['account.analytic.line'].search([
             ('employee_id', '=', self.employee_id.id),
             ('date', '>=', self.date_from),
             ('date', '<=', self.date_to),
-            ('project_id', '!=', False),  # Only project-related entries
         ])
+        
+        # Debug logging
+        import logging
+        _logger = logging.getLogger(__name__)
+        _logger.info(f"Loading timesheet lines for {self.employee_id.name} from {self.date_from} to {self.date_to}")
+        _logger.info(f"Found {len(timesheet_lines)} timesheet entries")
         
         # Create approval lines
         approval_lines = []
         for line in timesheet_lines:
-            approval_lines.append({
+            _logger.info(f"Processing entry: Date={line.date}, Project={line.project_id.name if line.project_id else 'NO PROJECT'}, Hours={line.unit_amount}")
+            
+            line_data = {
                 'approval_id': self.id,
                 'analytic_line_id': line.id,
                 'date': line.date,
-                'project_id': line.project_id.id,
-                'task_id': line.task_id.id if line.task_id else False,
                 'employee_id': line.employee_id.id,
                 'unit_amount': line.unit_amount,
-                'name': line.name,
-            })
+                'name': line.name or 'No description provided',
+            }
+            
+            # Only set project and task if they exist
+            if line.project_id:
+                line_data['project_id'] = line.project_id.id
+                line_data['task_id'] = line.task_id.id if line.task_id else False
+            
+            approval_lines.append(line_data)
         
         if approval_lines:
-            self.env['timesheet.approval.line'].create(approval_lines)
+            created_lines = self.env['timesheet.approval.line'].create(approval_lines)
+            _logger.info(f"Created {len(created_lines)} approval lines")
+        else:
+            _logger.warning("No approval lines created - no timesheet entries found or all entries were invalid")
     
     def _validate_timesheet_lines(self):
         """Validate all timesheet lines before submission"""
@@ -402,14 +419,21 @@ class TimesheetApproval(models.Model):
             line._validate_line()
     
     def _create_history_record(self, action, comments=''):
-        """Create approval history record"""
-        self.env['timesheet.approval.history'].create({
-            'approval_id': self.id,
-            'action': action,
-            'action_date': fields.Datetime.now(),
-            'user_id': self.env.user.id,
-            'comments': comments,
-        })
+        """Create approval history record - handle permission errors gracefully"""
+        try:
+            self.env['timesheet.approval.history'].create({
+                'approval_id': self.id,
+                'action': action,
+                'action_date': fields.Datetime.now(),
+                'user_id': self.env.user.id,
+                'comments': comments,
+            })
+        except Exception as e:
+            # Log the error but don't break the workflow
+            import logging
+            _logger = logging.getLogger(__name__)
+            _logger.warning(f"Could not create history record for approval {self.id}: {e}")
+            # Continue without history record - this is not critical for workflow
     
     def _send_notification_email(self, action):
         """Send email notifications based on configuration settings"""

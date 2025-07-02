@@ -8,6 +8,55 @@ class TimesheetSubmissionWizard(models.TransientModel):
     _name = 'timesheet.submission.wizard'
     _description = 'Timesheet Submission Wizard'
 
+    @api.model
+    def default_get(self, fields_list):
+        """Ensure timesheet entries are loaded when wizard opens"""
+        res = super().default_get(fields_list)
+        
+        # Auto-load timesheet entries if dates are available
+        if 'date_from' in res and 'date_to' in res and 'employee_id' in res:
+            self._load_timesheet_entries_for_defaults(res)
+        
+        return res
+    
+    def _load_timesheet_entries_for_defaults(self, vals):
+        """Load timesheet entries for default_get"""
+        try:
+            employee_id = vals.get('employee_id')
+            date_from = vals.get('date_from')
+            date_to = vals.get('date_to')
+            
+            if employee_id and date_from and date_to:
+                # Find timesheet entries
+                timesheet_lines = self.env['account.analytic.line'].search([
+                    ('employee_id', '=', employee_id),
+                    ('date', '>=', date_from),
+                    ('date', '<=', date_to),
+                ])
+                
+                # Create line data
+                line_vals = []
+                for line in timesheet_lines:
+                    line_vals.append((0, 0, {
+                        'analytic_line_id': line.id,
+                        'date': line.date,
+                        'employee_id': line.employee_id.id,
+                        'project_id': line.project_id.id if line.project_id else False,
+                        'task_id': line.task_id.id if line.task_id else False,
+                        'unit_amount': line.unit_amount,
+                        'name': line.name or 'No description',
+                    }))
+                
+                vals['timesheet_line_ids'] = line_vals
+                vals['total_hours'] = sum(line.unit_amount for line in timesheet_lines)
+                vals['total_entries'] = len(timesheet_lines)
+                
+        except Exception as e:
+            # Don't break wizard creation if loading fails
+            import logging
+            _logger = logging.getLogger(__name__)
+            _logger.warning(f"Failed to load timesheet entries in default_get: {e}")
+
     # Employee Selection
     employee_id = fields.Many2one(
         'hr.employee',
@@ -72,6 +121,21 @@ class TimesheetSubmissionWizard(models.TransientModel):
         compute='_compute_validation',
         help="Validation messages and warnings"
     )
+    
+    # Advanced Options
+    include_entries_without_projects = fields.Boolean(
+        string='Include Entries Without Projects',
+        default=False,
+        help="Include timesheet entries that don't have a project assigned (may require admin approval)"
+    )
+
+    def action_refresh_entries(self):
+        """Manual refresh button for timesheet entries"""
+        self._load_timesheet_entries()
+        return {
+            'type': 'ir.actions.client',
+            'tag': 'reload',
+        }
     
     def _default_date_from(self):
         """Default start date (beginning of current week)"""
@@ -143,7 +207,7 @@ class TimesheetSubmissionWizard(models.TransientModel):
                 next_month = today.replace(month=today.month + 1, day=1)
             self.date_to = next_month - timedelta(days=1)
     
-    @api.onchange('employee_id', 'date_from', 'date_to')
+    @api.onchange('employee_id', 'date_from', 'date_to', 'include_entries_without_projects')
     def _onchange_period(self):
         """Load timesheet entries when period changes"""
         if self.employee_id and self.date_from and self.date_to:
@@ -157,25 +221,59 @@ class TimesheetSubmissionWizard(models.TransientModel):
         if not (self.employee_id and self.date_from and self.date_to):
             return
         
-        # Find timesheet entries
-        timesheet_entries = self.env['account.analytic.line'].search([
+        # Debug: Check all timesheet entries for this employee in the period
+        all_entries = self.env['account.analytic.line'].search([
             ('employee_id', '=', self.employee_id.id),
             ('date', '>=', self.date_from),
             ('date', '<=', self.date_to),
-            ('project_id', '!=', False),  # Only project timesheets
         ])
+        
+        import logging
+        _logger = logging.getLogger(__name__)
+        _logger.info(f"Found {len(all_entries)} total timesheet entries for {self.employee_id.name} "
+                    f"from {self.date_from} to {self.date_to}")
+        
+        # Log details of all entries for debugging
+        for entry in all_entries:
+            _logger.info(f"Entry: ID={entry.id}, Date={entry.date}, Project={entry.project_id.name if entry.project_id else 'NO PROJECT'}, "
+                        f"Hours={entry.unit_amount}, Desc='{entry.name[:50] if entry.name else ''}...'")
+        
+        # Determine which entries to include
+        if self.include_entries_without_projects:
+            # Include all timesheet entries
+            timesheet_entries = all_entries
+            _logger.info(f"Including all {len(timesheet_entries)} timesheet entries (with and without projects)")
+        else:
+            # Find timesheet entries with projects only
+            timesheet_entries = all_entries.filtered(lambda line: line.project_id)
+            _logger.info(f"Found {len(timesheet_entries)} timesheet entries with project assignments")
+        
+        # If no entries found, provide helpful information
+        if not timesheet_entries:
+            entries_without_projects = all_entries.filtered(lambda line: not line.project_id)
+            if entries_without_projects and not self.include_entries_without_projects:
+                _logger.warning(f"Found {len(entries_without_projects)} timesheet entries without project assignments. "
+                              f"User may need to enable 'Include Entries Without Projects' option.")
+            elif not all_entries:
+                _logger.warning(f"No timesheet entries found for {self.employee_id.name} "
+                              f"from {self.date_from} to {self.date_to}")
         
         # Create wizard lines
         wizard_lines = []
         for entry in timesheet_entries:
-            wizard_lines.append((0, 0, {
+            line_data = {
                 'analytic_line_id': entry.id,
                 'date': entry.date,
-                'project_id': entry.project_id.id,
-                'task_id': entry.task_id.id if entry.task_id else False,
                 'unit_amount': entry.unit_amount,
-                'name': entry.name,
-            }))
+                'name': entry.name or 'No description provided',
+            }
+            
+            # Only set project_id if entry has a project
+            if entry.project_id:
+                line_data['project_id'] = entry.project_id.id
+                line_data['task_id'] = entry.task_id.id if entry.task_id else False
+            
+            wizard_lines.append((0, 0, line_data))
         
         self.timesheet_line_ids = wizard_lines
     
@@ -184,7 +282,31 @@ class TimesheetSubmissionWizard(models.TransientModel):
         self.ensure_one()
         
         if not self.timesheet_line_ids:
-            raise UserError(_("No timesheet entries found for the selected period."))
+            # Check if there are any timesheet entries at all for better error message
+            all_entries = self.env['account.analytic.line'].search([
+                ('employee_id', '=', self.employee_id.id),
+                ('date', '>=', self.date_from),
+                ('date', '<=', self.date_to),
+            ])
+            
+            if not all_entries:
+                raise UserError(_(
+                    "No timesheet entries found for %s from %s to %s. "
+                    "Please create timesheet entries first in Timesheets > My Timesheets."
+                ) % (self.employee_id.name, self.date_from, self.date_to))
+            else:
+                # There are entries but none were loaded
+                entries_without_projects = all_entries.filtered(lambda line: not line.project_id)
+                if entries_without_projects and not self.include_entries_without_projects:
+                    raise UserError(_(
+                        "Found %d timesheet entries for the selected period, but %d entries "
+                        "do not have projects assigned. \n\n"
+                        "Option 1: Assign projects to your timesheet entries in Timesheets > My Timesheets.\n"
+                        "Option 2: Enable 'Include Entries Without Projects' option below and resubmit."
+                    ) % (len(all_entries), len(entries_without_projects)))
+                else:
+                    raise UserError(_("No timesheet entries found for the selected period. "
+                                    "Please check your timesheet entries and try again."))
         
         if self.has_existing_submission:
             raise UserError(_(
@@ -239,6 +361,33 @@ class TimesheetSubmissionWizard(models.TransientModel):
             'context': {'preview_mode': True},
         }
 
+    @api.model
+    def default_get(self, fields_list):
+        """Set default values and load timesheet entries"""
+        res = super().default_get(fields_list)
+        
+        # If we have an employee context, set it
+        if self.env.context.get('default_employee_id'):
+            res['employee_id'] = self.env.context['default_employee_id']
+        elif not res.get('employee_id'):
+            # Get current user's employee record
+            employee = self.env['hr.employee'].search([('user_id', '=', self.env.user.id)], limit=1)
+            if employee:
+                res['employee_id'] = employee.id
+        
+        return res
+
+    @api.model
+    def create(self, vals):
+        """Override create to load timesheet entries after creation"""
+        wizard = super().create(vals)
+        
+        # Load timesheet entries after creation if we have the required fields
+        if wizard.employee_id and wizard.date_from and wizard.date_to:
+            wizard._load_timesheet_entries()
+        
+        return wizard
+
 
 class TimesheetSubmissionLine(models.TransientModel):
     _name = 'timesheet.submission.line'
@@ -265,7 +414,8 @@ class TimesheetSubmissionLine(models.TransientModel):
     project_id = fields.Many2one(
         'project.project',
         string='Project',
-        required=True
+        required=False,  # Made optional to support entries without projects
+        help="Project (if assigned)"
     )
     
     task_id = fields.Many2one(

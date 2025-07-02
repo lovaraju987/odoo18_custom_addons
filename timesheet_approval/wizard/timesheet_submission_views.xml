@@ -39,7 +39,17 @@
                             </group>
                         </group>
                         
+                        <group>
+                            <field name="include_entries_without_projects"/>
+                            <div class="text-muted" invisible="include_entries_without_projects == False">
+                                Note: Entries without projects may require additional approval
+                            </div>
+                        </group>
+                        
                         <separator string="Timesheet Entries"/>
+                        <div class="oe_button_box" style="text-align: right;">
+                            <button name="action_refresh_entries" type="object" string="Refresh Entries" class="btn-secondary"/>
+                        </div>
                         <field name="timesheet_line_ids" nolabel="1" readonly="1">
                             <list>
                                 <field name="date"/>

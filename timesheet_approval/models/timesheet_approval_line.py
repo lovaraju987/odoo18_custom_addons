@@ -34,8 +34,8 @@ class TimesheetApprovalLine(models.Model):
     project_id = fields.Many2one(
         'project.project',
         string='Project',
-        required=True,
-        help="Project worked on"
+        required=False,  # Made optional to support entries without projects
+        help="Project worked on (if assigned)"
     )
     
     task_id = fields.Many2one(
@@ -132,15 +132,20 @@ class TimesheetApprovalLine(models.Model):
             validation_status = 'warning'
             validation_messages.append(f"Daily total ({daily_total:.2f} hrs) exceeds recommended 8 hours.")
         
-        # Check project allocation if employee_project_allocation module is installed
-        if self.env['ir.module.module'].search([
+        # Check for missing project assignment
+        if not self.project_id:
+            validation_status = 'warning'
+            validation_messages.append("No project assigned - may require additional approval.")
+        
+        # Check project allocation if employee_project_allocation module is installed and project exists
+        if self.project_id and self.env['ir.module.module'].search([
             ('name', '=', 'employee_project_allocation'),
             ('state', '=', 'installed')
         ]):
             self._check_project_allocation(validation_messages)
         
-        # Check project access
-        if not self._check_project_access():
+        # Check project access if project exists
+        if self.project_id and not self._check_project_access():
             validation_status = 'error'
             validation_messages.append("Employee not assigned to this project.")
         
@@ -154,6 +159,10 @@ class TimesheetApprovalLine(models.Model):
     
     def _check_project_allocation(self, validation_messages):
         """Check project allocation limits if module is available"""
+        # Skip check if no project assigned
+        if not self.project_id:
+            return
+            
         try:
             # Get allocation for this employee on this project
             allocation = self.env['project.sale.line.employee.map'].search([
@@ -182,6 +191,10 @@ class TimesheetApprovalLine(models.Model):
     
     def _check_project_access(self):
         """Check if employee has access to the project"""
+        # If no project assigned, access is granted (it's just a warning)
+        if not self.project_id:
+            return True
+            
         # Check if employee is assigned to project
         if self.employee_id.user_id:
             project_users = self.project_id.message_partner_ids.mapped('user_ids')
