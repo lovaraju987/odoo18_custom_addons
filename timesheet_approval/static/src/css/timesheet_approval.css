@@ -1,0 +1,174 @@
+/* Timesheet Approval Workflow - Custom Styles */
+
+/* Approval Status Badges */
+.o_timesheet_approval_status {
+    display: inline-block;
+    padding: 3px 8px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.o_timesheet_approval_status.draft {
+    background-color: #e3f2fd;
+    color: #1976d2;
+    border: 1px solid #bbdefb;
+}
+
+.o_timesheet_approval_status.submitted {
+    background-color: #fff3e0;
+    color: #f57c00;
+    border: 1px solid #ffcc02;
+}
+
+.o_timesheet_approval_status.approved {
+    background-color: #e8f5e8;
+    color: #2e7d32;
+    border: 1px solid #4caf50;
+}
+
+.o_timesheet_approval_status.rejected {
+    background-color: #ffebee;
+    color: #c62828;
+    border: 1px solid #f44336;
+}
+
+/* Dashboard Cards */
+.o_timesheet_dashboard_card {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 8px;
+    padding: 20px;
+    color: white;
+    margin-bottom: 15px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    transition: transform 0.2s ease;
+}
+
+.o_timesheet_dashboard_card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+}
+
+.o_timesheet_dashboard_card .o_card_title {
+    font-size: 24px;
+    font-weight: 700;
+    margin-bottom: 5px;
+}
+
+.o_timesheet_dashboard_card .o_card_subtitle {
+    font-size: 14px;
+    opacity: 0.8;
+}
+
+/* Approval Timeline */
+.o_approval_timeline {
+    position: relative;
+    padding-left: 30px;
+}
+
+.o_approval_timeline::before {
+    content: '';
+    position: absolute;
+    left: 15px;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: #e0e0e0;
+}
+
+.o_approval_timeline_item {
+    position: relative;
+    padding-bottom: 20px;
+}
+
+.o_approval_timeline_item::before {
+    content: '';
+    position: absolute;
+    left: -23px;
+    top: 5px;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: #2196f3;
+    border: 3px solid white;
+    box-shadow: 0 0 0 2px #e0e0e0;
+}
+
+.o_approval_timeline_item.approved::before {
+    background: #4caf50;
+}
+
+.o_approval_timeline_item.rejected::before {
+    background: #f44336;
+}
+
+/* Batch Approval Actions */
+.o_batch_approval_summary {
+    background: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 6px;
+    padding: 15px;
+    margin: 10px 0;
+}
+
+.o_batch_approval_summary .o_summary_item {
+    display: flex;
+    justify-content: space-between;
+    padding: 5px 0;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.o_batch_approval_summary .o_summary_item:last-child {
+    border-bottom: none;
+    font-weight: 600;
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+    .o_timesheet_dashboard_card {
+        margin-bottom: 10px;
+        padding: 15px;
+    }
+    
+    .o_timesheet_dashboard_card .o_card_title {
+        font-size: 20px;
+    }
+    
+    .o_approval_timeline {
+        padding-left: 20px;
+    }
+}
+
+/* Kanban View Enhancements */
+.o_kanban_view .o_kanban_record {
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    transition: box-shadow 0.2s ease;
+}
+
+.o_kanban_view .o_kanban_record:hover {
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+/* Priority Indicators */
+.o_priority_indicator {
+    width: 4px;
+    height: 20px;
+    border-radius: 2px;
+    display: inline-block;
+    margin-right: 8px;
+}
+
+.o_priority_indicator.high {
+    background-color: #f44336;
+}
+
+.o_priority_indicator.medium {
+    background-color: #ff9800;
+}
+
+.o_priority_indicator.low {
+    background-color: #4caf50;
+}

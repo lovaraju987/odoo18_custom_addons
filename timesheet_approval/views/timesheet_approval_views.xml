@@ -1,0 +1,232 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        
+        <!-- List view for timesheet approval history (embedded) -->
+        <record id="view_timesheet_approval_history_list_embedded" model="ir.ui.view">
+            <field name="name">timesheet.approval.history.list.embedded</field>
+            <field name="model">timesheet.approval.history</field>
+            <field name="type">list</field>
+            <field name="arch" type="xml">
+                <list>
+                    <field name="action_date"/>
+                    <field name="action"/>
+                    <field name="user_id"/>
+                    <field name="comments"/>
+                </list>
+            </field>
+        </record>
+
+        <!-- Tree view for timesheet approval lines (embedded) -->
+        <record id="view_timesheet_approval_line_tree_embedded" model="ir.ui.view">
+            <field name="name">timesheet.approval.line.tree.embedded</field>
+            <field name="model">timesheet.approval.line</field>
+            <field name="type">list</field>
+            <field name="arch" type="xml">
+                <list>
+                    <field name="date"/>
+                    <field name="project_id"/>
+                    <field name="task_id"/>
+                    <field name="name"/>
+                    <field name="unit_amount" widget="float_time" sum="Total Hours"/>
+                    <field name="validation_message"/>
+                </list>
+            </field>
+        </record>
+
+        <!-- Timesheet Approval Form View -->
+        <record id="view_timesheet_approval_form" model="ir.ui.view">
+            <field name="name">timesheet.approval.form</field>
+            <field name="model">timesheet.approval</field>
+            <field name="arch" type="xml">
+                <form string="Timesheet Approval">
+                    <header>
+                        <button name="action_submit" string="Submit for Approval" 
+                                type="object" class="oe_highlight"
+                                invisible="state != 'draft'"/>
+                        <button name="action_approve" string="Approve" 
+                                type="object" class="oe_highlight"
+                                invisible="state != 'submitted'"/>
+                        <button name="action_reject" string="Reject" 
+                                type="object" class="btn-danger"
+                                invisible="state != 'submitted'"/>
+                        <button name="action_reset_to_draft" string="Reset to Draft" 
+                                type="object"
+                                invisible="state != 'rejected'"/>
+                        <field name="state" widget="statusbar" statusbar_visible="draft,submitted,approved"/>
+                    </header>
+                    <sheet>
+                        <div class="oe_button_box" name="button_box">
+                            <button class="oe_stat_button" type="object" 
+                                    name="action_view_timesheet_lines" icon="fa-clock-o">
+                                <field string="Hours" name="total_hours" widget="float_time"/>
+                            </button>
+                            <button class="oe_stat_button" type="object" 
+                                    name="action_view_projects" icon="fa-folder">
+                                <field string="Projects" name="project_count" widget="integer"/>
+                            </button>
+                        </div>
+                        
+                        <div class="oe_title">
+                            <h1>
+                                <field name="display_name" readonly="1"/>
+                            </h1>
+                        </div>
+                        
+                        <group>
+                            <group>
+                                <field name="employee_id" options="{'no_create': True, 'no_edit': True}"/>
+                                <field name="manager_id" readonly="1"/>
+                                <field name="date_from"/>
+                                <field name="date_to"/>
+                            </group>
+                            <group>
+                                <field name="submission_date" readonly="1"/>
+                                <field name="submitted_by" readonly="1"/>
+                                <field name="approval_date" readonly="1"/>
+                                <field name="approved_by" readonly="1"/>
+                            </group>
+                        </group>
+                        
+                        <notebook>
+                            <page string="Timesheet Lines" name="timesheet_lines">
+                                <field name="timesheet_line_ids" readonly="1"/>
+                            </page>
+                            
+                            <page string="Approval Comments" name="comments">
+                                <group>
+                                    <field name="approval_comments" nolabel="1" placeholder="Add approval comments here..."/>
+                                </group>
+                            </page>
+                            
+                            <page string="History" name="history">
+                                <field name="approval_history_ids" readonly="1"/>
+                            </page>
+                        </notebook>
+                    </sheet>
+                    <div class="oe_chatter">
+                        <field name="message_follower_ids"/>
+                        <field name="activity_ids"/>
+                        <field name="message_ids"/>
+                    </div>
+                </form>
+            </field>
+        </record>
+        
+        <!-- Timesheet Approval Tree View -->
+        <record id="view_timesheet_approval_tree" model="ir.ui.view">
+            <field name="name">timesheet.approval.tree</field>
+            <field name="model">timesheet.approval</field>
+            <field name="type">list</field>
+            <field name="arch" type="xml">
+                <list decoration-info="state == 'draft'" 
+                      decoration-warning="state == 'submitted'" 
+                      decoration-success="state == 'approved'"
+                      decoration-danger="state == 'rejected'"
+                      multi_edit="1">
+                    <field name="employee_id"/>
+                    <field name="date_from"/>
+                    <field name="date_to"/>
+                    <field name="total_hours" widget="float_time" sum="Total Hours"/>
+                    <field name="total_days"/>
+                    <field name="project_count"/>
+                    <field name="submission_date"/>
+                    <field name="manager_id"/>
+                    <field name="state" widget="badge" 
+                           decoration-info="state == 'draft'"
+                           decoration-warning="state == 'submitted'"
+                           decoration-success="state == 'approved'"
+                           decoration-danger="state == 'rejected'"/>
+                    <field name="company_id" groups="base.group_multi_company"/>
+                </list>
+            </field>
+        </record>
+        
+        <!-- Timesheet Approval Search View -->
+        <record id="view_timesheet_approval_search" model="ir.ui.view">
+            <field name="name">timesheet.approval.search</field>
+            <field name="model">timesheet.approval</field>
+            <field name="arch" type="xml">
+                <search string="Timesheet Approvals">
+                    <field name="employee_id"/>
+                    <field name="manager_id"/>
+                    <field name="date_from"/>
+                    <field name="date_to"/>
+                    <field name="state"/>
+                    
+                    <filter string="My Timesheets" name="my_timesheets" 
+                            domain="[('employee_id.user_id', '=', uid)]"/>
+                    <filter string="My Team" name="my_team" 
+                            domain="[('manager_id.user_id', '=', uid)]"/>
+                    
+                    <separator/>
+                    <filter string="Draft" name="draft" domain="[('state', '=', 'draft')]"/>
+                    <filter string="Submitted" name="submitted" domain="[('state', '=', 'submitted')]"/>
+                    <filter string="Approved" name="approved" domain="[('state', '=', 'approved')]"/>
+                    <filter string="Rejected" name="rejected" domain="[('state', '=', 'rejected')]"/>
+                    
+                    <separator/>
+                    <filter string="This Week" name="this_week" 
+                            domain="[('date_from', '&gt;=', (context_today() - datetime.timedelta(days=7)).strftime('%Y-%m-%d')),
+                                     ('date_to', '&lt;=', context_today().strftime('%Y-%m-%d'))]"/>
+                    <filter string="This Month" name="this_month" 
+                            domain="[('date_from', '&gt;=', (context_today().replace(day=1)).strftime('%Y-%m-%d')),
+                                     ('date_to', '&lt;=', context_today().strftime('%Y-%m-%d'))]"/>
+                    
+                    <group expand="0" string="Group By">
+                        <filter string="Employee" name="group_employee" context="{'group_by': 'employee_id'}"/>
+                        <filter string="Manager" name="group_manager" context="{'group_by': 'manager_id'}"/>
+                        <filter string="Status" name="group_state" context="{'group_by': 'state'}"/>
+                        <filter string="Submission Date" name="group_submission_date" context="{'group_by': 'submission_date'}"/>
+                    </group>
+                </search>
+            </field>
+        </record>
+        
+        <!-- Timesheet Approval Kanban View -->
+        <record id="view_timesheet_approval_kanban" model="ir.ui.view">
+            <field name="name">timesheet.approval.kanban</field>
+            <field name="model">timesheet.approval</field>
+            <field name="arch" type="xml">
+                <kanban default_group_by="state" class="o_kanban_small_column">
+                    <field name="employee_id"/>
+                    <field name="total_hours"/>
+                    <field name="state"/>
+                    <field name="submission_date"/>
+                    <templates>
+                        <t t-name="kanban-box">
+                            <div t-attf-class="oe_kanban_card oe_kanban_global_click o_kanban_record_has_image_fill">
+                                <div class="o_dropdown_kanban dropdown">
+                                    <a role="button" class="dropdown-toggle o-no-caret btn" data-toggle="dropdown" href="#" aria-label="Dropdown menu" title="Dropdown menu">
+                                        <span class="fa fa-ellipsis-v"/>
+                                    </a>
+                                    <div class="dropdown-menu" role="menu">
+                                        <a t-if="widget.editable" role="menuitem" type="edit" class="dropdown-item">Edit</a>
+                                        <a t-if="widget.deletable" role="menuitem" type="delete" class="dropdown-item">Delete</a>
+                                    </div>
+                                </div>
+                                <div class="oe_kanban_content">
+                                    <div class="o_kanban_record_title">
+                                        <field name="employee_id"/>
+                                    </div>
+                                    <div class="o_kanban_record_subtitle">
+                                        <field name="date_from"/> - <field name="date_to"/>
+                                    </div>
+                                    <div class="oe_kanban_bottom_left">
+                                        <span class="oe_kanban_text_red">
+                                            <field name="total_hours" widget="float_time"/> hours
+                                        </span>
+                                    </div>
+                                    <div class="oe_kanban_bottom_right">
+                                        <field name="submission_date" widget="date"/>
+                                    </div>
+                                </div>
+                            </div>
+                        </t>
+                    </templates>
+                </kanban>
+            </field>
+        </record>
+
+    </data>
+</odoo>

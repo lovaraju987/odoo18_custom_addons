@@ -1,0 +1,153 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        
+        <!-- Email Template: Timesheet Submitted -->
+        <record id="email_template_timesheet_submit" model="mail.template">
+            <field name="name">Timesheet Approval: Submission Notification</field>
+            <field name="model_id" ref="model_timesheet_approval"/>
+            <field name="subject">Timesheet Approval Required - {{ object.employee_id.name }}</field>
+            <field name="email_from">{{ (object.submitted_by.email_formatted or user.email_formatted) }}</field>
+            <field name="email_to">{{ object.manager_id.work_email or object.manager_id.user_id.email }}</field>
+            <field name="body_html" type="html">
+<div style="margin: 0px; padding: 0px;">
+    <p style="margin: 0px; padding: 0px; font-size: 13px;">
+        Dear {{ object.manager_id.name or 'Manager' }},
+    </p>
+    <br/>
+    <p style="margin: 0px; padding: 0px; font-size: 13px;">
+        {{ object.employee_id.name }} has submitted a timesheet for your approval.
+    </p>
+    <br/>
+    <p style="margin: 0px; padding: 0px; font-size: 13px;">
+        <strong>Timesheet Details:</strong><br/>
+        Employee: {{ object.employee_id.name }}<br/>
+        Period: {{ object.date_from }} to {{ object.date_to }}<br/>
+        Total Hours: {{ "%.2f"|format(object.total_hours) }}<br/>
+        Projects: {{ object.project_count }}<br/>
+        Submitted: {{ object.submission_date.strftime('%Y-%m-%d %H:%M') if object.submission_date else 'N/A' }}
+    </p>
+    <br/>
+    <p style="margin: 0px; padding: 0px; font-size: 13px;">
+        Please review and approve the timesheet at your earliest convenience.
+    </p>
+    <br/>
+    <div style="margin: 16px 0px 16px 0px;">
+        <a href="{{ object.get_portal_url() }}" 
+           style="background-color: #1f89ce; padding: 8px 16px 8px 16px; text-decoration: none; color: #fff; border-radius: 5px; font-size: 13px;">
+            Review Timesheet
+        </a>
+    </div>
+    <br/>
+    <p style="margin: 0px; padding: 0px; font-size: 13px;">
+        Best regards,<br/>
+        {{ object.submitted_by.name or user.name }}<br/>
+        <em>{{ object.company_id.name }}</em>
+    </p>
+</div>
+            </field>
+            <field name="auto_delete" eval="True"/>
+        </record>
+        
+        <!-- Email Template: Timesheet Approved -->
+        <record id="email_template_timesheet_approve" model="mail.template">
+            <field name="name">Timesheet Approval: Approved Notification</field>
+            <field name="model_id" ref="model_timesheet_approval"/>
+            <field name="subject">Timesheet Approved - {{ object.date_from }} to {{ object.date_to }}</field>
+            <field name="email_from">{{ (object.approved_by.email_formatted or user.email_formatted) }}</field>
+            <field name="email_to">{{ object.employee_id.work_email or object.employee_id.user_id.email }}</field>
+            <field name="body_html" type="html">
+<div style="margin: 0px; padding: 0px;">
+    <p style="margin: 0px; padding: 0px; font-size: 13px;">
+        Dear {{ object.employee_id.name }},
+    </p>
+    <br/>
+    <p style="margin: 0px; padding: 0px; font-size: 13px;">
+        Great news! Your timesheet has been approved.
+    </p>
+    <br/>
+    <p style="margin: 0px; padding: 0px; font-size: 13px;">
+        <strong>Approved Timesheet:</strong><br/>
+        Period: {{ object.date_from }} to {{ object.date_to }}<br/>
+        Total Hours: {{ "%.2f"|format(object.total_hours) }}<br/>
+        Approved by: {{ object.approved_by.name }}<br/>
+        Approved on: {{ object.approval_date.strftime('%Y-%m-%d %H:%M') if object.approval_date else 'N/A' }}
+    </p>
+    {% if object.approval_comments %}
+    <br/>
+    <p style="margin: 0px; padding: 0px; font-size: 13px;">
+        <strong>Manager Comments:</strong><br/>
+        {{ object.approval_comments }}
+    </p>
+    {% endif %}
+    <br/>
+    <div style="margin: 16px 0px 16px 0px;">
+        <a href="{{ object.get_portal_url() }}" 
+           style="background-color: #28a745; padding: 8px 16px 8px 16px; text-decoration: none; color: #fff; border-radius: 5px; font-size: 13px;">
+            View Timesheet
+        </a>
+    </div>
+    <br/>
+    <p style="margin: 0px; padding: 0px; font-size: 13px;">
+        Best regards,<br/>
+        {{ object.approved_by.name or user.name }}<br/>
+        <em>{{ object.company_id.name }}</em>
+    </p>
+</div>
+            </field>
+            <field name="auto_delete" eval="True"/>
+        </record>
+        
+        <!-- Email Template: Timesheet Rejected -->
+        <record id="email_template_timesheet_reject" model="mail.template">
+            <field name="name">Timesheet Approval: Rejected Notification</field>
+            <field name="model_id" ref="model_timesheet_approval"/>
+            <field name="subject">Timesheet Rejected - {{ object.date_from }} to {{ object.date_to }}</field>
+            <field name="email_from">{{ (object.approved_by.email_formatted or user.email_formatted) }}</field>
+            <field name="email_to">{{ object.employee_id.work_email or object.employee_id.user_id.email }}</field>
+            <field name="body_html" type="html">
+<div style="margin: 0px; padding: 0px;">
+    <p style="margin: 0px; padding: 0px; font-size: 13px;">
+        Dear {{ object.employee_id.name }},
+    </p>
+    <br/>
+    <p style="margin: 0px; padding: 0px; font-size: 13px;">
+        Your timesheet has been rejected and requires corrections.
+    </p>
+    <br/>
+    <p style="margin: 0px; padding: 0px; font-size: 13px;">
+        <strong>Rejected Timesheet:</strong><br/>
+        Period: {{ object.date_from }} to {{ object.date_to }}<br/>
+        Total Hours: {{ "%.2f"|format(object.total_hours) }}<br/>
+        Rejected by: {{ object.approved_by.name }}<br/>
+        Rejected on: {{ object.approval_date.strftime('%Y-%m-%d %H:%M') if object.approval_date else 'N/A' }}
+    </p>
+    <br/>
+    <p style="margin: 0px; padding: 0px; font-size: 13px;">
+        <strong>Rejection Reason:</strong><br/>
+        {{ object.approval_comments or 'No specific reason provided.' }}
+    </p>
+    <br/>
+    <p style="margin: 0px; padding: 0px; font-size: 13px;">
+        Please review the comments, make necessary corrections, and resubmit your timesheet.
+    </p>
+    <br/>
+    <div style="margin: 16px 0px 16px 0px;">
+        <a href="{{ object.get_portal_url() }}" 
+           style="background-color: #dc3545; padding: 8px 16px 8px 16px; text-decoration: none; color: #fff; border-radius: 5px; font-size: 13px;">
+            Review &amp; Correct
+        </a>
+    </div>
+    <br/>
+    <p style="margin: 0px; padding: 0px; font-size: 13px;">
+        Best regards,<br/>
+        {{ object.approved_by.name or user.name }}<br/>
+        <em>{{ object.company_id.name }}</em>
+    </p>
+</div>
+            </field>
+            <field name="auto_delete" eval="True"/>
+        </record>
+
+    </data>
+</odoo>

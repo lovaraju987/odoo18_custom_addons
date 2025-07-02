@@ -1,0 +1,142 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        
+        <!-- Demo Employees -->
+        <record id="demo_employee_john" model="hr.employee">
+            <field name="name">John Doe</field>
+            <field name="work_email">john.doe@example.com</field>
+            <field name="approval_manager_id" ref="demo_employee_manager"/>
+            <field name="requires_timesheet_approval">True</field>
+        </record>
+        
+        <record id="demo_employee_jane" model="hr.employee">
+            <field name="name">Jane Smith</field>
+            <field name="work_email">jane.smith@example.com</field>
+            <field name="approval_manager_id" ref="demo_employee_manager"/>
+            <field name="requires_timesheet_approval">True</field>
+        </record>
+        
+        <record id="demo_employee_manager" model="hr.employee">
+            <field name="name">Mike Manager</field>
+            <field name="work_email">mike.manager@example.com</field>
+            <field name="can_approve_timesheets">True</field>
+            <field name="requires_timesheet_approval">False</field>
+        </record>
+        
+        <!-- Demo Projects -->
+        <record id="demo_project_alpha" model="project.project">
+            <field name="name">Project Alpha</field>
+            <field name="requires_timesheet_approval">True</field>
+            <field name="approval_manager_id" ref="demo_employee_manager"/>
+        </record>
+        
+        <record id="demo_project_beta" model="project.project">
+            <field name="name">Project Beta</field>
+            <field name="requires_timesheet_approval">True</field>
+            <field name="approval_manager_id" ref="demo_employee_manager"/>
+        </record>
+        
+        <!-- Demo Tasks -->
+        <record id="demo_task_development" model="project.task">
+            <field name="name">Development Work</field>
+            <field name="project_id" ref="demo_project_alpha"/>
+        </record>
+        
+        <record id="demo_task_testing" model="project.task">
+            <field name="name">Testing and QA</field>
+            <field name="project_id" ref="demo_project_alpha"/>
+        </record>
+        
+        <record id="demo_task_documentation" model="project.task">
+            <field name="name">Documentation</field>
+            <field name="project_id" ref="demo_project_beta"/>
+        </record>
+        
+        <!-- Demo Timesheet Approvals -->
+        <record id="demo_approval_john_week1" model="timesheet.approval">
+            <field name="name">John Doe - Week 1</field>
+            <field name="employee_id" ref="demo_employee_john"/>
+            <field name="manager_id" ref="demo_employee_manager"/>
+            <field name="start_date" eval="(DateTime.today() - timedelta(days=7)).strftime('%Y-%m-%d')"/>
+            <field name="end_date" eval="(DateTime.today() - timedelta(days=1)).strftime('%Y-%m-%d')"/>
+            <field name="state">submitted</field>
+            <field name="total_hours">40.0</field>
+            <field name="submit_date" eval="(DateTime.today() - timedelta(days=1)).strftime('%Y-%m-%d %H:%M:%S')"/>
+        </record>
+        
+        <record id="demo_approval_jane_week1" model="timesheet.approval">
+            <field name="name">Jane Smith - Week 1</field>
+            <field name="employee_id" ref="demo_employee_jane"/>
+            <field name="manager_id" ref="demo_employee_manager"/>
+            <field name="start_date" eval="(DateTime.today() - timedelta(days=14)).strftime('%Y-%m-%d')"/>
+            <field name="end_date" eval="(DateTime.today() - timedelta(days=8)).strftime('%Y-%m-%d')"/>
+            <field name="state">approved</field>
+            <field name="total_hours">38.5</field>
+            <field name="submit_date" eval="(DateTime.today() - timedelta(days=8)).strftime('%Y-%m-%d %H:%M:%S')"/>
+            <field name="approve_date" eval="(DateTime.today() - timedelta(days=7)).strftime('%Y-%m-%d %H:%M:%S')"/>
+            <field name="approval_comments">Good work on Project Alpha milestones.</field>
+        </record>
+        
+        <!-- Demo Timesheet Lines -->
+        <record id="demo_line_john_1" model="timesheet.approval.line">
+            <field name="approval_id" ref="demo_approval_john_week1"/>
+            <field name="employee_id" ref="demo_employee_john"/>
+            <field name="project_id" ref="demo_project_alpha"/>
+            <field name="task_id" ref="demo_task_development"/>
+            <field name="date" eval="(DateTime.today() - timedelta(days=7)).strftime('%Y-%m-%d')"/>
+            <field name="unit_amount">8.0</field>
+            <field name="name">Implemented user authentication module</field>
+        </record>
+        
+        <record id="demo_line_john_2" model="timesheet.approval.line">
+            <field name="approval_id" ref="demo_approval_john_week1"/>
+            <field name="employee_id" ref="demo_employee_john"/>
+            <field name="project_id" ref="demo_project_alpha"/>
+            <field name="task_id" ref="demo_task_testing"/>
+            <field name="date" eval="(DateTime.today() - timedelta(days=6)).strftime('%Y-%m-%d')"/>
+            <field name="unit_amount">8.0</field>
+            <field name="name">Unit testing for authentication module</field>
+        </record>
+        
+        <record id="demo_line_john_3" model="timesheet.approval.line">
+            <field name="approval_id" ref="demo_approval_john_week1"/>
+            <field name="employee_id" ref="demo_employee_john"/>
+            <field name="project_id" ref="demo_project_alpha"/>
+            <field name="task_id" ref="demo_task_development"/>
+            <field name="date" eval="(DateTime.today() - timedelta(days=5)).strftime('%Y-%m-%d')"/>
+            <field name="unit_amount">8.0</field>
+            <field name="name">Database optimization and performance tuning</field>
+        </record>
+        
+        <record id="demo_line_jane_1" model="timesheet.approval.line">
+            <field name="approval_id" ref="demo_approval_jane_week1"/>
+            <field name="employee_id" ref="demo_employee_jane"/>
+            <field name="project_id" ref="demo_project_beta"/>
+            <field name="task_id" ref="demo_task_documentation"/>
+            <field name="date" eval="(DateTime.today() - timedelta(days=14)).strftime('%Y-%m-%d')"/>
+            <field name="unit_amount">7.5</field>
+            <field name="name">API documentation and user guides</field>
+        </record>
+        
+        <record id="demo_line_jane_2" model="timesheet.approval.line">
+            <field name="approval_id" ref="demo_approval_jane_week1"/>
+            <field name="employee_id" ref="demo_employee_jane"/>
+            <field name="project_id" ref="demo_project_alpha"/>
+            <field name="task_id" ref="demo_task_testing"/>
+            <field name="date" eval="(DateTime.today() - timedelta(days=13)).strftime('%Y-%m-%d')"/>
+            <field name="unit_amount">8.0</field>
+            <field name="name">Integration testing and bug fixes</field>
+        </record>
+        
+        <!-- Demo Approval History -->
+        <record id="demo_history_jane_approval" model="timesheet.approval.history">
+            <field name="approval_id" ref="demo_approval_jane_week1"/>
+            <field name="action">approved</field>
+            <field name="user_id" ref="base.user_admin"/>
+            <field name="date" eval="(DateTime.today() - timedelta(days=7)).strftime('%Y-%m-%d %H:%M:%S')"/>
+            <field name="comments">All hours are properly allocated and documented. Great work!</field>
+        </record>
+        
+    </data>
+</odoo>

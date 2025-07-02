@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        
+        <!-- Timesheet Approval Report -->
+        <record id="action_report_timesheet_approval" model="ir.actions.report">
+            <field name="name">Timesheet Approval Report</field>
+            <field name="model">timesheet.approval</field>
+            <field name="report_type">qweb-pdf</field>
+            <field name="report_name">timesheet_approval.report_timesheet_approval</field>
+            <field name="report_file">timesheet_approval.report_timesheet_approval</field>
+            <field name="print_report_name">'Timesheet - %s' % (object.employee_id.name)</field>
+            <field name="binding_model_id" ref="model_timesheet_approval"/>
+            <field name="binding_type">report</field>
+        </record>
+        
+        <!-- Report Template -->
+        <template id="report_timesheet_approval">
+            <t t-call="web.html_container">
+                <t t-foreach="docs" t-as="o">
+                    <t t-call="web.external_layout">
+                        <div class="page">
+                            <div class="oe_structure"/>
+                            
+                            <!-- Header -->
+                            <div class="row">
+                                <div class="col-12">
+                                    <h2>Timesheet Approval Report</h2>
+                                </div>
+                            </div>
+                            
+                            <!-- Timesheet Information -->
+                            <div class="row mt32">
+                                <div class="col-6">
+                                    <strong>Employee:</strong> <span t-field="o.employee_id.name"/><br/>
+                                    <strong>Manager:</strong> <span t-field="o.manager_id.name"/><br/>
+                                    <strong>Period:</strong> <span t-field="o.date_from"/> to <span t-field="o.date_to"/><br/>
+                                </div>
+                                <div class="col-6">
+                                    <strong>Status:</strong> <span t-field="o.state"/><br/>
+                                    <strong>Total Hours:</strong> <span t-field="o.total_hours" t-options="{'widget': 'float_time'}"/><br/>
+                                    <strong>Submission Date:</strong> <span t-field="o.submission_date"/><br/>
+                                </div>
+                            </div>
+                            
+                            <!-- Timesheet Lines -->
+                            <div class="row mt32">
+                                <div class="col-12">
+                                    <h4>Timesheet Entries</h4>
+                                    <table class="table table-sm">
+                                        <thead>
+                                            <tr>
+                                                <th>Date</th>
+                                                <th>Project</th>
+                                                <th>Task</th>
+                                                <th>Description</th>
+                                                <th class="text-right">Hours</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr t-foreach="o.timesheet_line_ids" t-as="line">
+                                                <td><span t-field="line.date"/></td>
+                                                <td><span t-field="line.project_id.name"/></td>
+                                                <td><span t-field="line.task_id.name"/></td>
+                                                <td><span t-field="line.name"/></td>
+                                                <td class="text-right">
+                                                    <span t-field="line.unit_amount" t-options="{'widget': 'float_time'}"/>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                        <tfoot>
+                                            <tr class="border-top">
+                                                <td colspan="4"><strong>Total</strong></td>
+                                                <td class="text-right">
+                                                    <strong><span t-field="o.total_hours" t-options="{'widget': 'float_time'}"/></strong>
+                                                </td>
+                                            </tr>
+                                        </tfoot>
+                                    </table>
+                                </div>
+                            </div>
+                            
+                            <!-- Approval Information -->
+                            <div class="row mt32" t-if="o.state in ['approved', 'rejected']">
+                                <div class="col-12">
+                                    <h4>Approval Information</h4>
+                                    <p>
+                                        <strong>Approved/Rejected by:</strong> <span t-field="o.approved_by.name"/><br/>
+                                        <strong>Date:</strong> <span t-field="o.approval_date"/><br/>
+                                        <t t-if="o.approval_comments">
+                                            <strong>Comments:</strong><br/>
+                                            <span t-field="o.approval_comments"/>
+                                        </t>
+                                    </p>
+                                </div>
+                            </div>
+                            
+                            <div class="oe_structure"/>
+                        </div>
+                    </t>
+                </t>
+            </t>
+        </template>
+
+    </data>
+</odoo>

@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        
+        <!-- Manager-specific views -->
+        
+        <!-- Manager Timesheet Approval Tree View -->
+        <record id="view_timesheet_approval_manager_tree" model="ir.ui.view">
+            <field name="name">timesheet.approval.manager.tree</field>
+            <field name="model">timesheet.approval</field>
+            <field name="type">list</field>
+            <field name="arch" type="xml">
+                <list decoration-warning="state == 'submitted'" 
+                      decoration-success="state == 'approved'"
+                      decoration-danger="state == 'rejected'"
+                      create="false" delete="false">
+                    <field name="employee_id"/>
+                    <field name="date_from"/>
+                    <field name="date_to"/>
+                    <field name="total_hours" widget="float_time" sum="Total Hours"/>
+                    <field name="submission_date"/>
+                    <field name="state" widget="badge" 
+                           decoration-warning="state == 'submitted'"
+                           decoration-success="state == 'approved'"
+                           decoration-danger="state == 'rejected'"/>
+                    <button name="action_approve" type="object" string="Approve"
+                            class="btn-success" invisible="state != 'submitted'"/>
+                    <button name="action_reject" type="object" string="Reject"
+                            class="btn-danger" invisible="state != 'submitted'"/>
+                </list>
+            </field>
+        </record>
+        
+        <!-- Manager Action -->
+        <record id="action_timesheet_approval_manager_view" model="ir.actions.act_window">
+            <field name="name">Team Timesheet Approvals</field>
+            <field name="res_model">timesheet.approval</field>
+            <field name="view_mode">list,form,kanban</field>
+            <field name="view_id" ref="view_timesheet_approval_manager_tree"/>
+            <field name="context">{
+                'search_default_submitted': 1,
+                'search_default_my_team': 1
+            }</field>
+        </record>
+
+    </data>
+</odoo>
