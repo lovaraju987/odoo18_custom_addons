@@ -158,6 +158,7 @@
         <menuitem id="menu_timesheet_approval_config" 
                   name="Configuration" 
                   parent="menu_timesheet_approval_root" 
+                  action="timesheet_approval_settings_action"
                   sequence="90"
                   groups="hr.group_hr_manager"/>
         
