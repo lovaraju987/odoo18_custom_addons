@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        
+        <!-- Automated Actions / Cron Jobs -->
+        
+        <!-- Daily reminder for pending timesheet submissions -->
+        <record id="ir_cron_timesheet_submission_reminder" model="ir.cron">
+            <field name="name">Timesheet Submission Reminder</field>
+            <field name="model_id" ref="model_hr_employee"/>
+            <field name="state">code</field>
+            <field name="code">model._send_timesheet_submission_reminders()</field>
+            <field name="interval_number">1</field>
+            <field name="interval_type">days</field>
+            <field name="active" eval="True"/>
+        </record>
+        
+        <!-- Weekly reminder for pending approvals -->
+        <record id="ir_cron_timesheet_approval_reminder" model="ir.cron">
+            <field name="name">Timesheet Approval Reminder</field>
+            <field name="model_id" ref="model_timesheet_approval"/>
+            <field name="state">code</field>
+            <field name="code">model._send_approval_reminders()</field>
+            <field name="interval_number">1</field>
+            <field name="interval_type">weeks</field>
+            <field name="active" eval="True"/>
+        </record>
+
+    </data>
+</odoo>

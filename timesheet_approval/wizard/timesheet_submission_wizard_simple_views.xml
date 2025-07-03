@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        
+        <!-- Simple Timesheet Submission Wizard Form -->
+        <record id="view_timesheet_submission_wizard_simple_form" model="ir.ui.view">
+            <field name="name">timesheet.submission.wizard.simple.form</field>
+            <field name="model">timesheet.submission.wizard.simple</field>
+            <field name="arch" type="xml">
+                <form string="Submit Timesheet (Simple)">
+                    <sheet>
+                        <div class="oe_title">
+                            <h1>Submit Timesheet for Approval (Simplified)</h1>
+                            <p class="text-muted">This is a simplified submission wizard that bypasses history tracking.</p>
+                        </div>
+                        
+                        <group>
+                            <group>
+                                <field name="employee_id" options="{'no_create': True, 'no_edit': True}"/>
+                            </group>
+                            <group>
+                                <field name="date_from"/>
+                                <field name="date_to"/>
+                            </group>
+                        </group>
+                        
+                        <separator string="Timesheet Preview"/>
+                        <field name="preview_html" nolabel="1" readonly="1"/>
+                        
+                    </sheet>
+                    <footer>
+                        <button string="Submit for Approval" name="action_submit_simple" type="object" class="btn-primary"/>
+                        <button string="Cancel" class="btn-secondary" special="cancel"/>
+                    </footer>
+                </form>
+            </field>
+        </record>
+        
+        <!-- Action for Simple Timesheet Submission -->
+        <record id="action_timesheet_submission_wizard_simple" model="ir.actions.act_window">
+            <field name="name">Submit Timesheet (Simple)</field>
+            <field name="res_model">timesheet.submission.wizard.simple</field>
+            <field name="view_mode">form</field>
+            <field name="target">new</field>
+            <field name="view_id" ref="view_timesheet_submission_wizard_simple_form"/>
+        </record>
+        
+        <!-- Menu Item for Simple Submission -->
+        <menuitem
+            id="menu_timesheet_submission_simple"
+            name="Submit Timesheet (Simple)"
+            parent="hr_timesheet.timesheet_menu_root"
+            action="action_timesheet_submission_wizard_simple"
+            sequence="15"
+            groups="timesheet_approval.group_timesheet_approval_user"/>
+        
+    </data>
+</odoo>

@@ -1,0 +1,209 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        
+        <!-- Actions -->
+        
+        <!-- Employee's Own Timesheet Approvals -->
+        <record id="action_timesheet_approval_employee" model="ir.actions.act_window">
+            <field name="name">My Timesheet Submissions</field>
+            <field name="res_model">timesheet.approval</field>
+            <field name="view_mode">list,form,kanban</field>
+            <field name="view_id" ref="view_timesheet_approval_tree"/>
+            <field name="domain">[('employee_id.user_id', '=', uid)]</field>
+            <field name="context">{
+                'default_employee_id': uid,
+                'search_default_my_timesheets': 1
+            }</field>
+            <field name="help" type="html">
+                <p class="o_view_nocontent_smiling_face">
+                    No timesheet submissions found!
+                </p>
+                <p>
+                    Create your first timesheet approval to get started.
+                    Submit your timesheets for manager approval to track your work hours.
+                </p>
+            </field>
+        </record>
+        
+        <!-- Manager's Pending Approvals -->
+        <record id="action_timesheet_approval_manager_pending" model="ir.actions.act_window">
+            <field name="name">My Approvals</field>
+            <field name="res_model">timesheet.approval</field>
+            <field name="view_mode">list,form,kanban</field>
+            <field name="view_id" ref="view_timesheet_approval_manager_tree"/>
+            <field name="domain">['&amp;', '|', ('manager_id.user_id', '=', uid), ('employee_id.parent_id.user_id', '=', uid), ('state', '=', 'submitted')]</field>
+            <field name="context">{
+                'search_default_submitted': 1,
+                'search_default_my_team': 1
+            }</field>
+            <field name="help" type="html">
+                <p class="o_view_nocontent_smiling_face">
+                    No pending approvals found!
+                </p>
+                <p>
+                    Timesheet approvals requiring your approval will appear here.
+                    You can approve or reject submitted timesheets from your team.
+                </p>
+            </field>
+        </record>
+        
+        <!-- Manager's Team Timesheets (All Statuses) -->
+        <record id="action_timesheet_approval_manager" model="ir.actions.act_window">
+            <field name="name">Team Approvals</field>
+            <field name="res_model">timesheet.approval</field>
+            <field name="view_mode">list,form,kanban</field>
+            <field name="view_id" ref="view_timesheet_approval_manager_tree"/>
+            <field name="domain">['|', ('manager_id.user_id', '=', uid), ('employee_id.parent_id.user_id', '=', uid)]</field>
+            <field name="context">{
+                'search_default_my_team': 1
+            }</field>
+            <field name="help" type="html">
+                <p class="o_view_nocontent_smiling_face">
+                    No team timesheet approvals found!
+                </p>
+                <p>
+                    All timesheet approvals from your team will appear here.
+                    You can approve or reject submitted timesheets and view historical approvals.
+                </p>
+            </field>
+        </record>
+        
+        <!-- All Timesheet Approvals (HR) -->
+        <record id="action_timesheet_approval_all" model="ir.actions.act_window">
+            <field name="name">All Timesheet Approvals</field>
+            <field name="res_model">timesheet.approval</field>
+            <field name="view_mode">list,form,kanban</field>
+            <field name="help" type="html">
+                <p class="o_view_nocontent_smiling_face">
+                    No timesheet approvals found!
+                </p>
+                <p>
+                    All timesheet approvals across the company will appear here.
+                    Use filters to find specific approvals.
+                </p>
+            </field>
+        </record>
+        
+        <!-- Timesheet Approval Form Action -->
+        <record id="action_timesheet_approval_form" model="ir.actions.act_window">
+            <field name="name">New Timesheet Approval</field>
+            <field name="res_model">timesheet.approval</field>
+            <field name="view_mode">form</field>
+            <field name="target">new</field>
+        </record>
+        
+        <!-- Timesheet Submission Wizard -->
+        <record id="action_timesheet_submission_wizard" model="ir.actions.act_window">
+            <field name="name">Submit Timesheet</field>
+            <field name="res_model">timesheet.submission.wizard</field>
+            <field name="view_mode">form</field>
+            <field name="target">new</field>
+        </record>
+        
+        <!-- Batch Approval Wizard -->
+        <record id="action_timesheet_batch_approval" model="ir.actions.act_window">
+            <field name="name">Batch Approval</field>
+            <field name="res_model">timesheet.batch.approval</field>
+            <field name="view_mode">form</field>
+            <field name="target">new</field>
+        </record>
+        
+        <!-- Menu Items -->
+        
+        <!-- Main Timesheet Approval Menu -->
+        <menuitem id="menu_timesheet_approval_root" 
+                  name="Timesheet Approvals" 
+                  parent="hr_timesheet.timesheet_menu_root" 
+                  sequence="15"/>
+          <!-- Employee Menus -->
+        <menuitem id="menu_timesheet_approval_employee" 
+                  name="My Submissions" 
+                  parent="menu_timesheet_approval_root" 
+                  action="action_timesheet_approval_employee" 
+                  sequence="10"
+                  groups="group_timesheet_approval_user"/>
+
+        <menuitem id="menu_timesheet_submission" 
+                  name="Submit Timesheet" 
+                  parent="menu_timesheet_approval_root" 
+                  action="action_timesheet_submission_wizard" 
+                  sequence="15"
+                  groups="group_timesheet_approval_user"/>
+
+        <!-- Manager Menus -->
+        <menuitem id="menu_timesheet_approval_manager_pending" 
+                  name="My Approvals" 
+                  parent="menu_timesheet_approval_root" 
+                  action="action_timesheet_approval_manager_pending" 
+                  sequence="20"
+                  groups="group_timesheet_approval_manager"/>
+                  
+        <menuitem id="menu_timesheet_approval_manager" 
+                  name="Team Approvals" 
+                  parent="menu_timesheet_approval_root" 
+                  action="action_timesheet_approval_manager" 
+                  sequence="25"
+                  groups="group_timesheet_approval_manager"/>
+
+        <!-- HR Menus -->
+        <menuitem id="menu_timesheet_approval_all" 
+                  name="All Approvals" 
+                  parent="menu_timesheet_approval_root" 
+                  action="action_timesheet_approval_all" 
+                  sequence="30"
+                  groups="hr.group_hr_manager"/>
+        
+        <!-- Configuration Menu -->
+        <menuitem id="menu_timesheet_approval_config" 
+                  name="Configuration" 
+                  parent="menu_timesheet_approval_root" 
+                  action="timesheet_approval_settings_action"
+                  sequence="90"
+                  groups="hr.group_hr_manager"/>
+        
+        <!-- Server Actions for Batch Operations -->
+        <record id="action_batch_approve_timesheets" model="ir.actions.server">
+            <field name="name">Batch Approve</field>
+            <field name="model_id" ref="model_timesheet_approval"/>
+            <field name="binding_model_id" ref="model_timesheet_approval"/>
+            <field name="state">code</field>
+            <field name="code">
+action = {
+    'type': 'ir.actions.act_window',
+    'name': 'Batch Approve Timesheets',
+    'res_model': 'timesheet.batch.approval',
+    'view_mode': 'form',
+    'target': 'new',
+    'context': {
+        'default_approval_action': 'approve',
+        'default_timesheet_approval_ids': [(6, 0, records.ids)],
+        'active_ids': records.ids,
+    }
+}
+            </field>
+        </record>
+        
+        <record id="action_batch_reject_timesheets" model="ir.actions.server">
+            <field name="name">Batch Reject</field>
+            <field name="model_id" ref="model_timesheet_approval"/>
+            <field name="binding_model_id" ref="model_timesheet_approval"/>
+            <field name="state">code</field>
+            <field name="code">
+action = {
+    'type': 'ir.actions.act_window',
+    'name': 'Batch Reject Timesheets',
+    'res_model': 'timesheet.batch.approval',
+    'view_mode': 'form',
+    'target': 'new',
+    'context': {
+        'default_approval_action': 'reject',
+        'default_timesheet_approval_ids': [(6, 0, records.ids)],
+        'active_ids': records.ids,
+    }
+}
+            </field>
+        </record>
+
+    </data>
+</odoo>

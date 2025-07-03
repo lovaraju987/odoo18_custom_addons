@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        
+        <!-- Security Groups -->
+        <record id="group_timesheet_approval_user" model="res.groups">
+            <field name="name">Timesheet Approval User</field>
+            <field name="category_id" ref="base.module_category_human_resources"/>
+            <field name="comment">Can submit and view own timesheet approvals</field>
+        </record>
+        
+        <record id="group_timesheet_approval_manager" model="res.groups">
+            <field name="name">Timesheet Approval Manager</field>
+            <field name="category_id" ref="base.module_category_human_resources"/>
+            <field name="implied_ids" eval="[(4, ref('group_timesheet_approval_user'))]"/>
+            <field name="comment">Can approve/reject timesheets and manage approval workflow</field>
+        </record>
+        
+        <!-- Add default groups to existing users -->
+        <record id="base.group_user" model="res.groups">
+            <field name="implied_ids" eval="[(4, ref('group_timesheet_approval_user'))]"/>
+        </record>
+        
+        <record id="hr.group_hr_manager" model="res.groups">
+            <field name="implied_ids" eval="[(4, ref('group_timesheet_approval_manager'))]"/>
+        </record>
+        
+        <record id="project.group_project_manager" model="res.groups">
+            <field name="implied_ids" eval="[(4, ref('group_timesheet_approval_manager'))]"/>
+        </record>
+        
+        <!-- Record Rules -->
+        
+        <!-- Timesheet Approval Rules -->
+        <record id="timesheet_approval_rule_employee" model="ir.rule">
+            <field name="name">Timesheet Approval: Employee Access</field>
+            <field name="model_id" ref="model_timesheet_approval"/>
+            <field name="groups" eval="[(4, ref('group_timesheet_approval_user'))]"/>
+            <field name="domain_force">[('employee_id.user_id', '=', user.id)]</field>
+            <field name="perm_read" eval="True"/>
+            <field name="perm_write" eval="True"/>
+            <field name="perm_create" eval="True"/>
+            <field name="perm_unlink" eval="True"/>
+        </record>
+        
+        <record id="timesheet_approval_rule_manager" model="ir.rule">
+            <field name="name">Timesheet Approval: Manager Access</field>
+            <field name="model_id" ref="model_timesheet_approval"/>
+            <field name="groups" eval="[(4, ref('group_timesheet_approval_manager'))]"/>
+            <field name="domain_force">['|', 
+                ('manager_id.user_id', '=', user.id),
+                ('employee_id.parent_id.user_id', '=', user.id)]</field>
+            <field name="perm_read" eval="True"/>
+            <field name="perm_write" eval="True"/>
+            <field name="perm_create" eval="True"/>
+            <field name="perm_unlink" eval="True"/>
+        </record>
+        
+        <record id="timesheet_approval_rule_hr_manager" model="ir.rule">
+            <field name="name">Timesheet Approval: HR Manager Access</field>
+            <field name="model_id" ref="model_timesheet_approval"/>
+            <field name="groups" eval="[(4, ref('hr.group_hr_manager'))]"/>
+            <field name="domain_force">[(1, '=', 1)]</field>
+            <field name="perm_read" eval="True"/>
+            <field name="perm_write" eval="True"/>
+            <field name="perm_create" eval="True"/>
+            <field name="perm_unlink" eval="True"/>
+        </record>
+        
+        <!-- Timesheet Approval Line Rules -->
+        <record id="timesheet_approval_line_rule_employee" model="ir.rule">
+            <field name="name">Timesheet Approval Line: Employee Access</field>
+            <field name="model_id" ref="model_timesheet_approval_line"/>
+            <field name="groups" eval="[(4, ref('group_timesheet_approval_user'))]"/>
+            <field name="domain_force">[('approval_id.employee_id.user_id', '=', user.id)]</field>
+            <field name="perm_read" eval="True"/>
+            <field name="perm_write" eval="True"/>
+            <field name="perm_create" eval="True"/>
+            <field name="perm_unlink" eval="True"/>
+        </record>
+        
+        <record id="timesheet_approval_line_rule_manager" model="ir.rule">
+            <field name="name">Timesheet Approval Line: Manager Access</field>
+            <field name="model_id" ref="model_timesheet_approval_line"/>
+            <field name="groups" eval="[(4, ref('group_timesheet_approval_manager'))]"/>
+            <field name="domain_force">['|',
+                ('approval_id.manager_id.user_id', '=', user.id),
+                ('approval_id.employee_id.parent_id.user_id', '=', user.id)]</field>
+            <field name="perm_read" eval="True"/>
+            <field name="perm_write" eval="True"/>
+            <field name="perm_create" eval="True"/>
+            <field name="perm_unlink" eval="True"/>
+        </record>
+        
+        <!-- Timesheet Approval History Rules -->
+        <record id="timesheet_approval_history_rule_user" model="ir.rule">
+            <field name="name">Timesheet Approval History: User Access</field>
+            <field name="model_id" ref="model_timesheet_approval_history"/>
+            <field name="groups" eval="[(4, ref('group_timesheet_approval_user'))]"/>
+            <field name="domain_force">['|',
+                ('approval_id.employee_id.user_id', '=', user.id),
+                ('user_id', '=', user.id)]</field>
+            <field name="perm_read" eval="True"/>
+            <field name="perm_write" eval="False"/>
+            <field name="perm_create" eval="False"/>
+            <field name="perm_unlink" eval="False"/>
+        </record>
+        
+        <record id="timesheet_approval_history_rule_manager" model="ir.rule">
+            <field name="name">Timesheet Approval History: Manager Access</field>
+            <field name="model_id" ref="model_timesheet_approval_history"/>
+            <field name="groups" eval="[(4, ref('group_timesheet_approval_manager'))]"/>
+            <field name="domain_force">['|',
+                ('approval_id.manager_id.user_id', '=', user.id),
+                ('approval_id.employee_id.parent_id.user_id', '=', user.id)]</field>
+            <field name="perm_read" eval="True"/>
+            <field name="perm_write" eval="True"/>
+            <field name="perm_create" eval="True"/>
+            <field name="perm_unlink" eval="True"/>
+        </record>
+        
+    </data>
+</odoo>

@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        
+        <!-- Manager Dashboard Views -->
+        
+        <!-- Manager Dashboard Action -->
+        <record id="action_timesheet_approval_dashboard" model="ir.actions.act_window">
+            <field name="name">Timesheet Approval Dashboard</field>
+            <field name="res_model">timesheet.approval</field>
+            <field name="view_mode">kanban,list,form</field>
+            <field name="context">{
+                'search_default_submitted': 1,
+                'search_default_my_team': 1
+            }</field>
+            <field name="help" type="html">
+                <p class="o_view_nocontent_smiling_face">
+                    No pending timesheet approvals!
+                </p>
+                <p>
+                    Your team's timesheet approval requests will appear here.
+                </p>
+            </field>
+        </record>
+        
+        <!-- Employee Dashboard Views -->
+        
+        <!-- Employee Dashboard Action -->
+        <record id="action_timesheet_approval_employee_dashboard" model="ir.actions.act_window">
+            <field name="name">My Timesheet Status</field>
+            <field name="res_model">timesheet.approval</field>
+            <field name="view_mode">kanban,list,form</field>
+            <field name="domain">[('employee_id.user_id', '=', uid)]</field>
+            <field name="context">{
+                'search_default_my_timesheets': 1
+            }</field>
+            <field name="help" type="html">
+                <p class="o_view_nocontent_smiling_face">
+                    No timesheet submissions yet!
+                </p>
+                <p>
+                    Submit your first timesheet for approval to get started.
+                </p>
+            </field>
+        </record>
+
+    </data>
+</odoo>
