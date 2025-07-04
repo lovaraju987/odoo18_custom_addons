@@ -154,6 +154,16 @@
                   sequence="30"
                   groups="hr.group_hr_manager"/>
         
+        <!-- Settings Action -->
+        <record id="timesheet_approval_settings_action" model="ir.actions.act_window">
+            <field name="name">Timesheet Approval Settings</field>
+            <field name="type">ir.actions.act_window</field>
+            <field name="res_model">timesheet.approval.settings</field>
+            <field name="view_mode">form</field>
+            <field name="target">inline</field>
+            <field name="context">{'module': 'timesheet_approval'}</field>
+        </record>
+        
         <!-- Configuration Menu -->
         <menuitem id="menu_timesheet_approval_config" 
                   name="Configuration" 
