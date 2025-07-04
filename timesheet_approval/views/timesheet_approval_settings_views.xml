@@ -234,33 +234,5 @@
             </field>
         </record>
 
-        <!-- Configuration Action -->
-        <record id="timesheet_approval_settings_action" model="ir.actions.act_window">
-            <field name="name">Timesheet Approval Settings</field>
-            <field name="type">ir.actions.act_window</field>
-            <field name="res_model">timesheet.approval.settings</field>
-            <field name="view_mode">form</field>
-            <field name="target">inline</field>
-            <field name="context">{'module': 'timesheet_approval'}</field>
-        </record>
-        
-        <!-- Alternative action for menu -->
-        <record id="action_timesheet_approval_config" model="ir.actions.act_window">
-            <field name="name">Configuration</field>
-            <field name="res_model">timesheet.approval.settings</field>
-            <field name="view_mode">form</field>
-            <field name="target">inline</field>
-            <field name="context">{'module': 'timesheet_approval'}</field>
-        </record>
-
-        <!-- Settings Menu -->
-        <menuitem 
-            id="timesheet_approval_settings_menu"
-            name="Settings"
-            parent="menu_timesheet_approval_config"
-            action="timesheet_approval_settings_action"
-            sequence="10"
-            groups="timesheet_approval.group_timesheet_approval_manager"/>
-
     </data>
 </odoo>
