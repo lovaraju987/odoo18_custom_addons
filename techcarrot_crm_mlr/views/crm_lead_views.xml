@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <!-- Inherit CRM Lead Form View -->
+        <record id="crm_lead_view_form_inherit" model="ir.ui.view">
+            <field name="name">crm.lead.form.inherit</field>
+            <field name="model">crm.lead</field>
+            <field name="inherit_id" ref="crm.crm_lead_view_form"/>
+            <field name="arch" type="xml">
+                <!-- Add deal manager field -->
+                <xpath expr="//field[@name='user_id']" position="after">
+                    <field name="deal_manager_id" widget="many2one_avatar_employee"/>
+                </xpath>
+                
+                <!-- Add point of contact field -->
+                <xpath expr="//field[@name='partner_id']" position="after">
+                    <field name="point_of_contact_id" 
+                           string="Point of Contact"
+                           placeholder="Select a contact person..."
+                           domain="[('is_company', '=', False)]"
+                           context="{'default_is_company': False}"
+                           options="{'no_create': False, 'no_open': True}"/>
+                </xpath>
+
+                <!-- Add custom fields in notebook -->
+                <xpath expr="//notebook" position="inside">
+                    <page string="TechCarrot Custom Fields" name="techcarrot_custom">
+                        <group>
+                            <group name="custom_group_1">
+                                <field name="point_of_contact_id" 
+                                       string="Point of Contact"
+                                       domain="[('is_company', '=', False)]"/>
+                                <field name="practice_id"/>
+                                <field name="industry_id"/>
+                                <field name="engaged_presales"/>
+                            </group>
+                            <group name="custom_group_2">
+                                <field name="proposal_submission_date"/>
+                            </group>
+                        </group>
+                    </page>
+                </xpath>
+            </field>
+        </record>
+
+        <!-- Inherit CRM Lead List View -->
+        <record id="crm_lead_view_list_inherit" model="ir.ui.view">
+            <field name="name">crm.lead.list.inherit</field>
+            <field name="model">crm.lead</field>
+            <field name="inherit_id" ref="crm.crm_case_tree_view_oppor"/>
+            <field name="arch" type="xml">
+                <xpath expr="//field[@name='user_id']" position="after">
+                    <field name="deal_manager_id" optional="hide"/>
+                    <field name="point_of_contact_id" optional="hide"/>
+                    <field name="practice_id" optional="hide"/>
+                    <field name="industry_id" optional="hide"/>
+                    <field name="engaged_presales" optional="hide"/>
+                    <field name="proposal_submission_date" optional="hide"/>
+                </xpath>
+            </field>
+        </record>
+
+        <!-- Add fields to search view -->
+        <record id="crm_lead_view_filter_inherit" model="ir.ui.view">
+            <field name="name">crm.lead.search.inherit</field>
+            <field name="model">crm.lead</field>
+            <field name="inherit_id" ref="crm.view_crm_case_opportunities_filter"/>
+            <field name="arch" type="xml">
+                <!-- Add search fields -->
+                <xpath expr="//field[@name='name']" position="after">
+                    <field name="deal_manager_id"/>
+                    <field name="point_of_contact_id"/>
+                    <field name="practice_id"/>
+                    <field name="industry_id"/>
+                </xpath>
+                
+                <!-- Add custom filters at the end -->
+                <xpath expr="//search" position="inside">
+                    <separator/>
+                    <filter name="filter_engaged_presales" string="Engaged Presales" 
+                            domain="[('engaged_presales', '=', True)]"/>
+                    <filter name="filter_proposal_submitted" string="Proposal Submitted" 
+                            domain="[('proposal_submission_date', '!=', False)]"/>
+                    
+                    <!-- Group by options -->
+                    <group expand="0" string="Group By">
+                        <filter name="group_by_deal_manager" string="Deal Manager" 
+                                context="{'group_by': 'deal_manager_id'}"/>
+                        <filter name="group_by_practice" string="Practice" 
+                                context="{'group_by': 'practice_id'}"/>
+                        <filter name="group_by_industry" string="Industry" 
+                                context="{'group_by': 'industry_id'}"/>
+                        <filter name="group_by_engaged_presales" string="Engaged Presales" 
+                                context="{'group_by': 'engaged_presales'}"/>
+                    </group>
+                </xpath>
+            </field>
+        </record>
+
+        <!-- Kanban view inheritance -->
+        <record id="crm_lead_view_kanban_inherit" model="ir.ui.view">
+            <field name="name">crm.lead.kanban.inherit</field>
+            <field name="model">crm.lead</field>
+            <field name="inherit_id" ref="crm.crm_case_kanban_view_leads"/>
+            <field name="arch" type="xml">
+                <!-- Add fields to kanban -->
+                <xpath expr="//field[@name='user_id']" position="after">
+                    <field name="deal_manager_id"/>
+                    <field name="practice_id"/>
+                    <field name="industry_id"/>
+                    <field name="engaged_presales"/>
+                    <field name="proposal_submission_date"/>
+                    <field name="point_of_contact_id"/>
+                </xpath>
+            </field>
+        </record>
+    </data>
+</odoo>
