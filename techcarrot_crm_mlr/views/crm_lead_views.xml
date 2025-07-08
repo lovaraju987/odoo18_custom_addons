@@ -10,16 +10,12 @@
                 <!-- Add deal manager field -->
                 <xpath expr="//field[@name='user_id']" position="after">
                     <field name="deal_manager_id" widget="many2one_avatar_employee"/>
-                </xpath>
-                
-                <!-- Add point of contact field -->
-                <xpath expr="//field[@name='partner_id']" position="after">
                     <field name="point_of_contact_id" 
                            string="Point of Contact"
                            placeholder="Select a contact person..."
                            domain="[('is_company', '=', False)]"
                            context="{'default_is_company': False}"
-                           options="{'no_create': False, 'no_open': True}"/>
+                           options="{'no_create_edit': True}"/>
                 </xpath>
 
                 <!-- Add custom fields in notebook -->
@@ -29,7 +25,10 @@
                             <group name="custom_group_1">
                                 <field name="point_of_contact_id" 
                                        string="Point of Contact"
-                                       domain="[('is_company', '=', False)]"/>
+                                       placeholder="Select a contact person..."
+                                       domain="[('is_company', '=', False)]"
+                                       context="{'default_is_company': False}"
+                                       options="{'no_create_edit': True}"/>
                                 <field name="practice_id"/>
                                 <field name="industry_id"/>
                                 <field name="engaged_presales"/>
