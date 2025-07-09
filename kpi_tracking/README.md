@@ -282,3 +282,273 @@ Place these images in `static/description/`:
 - [ ] Static images creation
 - [ ] Final testing in clean Odoo 18 instance
 - [ ] App Store submission and review
+
+---
+
+## 📋 **Step-by-Step User Guide**
+
+### 🚀 **Getting Started - Your First KPI**
+
+#### **Step 1: Install and Setup**
+1. Install the KPI Tracking module from Apps
+2. Go to **Settings > Users & Companies > Users**
+3. Add users to appropriate KPI groups:
+   - **KPI Admin**: Full control (IT/Management)
+   - **KPI Manager**: Department management (Team Leaders)
+   - **KPI User**: Submit KPI values (Employees)
+
+#### **Step 2: Create Your First KPI Group**
+1. Navigate to **KPI Tracking > KPI Groups**
+2. Click **Create** and fill in:
+   - **Name**: "Sales Team Performance"
+   - **Department**: Sales
+   - **Description**: "Track monthly sales targets and achievements"
+   - **Frequency**: Monthly
+   - **Start/End Dates**: Set your reporting period
+   - **Assigned Users**: Select team members
+
+#### **Step 3: Create a Manual KPI**
+1. Go to **KPI Tracking > KPI Reports**
+2. Click **Create** and configure:
+   - **KPI Name**: "Monthly Sales Revenue"
+   - **KPI Group**: Select "Sales Team Performance"
+   - **Target Type**: Currency
+   - **Target Value**: 100000 (₹1,00,000)
+   - **Calculation Type**: Manual
+   - **Performance Direction**: Higher is Better
+   - **Assigned User**: Select responsible person
+
+#### **Step 4: Submit KPI Values**
+1. Users can submit values from:
+   - **KPI Reports list**: Click on KPI name
+   - **My KPIs**: Shows only assigned KPIs
+   - **KPI Submissions**: Historical view
+2. Enter **Actual Value** and optional **Notes**
+3. Click **Submit** to save
+
+---
+
+## 🔧 **Advanced KPI Configuration**
+
+### **Creating Automatic KPIs**
+
+#### **Sales Order Count Example**
+```python
+# KPI: Monthly Sales Order Count
+Name: "Sales Orders This Month"
+Calculation Type: Auto
+Source Model: sale.order
+Filter Field: date_order
+Filter Type: this_month
+Domain Filter: [('state', '=', 'sale')]
+Formula: count_a
+Target: 50
+```
+
+#### **Revenue Calculation Example**
+```python
+# KPI: Monthly Revenue
+Name: "Monthly Revenue"
+Calculation Type: Auto
+Source Model: sale.order
+Filter Field: date_order
+Filter Type: this_month
+Domain Filter: [('state', '=', 'sale')]
+Formula: sum(record.amount_total for record in records)
+Target: 500000
+```
+
+#### **Conversion Rate Example**
+```python
+# KPI: Lead to Sale Conversion Rate
+Name: "Lead Conversion Rate"
+Calculation Type: Auto
+Source Model: crm.lead
+Filter Field: create_date
+Filter Type: this_month
+Domain Filter: [('stage_id.is_won', '=', True)]
+Formula: (count_b / count_a) * 100 if count_a > 0 else 0
+Target: 25
+```
+
+### **Formula Variables Reference**
+- **`count_a`**: Total records matching base domain
+- **`count_b`**: Records matching filtered domain
+- **`records`**: Actual record objects for calculations
+- **`assigned_user`**: Current user context
+- **`today`**: Current date
+
+---
+
+## 📊 **KPI Monitoring & Analytics**
+
+### **Dashboard Views**
+
+#### **List View Features**
+- **Progress Bars**: Visual achievement percentage
+- **Color Coding**: 
+  - 🟢 Green: >90% achievement
+  - 🟡 Yellow: 70-90% achievement
+  - 🔴 Red: <70% achievement
+- **Quick Actions**: Submit, Edit, View History
+
+#### **Form View Details**
+- **Performance Metrics**: Target vs Actual
+- **Submission History**: Track all submissions
+- **Performance Graph**: Trend analysis
+- **Test Buttons**: Validate formulas and domains
+
+#### **Graph View**
+- **Line Charts**: Performance trends over time
+- **Bar Charts**: Compare multiple KPIs
+- **Pivot Tables**: Multi-dimensional analysis
+
+### **Performance Monitoring**
+
+#### **Individual KPI Tracking**
+1. **Current Status**: Real-time achievement percentage
+2. **Historical Trends**: Performance over time
+3. **Submission Frequency**: Track regularity
+4. **Performance Alerts**: Email notifications for targets
+
+#### **Department-Level Monitoring**
+1. **Group Performance**: Overall department achievement
+2. **Team Comparisons**: Inter-departmental analysis
+3. **Resource Allocation**: Identify improvement areas
+4. **Trend Analysis**: Long-term performance patterns
+
+---
+
+## 📧 **Email Notifications & Reminders**
+
+### **Automated Reminders**
+- **Daily CRON Job**: Checks for pending manual KPIs
+- **Email Template**: Professional reminder format
+- **Recipient Logic**: Only assigned users with pending submissions
+- **Customizable**: Modify email content and frequency
+
+### **Manual Reminders**
+- **Group Level**: Send reminders to all group members
+- **Individual Level**: Target specific users
+- **Immediate Send**: Button-triggered notifications
+- **Bulk Operations**: Multiple KPIs at once
+
+---
+
+## 🎯 **Best Practices for KPI Success**
+
+### **KPI Design Principles**
+1. **SMART Goals**: Specific, Measurable, Achievable, Relevant, Time-bound
+2. **Clear Naming**: Use descriptive, unambiguous names
+3. **Realistic Targets**: Set achievable yet challenging goals
+4. **Regular Review**: Update targets based on performance
+5. **User Training**: Ensure all users understand the process
+
+### **Department-Specific Examples**
+
+#### **Sales Department**
+- Monthly Revenue Achievement
+- Lead Conversion Rate
+- Customer Acquisition Cost
+- Sales Cycle Time
+- Customer Satisfaction Score
+
+#### **HR Department**
+- Employee Retention Rate
+- Training Completion Rate
+- Recruitment Time
+- Employee Satisfaction
+- Performance Review Completion
+
+#### **Operations Department**
+- Process Efficiency Rate
+- Cost Reduction Achieved
+- Quality Score
+- Delivery Time
+- Resource Utilization
+
+#### **Marketing Department**
+- Campaign ROI
+- Lead Generation Rate
+- Website Traffic Growth
+- Social Media Engagement
+- Brand Awareness Score
+
+### **Common Pitfalls to Avoid**
+1. **Too Many KPIs**: Focus on 3-5 key metrics per department
+2. **Unrealistic Targets**: Set achievable goals
+3. **Infrequent Updates**: Regular monitoring is essential
+4. **No Action Plans**: Link KPIs to improvement initiatives
+5. **Lack of Training**: Ensure users understand the system
+
+---
+
+## 🔍 **Troubleshooting Guide**
+
+### **Common Issues**
+
+#### **Formula Errors**
+**Problem**: "Invalid formula syntax"
+**Solution**: 
+1. Use the **Test Domain** button to validate
+2. Check variable names (count_a, count_b, records)
+3. Ensure proper Python syntax
+4. Test with simple formulas first
+
+#### **Permission Issues**
+**Problem**: "Access denied to KPI records"
+**Solution**:
+1. Check user group assignments
+2. Verify record-level security rules
+3. Ensure proper role assignments
+4. Contact system administrator
+
+#### **Email Not Sending**
+**Problem**: "KPI reminders not received"
+**Solution**:
+1. Check email server configuration
+2. Verify email template exists
+3. Ensure CRON job is active
+4. Check user email addresses
+
+#### **Performance Issues**
+**Problem**: "Slow KPI calculations"
+**Solution**:
+1. Optimize domain filters
+2. Reduce formula complexity
+3. Use specific date ranges
+4. Consider database indexing
+
+### **Getting Help**
+- **Documentation**: Comprehensive README included
+- **Support Email**: info@oneto7solutions.in
+- **Website**: https://www.oneto7solutions.in
+- **Community**: Odoo forums and community support
+
+---
+
+## 📚 **Quick Reference Card**
+
+### **Navigation Menu**
+- **KPI Tracking > KPI Groups**: Manage departments
+- **KPI Tracking > KPI Reports**: Create and configure KPIs
+- **KPI Tracking > KPI Submissions**: Submit and view values
+- **KPI Tracking > My KPIs**: Personal KPI dashboard
+
+### **Key Actions**
+- **Create KPI**: Reports > Create
+- **Submit Value**: Click KPI name > Submit
+- **Send Reminder**: Group form > Send Email
+- **Test Formula**: KPI form > Test Domain
+- **View History**: Submissions tab in KPI form
+
+### **User Roles**
+- **Admin**: Full system access
+- **Manager**: Department KPIs only
+- **User**: Assigned KPIs only
+
+### **Support Shortcuts**
+- **F1**: Help documentation
+- **Ctrl+K**: Quick search
+- **Alt+M**: Main menu
+- **Ctrl+S**: Save current record
