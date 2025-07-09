@@ -244,6 +244,41 @@ This module is licensed under LGPL-3.
 
 ---
 
-**Author**: Custom Development Team  
-**Version**: 18.1.0  
-**Compatibility**: Odoo 18.0+
+## 🏪 Odoo App Store Preparation
+
+This module is prepared for publication on the Odoo App Store with the following commercial settings:
+
+### 💰 **Commercial Information**
+- **Price**: $20 USD
+- **License**: OPL-1 (Odoo Proprietary License)
+- **Category**: Human Resources
+- **Author**: OneTo7 Solutions
+- **Support**: info@oneto7solutions.in
+- **Website**: https://www.oneto7solutions.in
+
+### 📦 **Package Contents**
+- ✅ Demo data with sample KPIs and submissions
+- ✅ Professional README documentation
+- ✅ Commercial license (OPL-1)
+- ✅ Security and access control rules
+- ✅ Email templates and CRON jobs
+- ⚠️ **TODO**: Add static images (banner, icon, screenshots)
+
+### 🖼️ **Required Images** (to be added)
+Place these images in `static/description/`:
+- `banner.png` (1200x300px) - App Store banner
+- `icon.png` (128x128px) - Module icon
+- `kpi_dashboard.png` (800x600px) - Dashboard screenshot
+- `kpi_form.png` (800x600px) - Form view screenshot
+- `kpi_reports.png` (800x600px) - Reports screenshot
+
+### 🔍 **Pre-Publication Checklist**
+- [x] Code quality review and refactoring
+- [x] Security validation and access controls
+- [x] Documentation cleanup and enhancement
+- [x] Demo data creation
+- [x] Commercial license and pricing
+- [x] Manifest file optimization
+- [ ] Static images creation
+- [ ] Final testing in clean Odoo 18 instance
+- [ ] App Store submission and review
