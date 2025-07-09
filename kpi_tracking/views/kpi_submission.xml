@@ -19,7 +19,7 @@
                 <field name="target_unit_display" readonly="1"/>
                 <field name="achievement_percent" widget="progressbar"/>  
                 <field name="score_label" widget="badge" options="{'color_field': 'score_color'}"/>  
-                <!-- <field name="score_color" invisible="1"/>    -->
+                <field name="score_color" invisible="1"/>
                 <field name="note"/>
             </list>
         </field>

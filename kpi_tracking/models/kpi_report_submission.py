@@ -5,6 +5,12 @@ class KPIReportSubmission(models.Model):
     _description = 'KPI Report Submission'
     _order = 'date desc'
 
+    # SQL constraints for data integrity
+    _sql_constraints = [
+        ('unique_kpi_user_date', 'UNIQUE(kpi_id, user_id, date(date))', 'Only one submission per user per day'),
+        ('achievement_percent_range', 'CHECK(achievement_percent >= 0)', 'Achievement percent cannot be negative'),
+    ]
+
     report_id = fields.Many2one('kpi.report.group', string="Report Group", related='kpi_id.report_id', store=True)
     kpi_id = fields.Many2one('kpi.report', string="KPI", required=True)
     kpi_type = fields.Selection(related='kpi_id.kpi_type', store=True)
@@ -40,16 +46,25 @@ class KPIReportSubmission(models.Model):
     @api.depends('value', 'target_value', 'target_type', 'kpi_direction')
     def _compute_achievement(self):
         for rec in self:
-            if rec.target_type in ['number', 'percent', 'currency', 'duration']:
-                if rec.kpi_direction == 'higher_better':
-                    rec.achievement_percent = (rec.value / rec.target_value * 100) if rec.target_value else 0.0
-                elif rec.kpi_direction == 'lower_better':
-                    if rec.value == 0:
-                        rec.achievement_percent = 100.0
-                    else:
-                        ratio = (rec.target_value / rec.value * 100) if rec.value else 0.0
-                        rec.achievement_percent = min(ratio, 100.0)
-            elif rec.target_type == 'boolean':
-                rec.achievement_percent = 100.0 if rec.value else 0.0
+            rec.achievement_percent = rec._calculate_achievement_percent()
+
+    def _calculate_achievement_percent(self):
+        """Calculate achievement percentage based on target type and direction"""
+        if self.target_type in ['number', 'percent', 'currency', 'duration']:
+            return self._calculate_numeric_achievement()
+        elif self.target_type == 'boolean':
+            return 100.0 if self.value else 0.0
+        else:
+            return 0.0
+
+    def _calculate_numeric_achievement(self):
+        """Calculate achievement for numeric target types"""
+        if self.kpi_direction == 'higher_better':
+            return (self.value / self.target_value * 100) if self.target_value else 0.0
+        elif self.kpi_direction == 'lower_better':
+            if self.value == 0:
+                return 100.0
             else:
-                rec.achievement_percent = 0.0
+                ratio = (self.target_value / self.value * 100) if self.value else 0.0
+                return min(ratio, 100.0)
+        return 0.0

@@ -5,12 +5,6 @@
         <field name="model">kpi.report</field>
         <field name="arch" type="xml">
             <list>
-                <!-- <field name="name"/>
-                <field name="report_id"/>
-                <field name="kpi_type"/>
-                <field name="report_type"/>
-                <field name="value"/>
-                <field name="last_submitted"/> -->
                 <field name="name"/>
                 <field name="last_submitted"/>
                 <field name="department"/>
@@ -21,7 +15,7 @@
                 <field name="target_unit_display" readonly="1"/>
                 <field name="achievement_percent" widget="progressbar"/>
                 <field name="score_label" widget="badge" options="{'color_field': 'score_color'}"/>
-                <!-- <field name="score_color" invisible="1"/> -->
+                <field name="score_color" invisible="1"/>
             </list>
         </field>
     </record>
@@ -56,20 +50,21 @@
 
                     <group string="Auto Tracking Configuration"
                         invisible="kpi_type != 'auto'">
-                        <field name="source_model_id"/>
+                        <field name="source_model_id" help="Select the Odoo model to calculate KPI from"/>
                         <field name="source_model" invisible="1"/>
-                        <field name="filter_field"/>
-                        <field name="filter_type"/>
+                        <field name="filter_field" help="Date/datetime field to filter records (e.g., create_date, date_order)"/>
+                        <field name="filter_type" help="Time period for filtering records"/>
                         <field name="count_field"/>
-                        <field name="formula_field"/>
-                        <field name="source_domain"/>
+                        <field name="formula_field" help="Formula to calculate KPI value. Available variables: count_a, count_b, records, assigned_user, today"/>
+                        <field name="source_domain" help="Domain filter for records. Use Python list syntax, e.g., [('state', '=', 'done')]"/>
                         <field name="count_a" readonly="1"/>
                         <field name="count_b" readonly="1"/>
                         <field name="domain_test_result" readonly="1"/>
                         <button name="action_test_domain"
                                 string="Test Domain"
                                 type="object"
-                                class="btn btn-primary"/>
+                                class="btn btn-primary"
+                                help="Test if the domain syntax is valid"/>
                     </group>
 
                     <group>
@@ -98,7 +93,7 @@
                                     <field name="target_unit_display" readonly="1"/>
                                     <field name="achievement_percent" widget="progressbar"/>
                                     <field name="score_label" widget="badge" options="{'color_field': 'score_color'}"/>
-                                    <!-- <field name="score_color" invisible="1"/> -->
+                                    <field name="score_color" invisible="1"/>
                                     <field name="note"/>
                                 </list>
                             </field>

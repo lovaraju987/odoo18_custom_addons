@@ -24,7 +24,7 @@
                         <field name="description"/>
                         <field name="group_achievement_percent" readonly="1"/>
                         <field name="score_label" widget="badge" options="{'color_field': 'score_color'}"/>
-                        <!-- <field name="score_color" invisible="1"/> -->
+                        <field name="score_color" invisible="1"/>
                     </group>
                     <notebook>
                         <page string="KPIs">
@@ -43,7 +43,7 @@
                                     <field name="target_unit_display" readonly="1"/>
                                     <field name="achievement_percent" widget="progressbar"/>
                                     <field name="score_label" widget="badge" options="{'color_field': 'score_color'}"/>
-                                    <!-- <field name="score_color" invisible="1"/> -->
+                                    <field name="score_color" invisible="1"/>
                                 </list>
                                 <form>
                                     <group>
@@ -69,7 +69,7 @@
                                     <field name="target_unit_display" readonly="1"/>
                                     <field name="achievement_percent" widget="progressbar"/> 
                                     <field name="score_label" widget="badge" options="{'color_field': 'score_color'}"/>  
-                                    <!-- <field name="score_color" invisible="1"/> -->
+                                    <field name="score_color" invisible="1"/>
                                     <field name="note"/>
                                 </list>
                             </field>
@@ -80,7 +80,7 @@
                                     <field name="date" string="Submitted At"/>
                                     <field name="value"/>
                                     <field name="score_label" widget="badge" options="{'color_field': 'score_color'}"/>
-                                    <!-- <field name="score_color" invisible="1"/> -->
+                                    <field name="score_color" invisible="1"/>
                                     <field name="user_id"/>
                                     <field name="note"/>
                                 </list>

@@ -7,11 +7,23 @@ from odoo.exceptions import ValidationError, UserError
 from collections import namedtuple
 from types import SimpleNamespace
 
+# Constants for model names
+KPI_REPORT_SUBMISSION_MODEL = 'kpi.report.submission'
+KPI_REPORT_GROUP_MODEL = 'kpi.report.group'
+KPI_REPORT_GROUP_SUBMISSION_MODEL = 'kpi.report.group.submission'
+
 class KPIReport(models.Model):
     _name = 'kpi.report'
     _inherit = ['mail.thread']
     _description = 'KPI Report'
     _order = 'department, name'
+
+    # SQL constraints for data integrity
+    _sql_constraints = [
+        ('target_value_positive', 'CHECK(target_value >= 0)', 'Target value must be positive or zero'),
+        ('achievement_percent_range', 'CHECK(achievement_percent >= 0)', 'Achievement percent cannot be negative'),
+        ('unique_kpi_name_report', 'UNIQUE(name, report_id)', 'KPI name must be unique within a report group'),
+    ]
 
     count_a = fields.Integer(string="Base Count (count_a)", readonly=True)
     count_b = fields.Integer(string="Filtered Count (count_b)", readonly=True)
@@ -100,22 +112,10 @@ class KPIReport(models.Model):
     @api.depends('value', 'target_value', 'target_type', 'kpi_direction')
     def _compute_achievement(self):
         for rec in self:
-            if rec.target_type in ['number', 'percent', 'currency', 'duration']:
-                if rec.kpi_direction == 'higher_better':
-                    rec.achievement_percent = (rec.value / rec.target_value * 100) if rec.target_value else 0.0
-                elif rec.kpi_direction == 'lower_better':
-                    if rec.value == 0:
-                        rec.achievement_percent = 100.0
-                    else:
-                        ratio = (rec.target_value / rec.value * 100) if rec.value else 0.0
-                        rec.achievement_percent = min(ratio, 100.0)
-            elif rec.target_type == 'boolean':
-                rec.achievement_percent = 100.0 if rec.value else 0.0
-            else:
-                rec.achievement_percent = 0.0
+            rec.achievement_percent = rec._calculate_achievement_percent()
 
     note = fields.Text(string="Note")
-    submission_ids = fields.One2many('kpi.report.submission', 'kpi_id', string="Submission History")
+    submission_ids = fields.One2many(KPI_REPORT_SUBMISSION_MODEL, 'kpi_id', string="Submission History")
     report_type = fields.Selection([
         ('daily', 'Daily'),
         ('weekly', 'Weekly'),
@@ -162,10 +162,11 @@ class KPIReport(models.Model):
         self.domain_test_result = ''
         if self.source_model_id:
             try:
-                model_fields = self.env[self.source_model_id.model]._fields
-                self.formula_notes = "Fields loaded successfully"
+                # Test if model can be accessed
+                self.env[self.source_model_id.model].check_access_rights('read')
+                self.formula_notes = "Model loaded successfully"
             except Exception as e:
-                self.formula_notes = f"Error loading fields: {e}"
+                self.formula_notes = f"Error loading model: {e}"
 
     def action_test_domain(self):
         self.ensure_one()
@@ -193,14 +194,22 @@ class KPIReport(models.Model):
             self.domain_test_result = f"Invalid: {str(e)}"
 
     def action_manual_refresh_kpi(self):
+        """Enhanced with permission checks"""
         self.ensure_one()
+        
+        # Check permissions
+        if not self.env.user.has_group('kpi_tracking.group_kpi_admin'):
+            if not self.env.user.has_group('kpi_tracking.group_kpi_manager'):
+                if self.env.user.id not in self.assigned_user_ids.ids:
+                    raise UserError("You can only update KPIs assigned to you.")
+        
         today = fields.Date.today()
 
         if self.kpi_type == 'manual':
             self.sudo().value = self.manual_value
 
             for user in self.assigned_user_ids:
-                existing = self.env['kpi.report.submission'].sudo().search([
+                existing = self.env[KPI_REPORT_SUBMISSION_MODEL].sudo().search([
                     ('kpi_id', '=', self.id),
                     ('user_id', '=', user.id),
                     ('date', '>=', datetime.combine(today, datetime.min.time())),
@@ -218,7 +227,7 @@ class KPIReport(models.Model):
                 if existing:
                     existing.sudo().write(vals)
                 else:
-                    self.env['kpi.report.submission'].sudo().create(vals)
+                    self.env[KPI_REPORT_SUBMISSION_MODEL].sudo().create(vals)
 
         else:
             self.sudo().scheduled_update_kpis()
@@ -295,7 +304,7 @@ class KPIReport(models.Model):
                     rec.value = value
                     rec.last_submitted = fields.Datetime.now()
 
-                    existing = self.env['kpi.report.submission'].sudo().search([
+                    existing = self.env[KPI_REPORT_SUBMISSION_MODEL].sudo().search([
                         ('kpi_id', '=', rec.id),
                         ('user_id', '=', assigned_user.id),
                         ('date', '>=', datetime.combine(today, datetime.min.time())),
@@ -315,14 +324,14 @@ class KPIReport(models.Model):
                     if existing:
                         existing.sudo().write(vals)
                     else:
-                        self.env['kpi.report.submission'].sudo().create(vals)
+                        self.env[KPI_REPORT_SUBMISSION_MODEL].sudo().create(vals)
 
                 except Exception as e:
                     rec.formula_notes = f"Error calculating for {assigned_user.name}: {e}"
 
         # === Append Group KPI Submission after all individual KPI updates ===
-        group_model = self.env['kpi.report.group']
-        group_submission_model = self.env['kpi.report.group.submission']
+        group_model = self.env[KPI_REPORT_GROUP_MODEL]
+        group_submission_model = self.env[KPI_REPORT_GROUP_SUBMISSION_MODEL]
         for group in group_model.search([]):
             vals = {
                 'report_id': group.id,
@@ -385,6 +394,43 @@ class KPIReport(models.Model):
                 except Exception as e:
                     raise ValidationError(f"Invalid formula:\n{e}")
 
+    @api.constrains('formula_field', 'source_domain')
+    def _validate_formula_security(self):
+        """Validate formula for security risks"""
+        for rec in self:
+            rec._validate_formula_keywords()
+            rec._validate_domain_keywords()
+
+    def _validate_formula_keywords(self):
+        """Check formula for dangerous keywords"""
+        if self.formula_field:
+            dangerous_keywords = ['import', 'exec', 'eval', '__', 'open', 'file', 'compile', 'globals']
+            formula_lower = self.formula_field.lower()
+            for keyword in dangerous_keywords:
+                if keyword in formula_lower:
+                    raise ValidationError(f"Formula contains dangerous keyword: {keyword}")
+
+    def _validate_domain_keywords(self):
+        """Check domain for dangerous keywords"""
+        if self.source_domain:
+            dangerous_keywords = ['import', 'exec', 'eval', '__', 'open', 'file', 'compile', 'globals']
+            domain_lower = self.source_domain.lower()
+            for keyword in dangerous_keywords:
+                if keyword in domain_lower:
+                    raise ValidationError(f"Domain contains dangerous keyword: {keyword}")
+
+    @api.constrains('target_value', 'target_type')
+    def _validate_target_value(self):
+        """Validate target value based on target type"""
+        for rec in self:
+            if rec.target_value is not False:  # Allow 0 but not False
+                if rec.target_type == 'percent' and rec.target_value > 100:
+                    raise ValidationError("Percentage target cannot exceed 100%")
+                if rec.target_type == 'boolean' and rec.target_value not in [0, 1]:
+                    raise ValidationError("Boolean target must be 0 or 1")
+                if rec.target_value < 0:
+                    raise ValidationError("Target value cannot be negative")
+
     @api.model
     def send_manual_kpi_reminders(self):
         manual_kpis = self.search([('kpi_type', '=', 'manual')])
@@ -400,9 +446,23 @@ class KPIReport(models.Model):
     # Simple boolean field instead of computed field for now
     is_admin = fields.Boolean(string="Can Edit KPI", default=True, store=False)
 
-    # Remove the computed method for now
-    # @api.depends()
-    # def _compute_is_admin(self):
-    #     for rec in self:
-    #         # Temporarily always True for debugging
-    #         rec.is_admin = True
+    def _calculate_achievement_percent(self):
+        """Calculate achievement percentage based on target type and direction"""
+        if self.target_type in ['number', 'percent', 'currency', 'duration']:
+            return self._calculate_numeric_achievement()
+        elif self.target_type == 'boolean':
+            return 100.0 if self.value else 0.0
+        else:
+            return 0.0
+
+    def _calculate_numeric_achievement(self):
+        """Calculate achievement for numeric target types"""
+        if self.kpi_direction == 'higher_better':
+            return (self.value / self.target_value * 100) if self.target_value else 0.0
+        elif self.kpi_direction == 'lower_better':
+            if self.value == 0:
+                return 100.0
+            else:
+                ratio = (self.target_value / self.value * 100) if self.value else 0.0
+                return min(ratio, 100.0)
+        return 0.0
