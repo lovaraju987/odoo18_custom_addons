@@ -57,7 +57,10 @@
                         <field name="filter_type" help="Time period for filtering records"/>
                         <field name="count_field"/>
                         <field name="formula_field" help="Formula to calculate KPI value. Available variables: count_a, count_b, records, assigned_user, today"/>
-                        <field name="source_domain" help="Domain filter for records. Use Python list syntax, e.g., [('state', '=', 'done')]"/>
+                        <field name="source_domain" 
+                               widget="domain" 
+                               options="{'model': 'source_model', 'in_dialog': True}"
+                               help="Build a domain filter for records using the visual domain builder"/>
                         <field name="count_a" readonly="1"/>
                         <field name="count_b" readonly="1"/>
                         <field name="domain_test_result" readonly="1"/>

@@ -72,9 +72,9 @@ The **KPI Tracking** module is a comprehensive performance management system for
 ### **Automatic KPI Setup**
 1. Create KPI with type 'Auto'
 2. Select source model (e.g., sale.order, crm.lead)
-3. **Select filter field** from dropdown (only date/datetime fields shown)
+3. **Select filter field** from dropdown (all fields are now available)
 4. Set filter type (today, this week, this month)
-5. Write domain filter for record selection
+5. **Build domain filter** using the visual domain builder (no Python code required)
 6. Create formula using available variables:
    - `count_a`: Total records in base domain
    - `count_b`: Records matching filtered domain
@@ -110,6 +110,8 @@ sum(record.amount_total for record in records if record.state == 'sale')
 ### **Key UI Elements**
 - Progress bars for achievement visualization
 - Color-coded badges for performance levels
+- **Visual Domain Builder**: Intuitive interface for creating record filters without Python code
+- **Enhanced Filter Field Selection**: All model fields available in dropdown (not just date/datetime)
 - Contextual help text for complex fields
 - Submission history tracking
 - Test buttons for domain and formula validation
@@ -129,6 +131,51 @@ sum(record.amount_total for record in records if record.state == 'sale')
 4. Configure security groups and assign users
 5. Create your first KPI Report Group
 6. Define KPIs and start tracking!
+
+---
+
+## 🎨 Domain Builder Feature
+
+The KPI Tracking module now includes a **Visual Domain Builder** that makes it easy to create record filters without writing Python code.
+
+### **How to Use the Domain Builder**
+
+1. **Open a KPI**: Go to KPI Reports → Open any KPI with 'Auto' type
+2. **Navigate to Auto Tracking Configuration**: Scroll to the "Auto Tracking Configuration" section
+3. **Select Source Model**: Choose the Odoo model you want to filter (e.g., sale.order, hr.employee)
+4. **Click on Source Domain**: The domain builder widget will open in a popup dialog
+5. **Build Your Filter Visually**:
+   - Click "Add node" to add filter conditions
+   - Select fields from dropdown menus
+   - Choose operators (=, !=, <, >, contains, etc.)
+   - Enter values for comparison
+   - Use AND/OR logic to combine conditions
+6. **Save the Domain**: Click "Save" to apply your domain filter
+
+### **Domain Builder Benefits**
+
+- **No Python Knowledge Required**: Build complex filters using a visual interface
+- **Real-time Field Discovery**: All fields from the selected model are available in dropdowns
+- **Operator Suggestions**: Appropriate operators are suggested based on field types
+- **Syntax Validation**: Built-in validation ensures your domain is correctly formatted
+- **Visual Logic**: See AND/OR groupings clearly in the interface
+
+### **Example Domain Filters**
+
+**Sales Orders from Last Month:**
+```
+[('date_order', '>=', '2024-01-01'), ('date_order', '<=', '2024-01-31')]
+```
+
+**Confirmed Sales Orders with Specific Salesperson:**
+```
+[('state', 'in', ['sale', 'done']), ('user_id.name', '=', 'John Doe')]
+```
+
+**HR Employees in Specific Department:**
+```
+[('department_id.name', 'ilike', 'sales'), ('active', '=', True)]
+```
 
 ---
 
@@ -338,9 +385,9 @@ Place these images in `static/description/`:
 Name: "Sales Orders This Month"
 Calculation Type: Auto
 Source Model: sale.order
-Filter Field: date_order (selected from dropdown)
+Filter Field: date_order (selected from dropdown - all fields available)
 Filter Type: this_month
-Domain Filter: [('state', '=', 'sale')]
+Domain Filter: [('state', '=', 'sale')] (built using visual domain builder)
 Formula: count_a
 Target: 50
 ```
@@ -351,9 +398,9 @@ Target: 50
 Name: "Monthly Revenue"
 Calculation Type: Auto
 Source Model: sale.order
-Filter Field: date_order (selected from dropdown)
+Filter Field: date_order (selected from dropdown - all fields available)
 Filter Type: this_month
-Domain Filter: [('state', '=', 'sale')]
+Domain Filter: [('state', '=', 'sale')] (built using visual domain builder)
 Formula: sum(record.amount_total for record in records)
 Target: 500000
 ```
@@ -364,9 +411,9 @@ Target: 500000
 Name: "Lead Conversion Rate"
 Calculation Type: Auto
 Source Model: crm.lead
-Filter Field: create_date (selected from dropdown)
+Filter Field: create_date (selected from dropdown - all fields available)
 Filter Type: this_month
-Domain Filter: [('stage_id.is_won', '=', True)]
+Domain Filter: [('stage_id.is_won', '=', True)] (built using visual domain builder)
 Formula: (count_b / count_a) * 100 if count_a > 0 else 0
 Target: 25
 ```

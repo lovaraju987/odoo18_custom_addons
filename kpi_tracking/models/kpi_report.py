@@ -158,7 +158,7 @@ class KPIReport(models.Model):
     ])
     count_field = fields.Char()
     formula_field = fields.Text()
-    source_domain = fields.Char()
+    source_domain = fields.Text(string="Source Domain", help="Domain filter for records")
     domain_test_result = fields.Char(readonly=True)
     formula_notes = fields.Text()
 

@@ -87,13 +87,80 @@
 4. Assign to sales team
 5. Submit test value
 
+---
+
+## 🎨 **Using the Visual Domain Builder**
+
+### **What is the Domain Builder?**
+The Domain Builder is a visual interface that helps you create record filters without writing Python code. Instead of manually typing domain syntax like `[('state', '=', 'sale')]`, you can build the same filter using dropdown menus and buttons.
+
+### **How to Use the Domain Builder**
+
+#### **Step 1: Access the Domain Builder**
+1. Create or edit an Auto KPI
+2. Go to "Auto Tracking Configuration" section
+3. Select your Source Model (e.g., sale.order)
+4. Click on the "Source Domain" field
+5. The Domain Builder popup will open
+
+#### **Step 2: Build Your Filter**
+1. **Add Conditions**: Click "Add condition" or "Add group"
+2. **Select Field**: Choose from dropdown (all model fields available)
+3. **Choose Operator**: Select appropriate operator (=, !=, <, >, contains, etc.)
+4. **Enter Value**: Type the value to compare against
+5. **Combine Conditions**: Use AND/OR to combine multiple conditions
+
+#### **Step 3: Examples**
+
+**Simple Filter - Only Sale Orders:**
+- Field: `state`
+- Operator: `=`
+- Value: `sale`
+
+**Date Range Filter:**
+- Field: `date_order`
+- Operator: `>=`
+- Value: `2024-01-01`
+- AND
+- Field: `date_order`
+- Operator: `<=`
+- Value: `2024-12-31`
+
+**Complex Filter - Sales Orders from Specific Salesperson:**
+- Field: `state`
+- Operator: `=`
+- Value: `sale`
+- AND
+- Field: `user_id`
+- Operator: `=`
+- Value: (Select from dropdown)
+
+#### **Step 4: Save and Test**
+1. Click "Save" in the domain builder
+2. Use the "Test Domain" button to validate
+3. Check the count results (count_a, count_b)
+
+### **Domain Builder Benefits**
+- ✅ **No Python Knowledge Required**
+- ✅ **Real-time Field Discovery**
+- ✅ **Automatic Syntax Validation**
+- ✅ **Visual Logic Building**
+- ✅ **Error Prevention**
+
+---
+
+## 📚 **Practical Exercises**
+
 #### **Exercise 2: Automatic KPI**
 **Scenario**: Count completed tasks
 **Steps**:
 1. Create auto KPI "Tasks Completed"
 2. Source: project.task
-3. Filter: date_deadline
-4. Domain: [('stage_id.is_closed', '=', True)]
+3. Filter: date_deadline (select from dropdown - all fields available)
+4. Domain: Use domain builder to create [('stage_id.is_closed', '=', True)]
+   - Click Source Domain field → Domain Builder opens
+   - Add condition: stage_id.is_closed = True
+   - Save domain
 5. Formula: count_a
 
 #### **Exercise 3: Email Reminders**
@@ -115,9 +182,9 @@
 Name: "Monthly Sales Revenue"
 Type: Auto
 Source Model: sale.order
-Filter Field: date_order (select from dropdown)
+Filter Field: date_order (select from dropdown - all fields available)
 Filter Type: this_month
-Domain: [('state', '=', 'sale')]
+Domain: [('state', '=', 'sale')] (built using visual domain builder)
 Formula: sum(record.amount_total for record in records)
 Target: 500000
 Performance Direction: Higher is Better
@@ -128,9 +195,9 @@ Performance Direction: Higher is Better
 Name: "Lead Conversion Rate"
 Type: Auto
 Source Model: crm.lead
-Filter Field: create_date (select from dropdown)
+Filter Field: create_date (select from dropdown - all fields available)
 Filter Type: this_month
-Domain: [('stage_id.is_won', '=', True)]
+Domain: [('stage_id.is_won', '=', True)] (built using visual domain builder)
 Formula: (count_b / count_a) * 100 if count_a > 0 else 0
 Target: 25
 Performance Direction: Higher is Better
@@ -153,9 +220,9 @@ Description: "Monthly customer satisfaction survey results"
 Name: "Employee Retention Rate"
 Type: Auto
 Source Model: hr.employee
-Filter Field: create_date
+Filter Field: create_date (select from dropdown - all fields available)
 Filter Type: this_year
-Domain: [('active', '=', True)]
+Domain: [('active', '=', True)] (built using visual domain builder)
 Formula: (count_a / (count_a + departed_count)) * 100
 Target: 95
 Performance Direction: Higher is Better
