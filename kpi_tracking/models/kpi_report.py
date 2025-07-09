@@ -145,7 +145,12 @@ class KPIReport(models.Model):
 
     source_model_id = fields.Many2one('ir.model', string='Source Model')
     source_model = fields.Char(related='source_model_id.model', store=True, readonly=True)
-    filter_field = fields.Char()
+    filter_field_id = fields.Many2one(
+    'ir.model.fields',
+    string='Filter Field',
+    domain="[('model_id', '=', source_model_id)]"  # Remove ttype filter
+)
+    filter_field = fields.Char(related='filter_field_id.name', store=True, readonly=True)
     filter_type = fields.Selection([
         ('today', 'Today'),
         ('this_week', 'This Week'),
@@ -159,14 +164,30 @@ class KPIReport(models.Model):
 
     @api.onchange('source_model_id')
     def _onchange_source_model_id(self):
+        """Reset related fields when source model changes"""
         self.domain_test_result = ''
+        self.filter_field_id = False
         if self.source_model_id:
             try:
                 # Test if model can be accessed
                 self.env[self.source_model_id.model].check_access_rights('read')
-                self.formula_notes = "Model loaded successfully"
+                self.formula_notes = "Model loaded successfully. Select a date/datetime field for filtering."
             except Exception as e:
                 self.formula_notes = f"Error loading model: {e}"
+        else:
+            self.formula_notes = ""
+
+    @api.onchange('filter_field_id')
+    def _onchange_filter_field_id(self):
+        """Update formula notes when filter field changes"""
+        if self.filter_field_id:
+            field_type = self.filter_field_id.ttype
+            if field_type == 'date':
+                self.formula_notes = f"Selected date field: {self.filter_field_id.name}. Use filter_type to specify time range."
+            elif field_type == 'datetime':
+                self.formula_notes = f"Selected datetime field: {self.filter_field_id.name}. Use filter_type to specify time range."
+            else:
+                self.formula_notes = f"Warning: Field {self.filter_field_id.name} is not a date/datetime field."
 
     def action_test_domain(self):
         self.ensure_one()

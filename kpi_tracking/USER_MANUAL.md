@@ -41,7 +41,7 @@
    Name: "Sales Order Count"
    Type: Auto
    Source Model: sale.order
-   Filter Field: date_order
+   Filter Field: date_order (select from dropdown)
    Filter Type: this_month
    Domain: [('state', '=', 'sale')]
    Formula: count_a
@@ -115,7 +115,7 @@
 Name: "Monthly Sales Revenue"
 Type: Auto
 Source Model: sale.order
-Filter Field: date_order
+Filter Field: date_order (select from dropdown)
 Filter Type: this_month
 Domain: [('state', '=', 'sale')]
 Formula: sum(record.amount_total for record in records)
@@ -128,7 +128,7 @@ Performance Direction: Higher is Better
 Name: "Lead Conversion Rate"
 Type: Auto
 Source Model: crm.lead
-Filter Field: create_date
+Filter Field: create_date (select from dropdown)
 Filter Type: this_month
 Domain: [('stage_id.is_won', '=', True)]
 Formula: (count_b / count_a) * 100 if count_a > 0 else 0

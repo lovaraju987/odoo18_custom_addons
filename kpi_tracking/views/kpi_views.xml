@@ -52,7 +52,8 @@
                         invisible="kpi_type != 'auto'">
                         <field name="source_model_id" help="Select the Odoo model to calculate KPI from"/>
                         <field name="source_model" invisible="1"/>
-                        <field name="filter_field" help="Date/datetime field to filter records (e.g., create_date, date_order)"/>
+                        <field name="filter_field_id" help="Select any field from the model to use for filtering"/>
+                        <field name="filter_field" invisible="1"/>
                         <field name="filter_type" help="Time period for filtering records"/>
                         <field name="count_field"/>
                         <field name="formula_field" help="Formula to calculate KPI value. Available variables: count_a, count_b, records, assigned_user, today"/>

@@ -72,7 +72,7 @@ The **KPI Tracking** module is a comprehensive performance management system for
 ### **Automatic KPI Setup**
 1. Create KPI with type 'Auto'
 2. Select source model (e.g., sale.order, crm.lead)
-3. Define filter field for date filtering
+3. **Select filter field** from dropdown (only date/datetime fields shown)
 4. Set filter type (today, this week, this month)
 5. Write domain filter for record selection
 6. Create formula using available variables:
@@ -338,7 +338,7 @@ Place these images in `static/description/`:
 Name: "Sales Orders This Month"
 Calculation Type: Auto
 Source Model: sale.order
-Filter Field: date_order
+Filter Field: date_order (selected from dropdown)
 Filter Type: this_month
 Domain Filter: [('state', '=', 'sale')]
 Formula: count_a
@@ -351,7 +351,7 @@ Target: 50
 Name: "Monthly Revenue"
 Calculation Type: Auto
 Source Model: sale.order
-Filter Field: date_order
+Filter Field: date_order (selected from dropdown)
 Filter Type: this_month
 Domain Filter: [('state', '=', 'sale')]
 Formula: sum(record.amount_total for record in records)
@@ -364,7 +364,7 @@ Target: 500000
 Name: "Lead Conversion Rate"
 Calculation Type: Auto
 Source Model: crm.lead
-Filter Field: create_date
+Filter Field: create_date (selected from dropdown)
 Filter Type: this_month
 Domain Filter: [('stage_id.is_won', '=', True)]
 Formula: (count_b / count_a) * 100 if count_a > 0 else 0
