@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <!-- Configuration Menu -->
+        <menuitem id="menu_crm_mlr_config" 
+                  name="TechCarrot Configuration" 
+                  parent="crm.crm_menu_config"
+                  sequence="10"/>
+        
+        <!-- Practice Menu -->
+        <menuitem id="menu_crm_practice" 
+                  name="Practices" 
+                  parent="menu_crm_mlr_config"
+                  action="action_crm_practice"
+                  sequence="10"/>
+                  
+        <!-- Industry Menu -->
+        <menuitem id="menu_crm_industry" 
+                  name="Industries" 
+                  parent="menu_crm_mlr_config"
+                  action="action_crm_industry"
+                  sequence="20"/>
+    </data>
+</odoo>

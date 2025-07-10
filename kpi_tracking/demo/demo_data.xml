@@ -1,0 +1,165 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        
+        <!-- Demo KPI Report Groups -->
+        <record id="demo_sales_kpi_group" model="kpi.report.group">
+            <field name="name">Sales Performance</field>
+            <field name="department">sales</field>
+            <field name="description">Track sales targets, revenue, and customer acquisition metrics</field>
+            <field name="frequency">monthly</field>
+            <field name="start_date" eval="DateTime.today().replace(day=1)"/>
+            <field name="end_date" eval="DateTime.today().replace(day=28)"/>
+            <field name="user_id" ref="base.user_admin"/>
+        </record>
+
+        <record id="demo_hr_kpi_group" model="kpi.report.group">
+            <field name="name">HR Performance</field>
+            <field name="department">hr</field>
+            <field name="description">Monitor employee satisfaction, training completion, and retention metrics</field>
+            <field name="frequency">quarterly</field>
+            <field name="start_date" eval="DateTime.today().replace(day=1)"/>
+            <field name="end_date" eval="DateTime.today().replace(day=28)"/>
+            <field name="user_id" ref="base.user_admin"/>
+        </record>
+
+        <record id="demo_operations_kpi_group" model="kpi.report.group">
+            <field name="name">Operations Efficiency</field>
+            <field name="department">operations</field>
+            <field name="description">Track operational efficiency, cost reduction, and process optimization</field>
+            <field name="frequency">weekly</field>
+            <field name="start_date" eval="DateTime.today().replace(day=1)"/>
+            <field name="end_date" eval="DateTime.today().replace(day=28)"/>
+            <field name="user_id" ref="base.user_admin"/>
+        </record>
+
+        <!-- Demo KPI Reports -->
+        <record id="demo_monthly_revenue_kpi" model="kpi.report">
+            <field name="name">Monthly Revenue</field>
+            <field name="target_type">currency</field>
+            <field name="target_value">100000</field>
+            <field name="performance_direction">higher</field>
+            <field name="kpi_type">manual</field>
+            <field name="kpi_group_id" ref="demo_sales_kpi_group"/>
+            <field name="description">Track monthly revenue achievement against targets</field>
+            <field name="user_id" ref="base.user_admin"/>
+        </record>
+
+        <record id="demo_customer_satisfaction_kpi" model="kpi.report">
+            <field name="name">Customer Satisfaction Score</field>
+            <field name="target_type">percent</field>
+            <field name="target_value">85</field>
+            <field name="performance_direction">higher</field>
+            <field name="kpi_type">manual</field>
+            <field name="kpi_group_id" ref="demo_sales_kpi_group"/>
+            <field name="description">Customer satisfaction percentage based on feedback surveys</field>
+            <field name="user_id" ref="base.user_admin"/>
+        </record>
+
+        <record id="demo_employee_training_kpi" model="kpi.report">
+            <field name="name">Training Completion Rate</field>
+            <field name="target_type">percent</field>
+            <field name="target_value">90</field>
+            <field name="performance_direction">higher</field>
+            <field name="kpi_type">manual</field>
+            <field name="kpi_group_id" ref="demo_hr_kpi_group"/>
+            <field name="description">Percentage of employees completing mandatory training</field>
+            <field name="user_id" ref="base.user_admin"/>
+        </record>
+
+        <record id="demo_operational_efficiency_kpi" model="kpi.report">
+            <field name="name">Process Efficiency</field>
+            <field name="target_type">number</field>
+            <field name="target_value">95</field>
+            <field name="performance_direction">higher</field>
+            <field name="kpi_type">manual</field>
+            <field name="kpi_group_id" ref="demo_operations_kpi_group"/>
+            <field name="description">Overall operational efficiency score</field>
+            <field name="user_id" ref="base.user_admin"/>
+        </record>
+
+        <record id="demo_cost_reduction_kpi" model="kpi.report">
+            <field name="name">Cost Reduction</field>
+            <field name="target_type">currency</field>
+            <field name="target_value">50000</field>
+            <field name="performance_direction">higher</field>
+            <field name="kpi_type">manual</field>
+            <field name="kpi_group_id" ref="demo_operations_kpi_group"/>
+            <field name="description">Amount saved through cost reduction initiatives</field>
+            <field name="user_id" ref="base.user_admin"/>
+        </record>
+
+        <!-- Demo KPI Submissions -->
+        <record id="demo_revenue_submission_1" model="kpi.report.submission">
+            <field name="kpi_report_id" ref="demo_monthly_revenue_kpi"/>
+            <field name="actual_value">95000</field>
+            <field name="submission_date" eval="DateTime.today()"/>
+            <field name="user_id" ref="base.user_admin"/>
+            <field name="notes">Good performance but slightly below target due to seasonal factors</field>
+        </record>
+
+        <record id="demo_satisfaction_submission_1" model="kpi.report.submission">
+            <field name="kpi_report_id" ref="demo_customer_satisfaction_kpi"/>
+            <field name="actual_value">88</field>
+            <field name="submission_date" eval="DateTime.today()"/>
+            <field name="user_id" ref="base.user_admin"/>
+            <field name="notes">Exceeded target satisfaction score this month</field>
+        </record>
+
+        <record id="demo_training_submission_1" model="kpi.report.submission">
+            <field name="kpi_report_id" ref="demo_employee_training_kpi"/>
+            <field name="actual_value">92</field>
+            <field name="submission_date" eval="DateTime.today()"/>
+            <field name="user_id" ref="base.user_admin"/>
+            <field name="notes">Excellent training completion rate</field>
+        </record>
+
+        <record id="demo_efficiency_submission_1" model="kpi.report.submission">
+            <field name="kpi_report_id" ref="demo_operational_efficiency_kpi"/>
+            <field name="actual_value">97</field>
+            <field name="submission_date" eval="DateTime.today()"/>
+            <field name="user_id" ref="base.user_admin"/>
+            <field name="notes">Process improvements yielding excellent results</field>
+        </record>
+
+        <record id="demo_cost_submission_1" model="kpi.report.submission">
+            <field name="kpi_report_id" ref="demo_cost_reduction_kpi"/>
+            <field name="actual_value">45000</field>
+            <field name="submission_date" eval="DateTime.today()"/>
+            <field name="user_id" ref="base.user_admin"/>
+            <field name="notes">Close to target, implementing additional cost-saving measures</field>
+        </record>
+
+        <!-- Demo Automatic KPI with Dynamic Field Selection -->
+        <record id="demo_auto_sales_orders_kpi" model="kpi.report">
+            <field name="name">Monthly Sales Orders Count</field>
+            <field name="target_type">number</field>
+            <field name="target_value">50</field>
+            <field name="performance_direction">higher</field>
+            <field name="kpi_type">auto</field>
+            <field name="kpi_group_id" ref="demo_sales_kpi_group"/>
+            <field name="description">Count of confirmed sales orders this month</field>
+            <field name="user_id" ref="base.user_admin"/>
+            <field name="source_model_id" ref="sale.model_sale_order"/>
+            <field name="filter_type">this_month</field>
+            <field name="source_domain">[('state', '=', 'sale')]</field>
+            <field name="formula_field">count_a</field>
+        </record>
+
+        <record id="demo_auto_leads_kpi" model="kpi.report">
+            <field name="name">Monthly Leads Created</field>
+            <field name="target_type">number</field>
+            <field name="target_value">100</field>
+            <field name="performance_direction">higher</field>
+            <field name="kpi_type">auto</field>
+            <field name="kpi_group_id" ref="demo_sales_kpi_group"/>
+            <field name="description">Number of new leads created this month</field>
+            <field name="user_id" ref="base.user_admin"/>
+            <field name="source_model_id" ref="crm.model_crm_lead"/>
+            <field name="filter_type">this_month</field>
+            <field name="source_domain">[]</field>
+            <field name="formula_field">count_a</field>
+        </record>
+
+    </data>
+</odoo>

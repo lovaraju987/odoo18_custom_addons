@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        <!-- Default Practice Records -->
+        <record id="practice_web_development" model="crm.practice">
+            <field name="name">Web Development</field>
+            <field name="code">WEB</field>
+            <field name="description">Custom web application development services</field>
+        </record>
+        
+        <record id="practice_mobile_development" model="crm.practice">
+            <field name="name">Mobile Development</field>
+            <field name="code">MOB</field>
+            <field name="description">iOS and Android mobile application development</field>
+        </record>
+        
+        <record id="practice_data_analytics" model="crm.practice">
+            <field name="name">Data Analytics</field>
+            <field name="code">DATA</field>
+            <field name="description">Business intelligence and data analysis solutions</field>
+        </record>
+        
+        <record id="practice_cloud_services" model="crm.practice">
+            <field name="name">Cloud Services</field>
+            <field name="code">CLOUD</field>
+            <field name="description">Cloud infrastructure and migration services</field>
+        </record>
+        
+        <record id="practice_ai_ml" model="crm.practice">
+            <field name="name">AI/ML Solutions</field>
+            <field name="code">AIML</field>
+            <field name="description">Artificial Intelligence and Machine Learning solutions</field>
+        </record>
+        
+        <record id="practice_cybersecurity" model="crm.practice">
+            <field name="name">Cybersecurity</field>
+            <field name="code">SEC</field>
+            <field name="description">Information security and cybersecurity services</field>
+        </record>
+        
+        <record id="practice_consulting" model="crm.practice">
+            <field name="name">IT Consulting</field>
+            <field name="code">CONS</field>
+            <field name="description">Technology consulting and advisory services</field>
+        </record>
+        
+        <record id="practice_other" model="crm.practice">
+            <field name="name">Other</field>
+            <field name="code">OTHER</field>
+            <field name="description">Other technology services</field>
+        </record>
+    </data>
+</odoo>

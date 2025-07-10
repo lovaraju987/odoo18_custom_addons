@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        <!-- Default Industry Records -->
+        <record id="industry_automotive" model="crm.industry">
+            <field name="name">Automotive</field>
+            <field name="code">AUTO</field>
+            <field name="description">Automotive and transportation industry</field>
+        </record>
+        
+        <record id="industry_banking" model="crm.industry">
+            <field name="name">Banking &amp; Finance</field>
+            <field name="code">BANK</field>
+            <field name="description">Banking, financial services, and fintech</field>
+        </record>
+        
+        <record id="industry_construction" model="crm.industry">
+            <field name="name">Construction</field>
+            <field name="code">CONST</field>
+            <field name="description">Construction and real estate development</field>
+        </record>
+        
+        <record id="industry_education" model="crm.industry">
+            <field name="name">Education</field>
+            <field name="code">EDU</field>
+            <field name="description">Educational institutions and e-learning</field>
+        </record>
+        
+        <record id="industry_energy" model="crm.industry">
+            <field name="name">Energy &amp; Utilities</field>
+            <field name="code">ENERGY</field>
+            <field name="description">Energy, utilities, and renewable resources</field>
+        </record>
+        
+        <record id="industry_government" model="crm.industry">
+            <field name="name">Government</field>
+            <field name="code">GOV</field>
+            <field name="description">Government and public sector</field>
+        </record>
+        
+        <record id="industry_healthcare" model="crm.industry">
+            <field name="name">Healthcare</field>
+            <field name="code">HEALTH</field>
+            <field name="description">Healthcare, medical, and pharmaceutical</field>
+        </record>
+        
+        <record id="industry_hospitality" model="crm.industry">
+            <field name="name">Hospitality</field>
+            <field name="code">HOSP</field>
+            <field name="description">Hotels, restaurants, and tourism</field>
+        </record>
+        
+        <record id="industry_insurance" model="crm.industry">
+            <field name="name">Insurance</field>
+            <field name="code">INS</field>
+            <field name="description">Insurance and risk management</field>
+        </record>
+        
+        <record id="industry_manufacturing" model="crm.industry">
+            <field name="name">Manufacturing</field>
+            <field name="code">MFG</field>
+            <field name="description">Manufacturing and industrial production</field>
+        </record>
+        
+        <record id="industry_media" model="crm.industry">
+            <field name="name">Media &amp; Entertainment</field>
+            <field name="code">MEDIA</field>
+            <field name="description">Media, entertainment, and content creation</field>
+        </record>
+        
+        <record id="industry_nonprofit" model="crm.industry">
+            <field name="name">Non-Profit</field>
+            <field name="code">NPO</field>
+            <field name="description">Non-profit organizations and NGOs</field>
+        </record>
+        
+        <record id="industry_real_estate" model="crm.industry">
+            <field name="name">Real Estate</field>
+            <field name="code">RE</field>
+            <field name="description">Real estate and property management</field>
+        </record>
+        
+        <record id="industry_retail" model="crm.industry">
+            <field name="name">Retail</field>
+            <field name="code">RETAIL</field>
+            <field name="description">Retail and e-commerce</field>
+        </record>
+        
+        <record id="industry_technology" model="crm.industry">
+            <field name="name">Technology</field>
+            <field name="code">TECH</field>
+            <field name="description">Technology and software companies</field>
+        </record>
+        
+        <record id="industry_telecommunications" model="crm.industry">
+            <field name="name">Telecommunications</field>
+            <field name="code">TELECOM</field>
+            <field name="description">Telecommunications and networking</field>
+        </record>
+        
+        <record id="industry_transportation" model="crm.industry">
+            <field name="name">Transportation</field>
+            <field name="code">TRANS</field>
+            <field name="description">Transportation and logistics</field>
+        </record>
+        
+        <record id="industry_other" model="crm.industry">
+            <field name="name">Other</field>
+            <field name="code">OTHER</field>
+            <field name="description">Other industries</field>
+        </record>
+    </data>
+</odoo>

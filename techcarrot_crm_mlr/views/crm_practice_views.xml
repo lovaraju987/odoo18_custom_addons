@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <!-- Practice Tree View -->
+        <record id="view_crm_practice_tree" model="ir.ui.view">
+            <field name="name">crm.practice.tree</field>
+            <field name="model">crm.practice</field>
+            <field name="arch" type="xml">
+                <list>
+                    <field name="name"/>
+                    <field name="code"/>
+                    <field name="active"/>
+                </list>
+            </field>
+        </record>
+
+        <!-- Practice Form View -->
+        <record id="view_crm_practice_form" model="ir.ui.view">
+            <field name="name">crm.practice.form</field>
+            <field name="model">crm.practice</field>
+            <field name="arch" type="xml">
+                <form>
+                    <sheet>
+                        <div class="oe_button_box" name="button_box">
+                            <button name="toggle_active" type="object" class="oe_stat_button" icon="fa-archive">
+                                <field name="active" widget="boolean_button" options='{"terminology": "archive"}'/>
+                            </button>
+                        </div>
+                        <div class="oe_title">
+                            <label for="name" class="oe_edit_only"/>
+                            <h1>
+                                <field name="name" required="1" placeholder="Practice Name..."/>
+                            </h1>
+                        </div>
+                        <group>
+                            <group>
+                                <field name="code"/>
+                            </group>
+                        </group>
+                        <group>
+                            <field name="description" placeholder="Description..."/>
+                        </group>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <!-- Practice Search View -->
+        <record id="view_crm_practice_search" model="ir.ui.view">
+            <field name="name">crm.practice.search</field>
+            <field name="model">crm.practice</field>
+            <field name="arch" type="xml">
+                <search>
+                    <field name="name"/>
+                    <field name="code"/>
+                    <field name="description"/>
+                    <filter name="active" string="Active" domain="[('active', '=', True)]"/>
+                    <filter name="inactive" string="Archived" domain="[('active', '=', False)]"/>
+                </search>
+            </field>
+        </record>
+
+        <!-- Practice Action -->
+        <record id="action_crm_practice" model="ir.actions.act_window">
+            <field name="name">Practices</field>
+            <field name="res_model">crm.practice</field>
+            <field name="view_mode">list,form</field>
+            <field name="help" type="html">
+                <p class="o_view_nocontent_smiling_face">
+                    Create your first practice!
+                </p>
+                <p>
+                    Define the practice areas that your organization offers to categorize opportunities and leads.
+                </p>
+            </field>
+        </record>
+    </data>
+</odoo>
