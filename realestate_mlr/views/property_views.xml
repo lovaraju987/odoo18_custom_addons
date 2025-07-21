@@ -3,11 +3,11 @@
         <field name="name">realestate.property.tree</field>
         <field name="model">realestate.property</field>
         <field name="arch" type="xml">
-            <tree>
+            <list>
                 <field name="name"/>
                 <field name="project_id"/>
                 <field name="property_type"/>
-            </tree>
+            </list>
         </field>
     </record>
 
@@ -27,11 +27,11 @@
                     <notebook>
                         <page string="Units">
                             <field name="unit_ids">
-                                <tree editable="bottom">
+                                <list editable="bottom">
                                     <field name="name"/>
                                     <field name="floor"/>
                                     <field name="status"/>
-                                </tree>
+                                </list>
                             </field>
                         </page>
                     </notebook>
@@ -43,6 +43,6 @@
     <record id="action_realestate_property" model="ir.actions.act_window">
         <field name="name">Properties</field>
         <field name="res_model">realestate.property</field>
-        <field name="view_mode">tree,form</field>
+        <field name="view_mode">list,form</field>
     </record>
 </odoo>
