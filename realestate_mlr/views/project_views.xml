@@ -1,0 +1,34 @@
+<odoo>
+    <record id="view_realestate_project_list" model="ir.ui.view">
+        <field name="name">realestate.project.list</field>
+        <field name="model">realestate.project</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="name"/>
+                <field name="region_id"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_realestate_project_form" model="ir.ui.view">
+        <field name="name">realestate.project.form</field>
+        <field name="model">realestate.project</field>
+        <field name="arch" type="xml">
+            <form string="Project">
+                <sheet>
+                    <group>
+                        <field name="name"/>
+                        <field name="region_id"/>
+                        <field name="description"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_realestate_project" model="ir.actions.act_window">
+        <field name="name">Projects</field>
+        <field name="res_model">realestate.project</field>
+        <field name="view_mode">list,form</field>
+    </record>
+</odoo>
