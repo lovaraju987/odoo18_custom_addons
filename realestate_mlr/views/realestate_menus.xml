@@ -1,0 +1,8 @@
+<odoo>
+    <menuitem id="menu_realestate_root" name="Real Estate" sequence="10"/>
+
+    <menuitem id="menu_realestate_regions" name="Regions" parent="menu_realestate_root" action="action_realestate_region" sequence="10"/>
+    <menuitem id="menu_realestate_projects" name="Projects" parent="menu_realestate_root" action="action_realestate_project" sequence="20"/>
+    <menuitem id="menu_realestate_properties" name="Properties" parent="menu_realestate_root" action="action_realestate_property" sequence="30"/>
+    <menuitem id="menu_realestate_units" name="Units" parent="menu_realestate_root" action="action_realestate_unit" sequence="40"/>
+</odoo>
