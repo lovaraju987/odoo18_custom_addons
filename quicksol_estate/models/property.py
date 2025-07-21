@@ -15,7 +15,6 @@ class Property(models.Model):
     city = fields.Char(string='City')
     state = fields.Char('State')
     zip_code = fields.Char('Zip Code')
-    description = fields.Text(string='Description')
     latitude = fields.Float('Latitude')
     longitude = fields.Float('Longitude')
     country_id = fields.Many2one('res.country', string='Country')
