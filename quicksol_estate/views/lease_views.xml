@@ -1,0 +1,41 @@
+<odoo>
+
+     <record id="action_lease" model="ir.actions.act_window">
+        <field name="name">Lease</field>
+        <field name="res_model">real.estate.lease</field>
+        <field name="view_mode">tree,form</field>
+    </record>
+
+    <record id="view_lease_tree" model="ir.ui.view">
+        <field name="name">Lease</field>
+        <field name="model">real.estate.lease</field>
+        <field name="arch" type="xml">
+            <tree>
+                <field name="start_date"/>
+                <field name="property_id"/>
+                <field name="tenant_id"/>
+                <field name="rent_amount"/>
+            </tree>
+        </field>
+    </record>
+
+    <record id="view_lease_form" model="ir.ui.view">
+        <field name="name">lease.form</field>
+        <field name="model">real.estate.lease</field>
+        <field name="arch" type="xml">
+            <form>
+                <sheet>
+                    <group>
+                        <field name="start_date"/>
+                        <field name="end_date"/>
+                        <field name="rent_amount"/>
+                    </group>
+                    <group>
+                        <field name="property_id"/>
+                        <field name="tenant_id"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+</odoo>
