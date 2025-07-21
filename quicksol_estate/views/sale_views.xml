@@ -3,19 +3,19 @@
      <record id="action_sale" model="ir.actions.act_window">
         <field name="name">Sales</field>
         <field name="res_model">real.estate.sale</field>
-        <field name="view_mode">tree,form</field>
+        <field name="view_mode">list,form</field>
     </record>
 
     <record id="view_sale_tree" model="ir.ui.view">
         <field name="name">sale.tree</field>
         <field name="model">real.estate.sale</field>
         <field name="arch" type="xml">
-            <tree>
+            <list>
                 <field name="sale_date"/>
                 <field name="property_id"/>
                 <field name="sale_price"/>
                 <field name="buyer_name"/>
-            </tree>
+            </list>
         </field>
     </record>
 

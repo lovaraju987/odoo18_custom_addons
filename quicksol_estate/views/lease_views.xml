@@ -3,19 +3,19 @@
      <record id="action_lease" model="ir.actions.act_window">
         <field name="name">Lease</field>
         <field name="res_model">real.estate.lease</field>
-        <field name="view_mode">tree,form</field>
+        <field name="view_mode">list,form</field>
     </record>
 
     <record id="view_lease_tree" model="ir.ui.view">
         <field name="name">Lease</field>
         <field name="model">real.estate.lease</field>
         <field name="arch" type="xml">
-            <tree>
+            <list>
                 <field name="start_date"/>
                 <field name="property_id"/>
                 <field name="tenant_id"/>
                 <field name="rent_amount"/>
-            </tree>
+            </list>
         </field>
     </record>
 
