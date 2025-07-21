@@ -6,6 +6,10 @@
             <list>
                 <field name="name"/>
                 <field name="region_id"/>
+                <field name="location"/>
+                <field name="start_date"/>
+                <field name="end_date"/>
+                <field name="status"/>
             </list>
         </field>
     </record>
@@ -19,6 +23,10 @@
                     <group>
                         <field name="name"/>
                         <field name="region_id"/>
+                        <field name="location"/>
+                        <field name="start_date"/>
+                        <field name="end_date"/>
+                        <field name="status"/>
                         <field name="description"/>
                     </group>
                 </sheet>

@@ -6,6 +6,11 @@
             <list>
                 <field name="name"/>
                 <field name="property_id"/>
+                <field name="floor"/>
+                <field name="area"/>
+                <field name="num_bedrooms"/>
+                <field name="num_bathrooms"/>
+                <field name="price"/>
                 <field name="status"/>
             </list>
         </field>
@@ -22,7 +27,12 @@
                         <field name="property_id"/>
                         <field name="floor"/>
                         <field name="area"/>
+                        <field name="num_bedrooms"/>
+                        <field name="num_bathrooms"/>
+                        <field name="price"/>
                         <field name="status"/>
+                        <field name="image"/>
+                        <field name="notes"/>
                         <field name="description"/>
                     </group>
                 </sheet>

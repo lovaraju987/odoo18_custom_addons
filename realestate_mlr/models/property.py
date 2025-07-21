@@ -12,7 +12,14 @@ class RealEstateProperty(models.Model):
         ('building', 'Building'),
         ('villa', 'Villa'),
         ('land', 'Land'),
+        ('commercial', 'Commercial'),
+        ('office', 'Office'),
     ], string='Property Type', default='building')
-    address = fields.Char()
+    address = fields.Char(translate=True)
+    price = fields.Float(string='Price')
+    num_rooms = fields.Integer(string='Number of Rooms')
+    amenities = fields.Char(string='Amenities', translate=True)
+    image = fields.Binary(string='Image')
     description = fields.Text(translate=True)
+    notes = fields.Text(string='Notes', translate=True)
     unit_ids = fields.One2many('realestate.unit', 'property_id', string='Units')

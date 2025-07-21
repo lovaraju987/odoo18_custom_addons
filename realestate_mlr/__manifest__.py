@@ -18,6 +18,8 @@ Phase 1 implements core models for regions, projects, properties, and units.
         'views/property_views.xml',
         'views/unit_views.xml',
         'views/realestate_menus.xml',
+        'views/dashboard_views.xml',
+        'views/unit_create_wizard_views.xml',
     ],
     'license': 'LGPL-3',
     'installable': True,

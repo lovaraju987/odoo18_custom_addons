@@ -6,6 +6,8 @@
             <list>
                 <field name="name"/>
                 <field name="code"/>
+                <field name="location"/>
+                <field name="manager"/>
             </list>
         </field>
     </record>
@@ -19,6 +21,8 @@
                     <group>
                         <field name="name"/>
                         <field name="code"/>
+                        <field name="location"/>
+                        <field name="manager"/>
                         <field name="description"/>
                     </group>
                 </sheet>

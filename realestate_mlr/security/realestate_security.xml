@@ -1,5 +1,15 @@
 <odoo>
-    <record id="group_realestate_user" model="res.groups">
-        <field name="name">Real Estate User</field>
+    <record id="group_realestate_viewer" model="res.groups">
+        <field name="name">Real Estate Viewer</field>
+        <field name="category_id" ref="base.module_category_real_estate"/>
+    </record>
+    <record id="group_realestate_manager" model="res.groups">
+        <field name="name">Real Estate Manager</field>
+        <field name="category_id" ref="base.module_category_real_estate"/>
+    </record>
+    <record id="group_realestate_sales" model="res.groups">
+        <field name="name">Real Estate Sales</field>
+        <field name="category_id" ref="base.module_category_real_estate"/>
+        <field name="implied_ids" eval="[(4, ref('realestate_mlr.group_realestate_viewer'))]"/>
     </record>
 </odoo>

@@ -7,6 +7,10 @@
                 <field name="name"/>
                 <field name="project_id"/>
                 <field name="property_type"/>
+                <field name="address"/>
+                <field name="price"/>
+                <field name="num_rooms"/>
+                <field name="amenities"/>
             </list>
         </field>
     </record>
@@ -22,6 +26,11 @@
                         <field name="project_id"/>
                         <field name="property_type"/>
                         <field name="address"/>
+                        <field name="price"/>
+                        <field name="num_rooms"/>
+                        <field name="amenities"/>
+                        <field name="image"/>
+                        <field name="notes"/>
                         <field name="description"/>
                     </group>
                     <notebook>
