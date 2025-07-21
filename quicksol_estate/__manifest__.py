@@ -14,7 +14,7 @@ Key Features:
 - Lease Management: Handle leasing contracts and track rental properties.
 - Property Status: Set the status of a property (available, sold, rented, etc.).
 """,
-    'author': 'Quicksol Technolgies',
+    'author': 'Quicksol Technologies',
     'website': 'https://quicksol.ca',
     'depends': ['base'],
     'data': [
