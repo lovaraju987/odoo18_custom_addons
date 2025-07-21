@@ -3,18 +3,24 @@
     'version': '18.0.1',
     'category': 'Real Estate',
     'summary': 'Manage properties, sales, leases, tenants, and agents',
-    'description': """
-Real Estate Management Module
-This module allows real estate agencies, property managers, and landlords to manage their properties, agents, tenants, and leases easily.
-
-Key Features:
-- Property Management: Add and manage properties with detailed information like size, number of rooms, amenities, and condition.
-- Image Gallery: Upload multiple images for each property.
-- Agent and Tenant Management: Assign agents and tenants to properties and track their information.
-- Lease Management: Handle leasing contracts and track rental properties.
-- Property Status: Set the status of a property (available, sold, rented, etc.).
-""",
-    'author': 'Quicksol Technolgies',
+    'description': (
+        'Real Estate Management Module\n'
+        'This module allows real estate agencies, property managers, and '
+        'landlords to manage their properties, agents, tenants, and leases '
+        'easily.\n'
+        '\n'
+        'Key Features:\n'
+        '- Property Management: Add and manage properties with detailed '
+        'information like size, number of rooms, amenities, and condition.\n'
+        '- Image Gallery: Upload multiple images for each property.\n'
+        '- Agent and Tenant Management: Assign agents and tenants to '
+        'properties and track their information.\n'
+        '- Lease Management: Handle leasing contracts and track rental '
+        'properties.\n'
+        '- Property Status: Set the status of a property (available, sold, '
+        'rented, etc.).'
+    ),
+    'author': 'Quicksol Technologies',
     'website': 'https://quicksol.ca',
     'depends': ['base'],
     'data': [
