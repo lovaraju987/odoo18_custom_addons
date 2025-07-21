@@ -1,5 +1,5 @@
 {
-    'name': 'Real Estate Management',
+    'name': 'Real Estate Management MLR',
     'version': '18.0.1.0.0',
     'category': 'Real Estate',
     'summary': 'Manage properties, sales, leases, tenants, and agents',
@@ -14,8 +14,8 @@ Key Features:
 - Lease Management: Handle leasing contracts and track rental properties.
 - Property Status: Set the status of a property (available, sold, rented, etc.).
 """,
-    'author': 'Quicksol Technologies',
-    'website': 'https://quicksol.ca',
+    'author': 'Lovaraju Mylapalli',
+    'website': 'https://techcarrot.ae',
     'depends': ['base'],
     'data': [
         'security/real_estate_security.xml',
