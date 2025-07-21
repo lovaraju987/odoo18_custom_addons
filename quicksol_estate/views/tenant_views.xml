@@ -2,19 +2,19 @@
      <record id="action_tenant" model="ir.actions.act_window">
         <field name="name">Tenants</field>
         <field name="res_model">real.estate.tenant</field>
-        <field name="view_mode">tree,form</field>
+        <field name="view_mode">list,form</field>
     </record>
 
     <record id="view_tenant_tree" model="ir.ui.view">
         <field name="name">tenant.tree</field>
         <field name="model">real.estate.tenant</field>
         <field name="arch" type="xml">
-            <tree>
+            <list>
                 <field name="name"/>
                 <field name="phone"/>
                 <field name="email"/>
                 <field name="occupation"/>
-            </tree>
+            </list>
         </field>
     </record>
 
