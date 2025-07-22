@@ -47,6 +47,12 @@ class CrmLead(models.Model):
         string='Industry',
         help="Industry sector of the customer"
     )
+    # Business Type - many2one field
+    type_id = fields.Many2one(
+        'crm.lead.type',
+        string='Type',
+        help="Business type for this opportunity"
+    )
 
     @api.onchange('partner_id')
     def _onchange_partner_id_point_of_contact(self):

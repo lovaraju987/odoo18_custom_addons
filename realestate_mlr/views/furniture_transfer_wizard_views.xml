@@ -1,0 +1,31 @@
+<odoo>
+    <record id="view_furniture_transfer_wizard_form" model="ir.ui.view">
+        <field name="name">furniture.transfer.wizard.form</field>
+        <field name="model">realestate.furniture.transfer.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Transfer Furniture">
+                <group>
+                    <field name="furniture_id"/>
+                    <field name="from_location"/>
+                    <field name="to_location"/>
+                    <field name="property_id"/>
+                    <field name="unit_id"/>
+                    <field name="qty"/>
+                </group>
+                <footer>
+                    <button name="action_transfer" type="object" string="Transfer" class="btn-primary"/>
+                    <button string="Cancel" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <act_window id="action_furniture_transfer_wizard"
+        name="Transfer Furniture"
+        res_model="realestate.furniture.transfer.wizard"
+        view_mode="form"
+        target="new"
+        binding_model="realestate.furniture"
+        binding_type="action"
+    />
+</odoo>

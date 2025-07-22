@@ -32,6 +32,7 @@
                                 <field name="practice_id"/>
                                 <field name="industry_id"/>
                                 <field name="engaged_presales"/>
+                               <field name="type_id"/>
                             </group>
                             <group name="custom_group_2">
                                 <field name="proposal_submission_date"/>
@@ -55,6 +56,7 @@
                     <field name="industry_id" optional="hide"/>
                     <field name="engaged_presales" optional="hide"/>
                     <field name="proposal_submission_date" optional="hide"/>
+                   <field name="type_id" optional="hide"/>
                 </xpath>
             </field>
         </record>
@@ -71,6 +73,7 @@
                     <field name="point_of_contact_id"/>
                     <field name="practice_id"/>
                     <field name="industry_id"/>
+                   <field name="type_id"/>
                 </xpath>
                 
                 <!-- Add custom filters at the end -->
@@ -91,6 +94,7 @@
                                 context="{'group_by': 'industry_id'}"/>
                         <filter name="group_by_engaged_presales" string="Engaged Presales" 
                                 context="{'group_by': 'engaged_presales'}"/>
+                   <filter name="group_by_type" string="Type" context="{'group_by': 'type_id'}"/>
                     </group>
                 </xpath>
             </field>
@@ -110,6 +114,7 @@
                     <field name="engaged_presales"/>
                     <field name="proposal_submission_date"/>
                     <field name="point_of_contact_id"/>
+                   <field name="type_id"/>
                 </xpath>
             </field>
         </record>

@@ -1,0 +1,16 @@
+<odoo>
+    <data noupdate="1">
+        <record id="crm_lead_type_ee" model="crm.lead.type">
+            <field name="name">Existing Business</field>
+            <field name="code">EE</field>
+        </record>
+        <record id="crm_lead_type_en" model="crm.lead.type">
+            <field name="name">Existing Business-New</field>
+            <field name="code">EN</field>
+        </record>
+        <record id="crm_lead_type_nn" model="crm.lead.type">
+            <field name="name">New Business</field>
+            <field name="code">NN</field>
+        </record>
+    </data>
+</odoo>

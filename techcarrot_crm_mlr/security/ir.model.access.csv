@@ -5,3 +5,5 @@ access_crm_practice_user,crm.practice.user,model_crm_practice,sales_team.group_s
 access_crm_practice_manager,crm.practice.manager,model_crm_practice,sales_team.group_sale_manager,1,1,1,1
 access_crm_industry_user,crm.industry.user,model_crm_industry,sales_team.group_sale_salesman,1,1,1,0
 access_crm_industry_manager,crm.industry.manager,model_crm_industry,sales_team.group_sale_manager,1,1,1,1
+access_crm_lead_type_user,crm.lead.type.user,model_crm_lead_type,base.group_user,1,0,0,0
+access_crm_lead_type_manager,crm.lead.type.manager,model_crm_lead_type,sales_team.group_sale_manager,1,1,1,1

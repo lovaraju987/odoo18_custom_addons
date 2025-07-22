@@ -9,7 +9,7 @@ Phase 1 implements core models for regions, projects, properties, and units.
 """,
     'author': 'Your Company Name',
     'website': 'https://yourcompany.example.com',
-    'depends': ['base'],
+    'depends': ['base', 'stock'],
     'data': [
         'security/realestate_security.xml',
         'security/ir.model.access.csv',
@@ -20,6 +20,8 @@ Phase 1 implements core models for regions, projects, properties, and units.
         'views/realestate_menus.xml',
         'views/dashboard_views.xml',
         'views/unit_create_wizard_views.xml',
+        'views/furniture_views.xml',
+        'views/furniture_transfer_wizard_views.xml',
     ],
     'license': 'LGPL-3',
     'installable': True,
