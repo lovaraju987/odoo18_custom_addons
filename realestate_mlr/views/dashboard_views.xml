@@ -1,0 +1,25 @@
+<odoo>
+    <record id="view_realestate_dashboard_form" model="ir.ui.view">
+        <field name="name">realestate.dashboard.form</field>
+        <field name="model">realestate.dashboard</field>
+        <field name="arch" type="xml">
+            <form string="Real Estate Dashboard">
+                <group>
+                    <field name="total_units"/>
+                    <field name="available_units"/>
+                    <field name="sold_units"/>
+                    <field name="rented_units"/>
+                </group>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_realestate_dashboard" model="ir.actions.act_window">
+        <field name="name">Dashboard</field>
+        <field name="res_model">realestate.dashboard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+
+    <menuitem id="menu_realestate_dashboard" name="Dashboard" parent="menu_realestate_root" action="action_realestate_dashboard" sequence="1"/>
+</odoo>

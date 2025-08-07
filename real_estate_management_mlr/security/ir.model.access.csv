@@ -1,0 +1,10 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_real_estate_property,access_real_estate_property,model_real_estate_property,,1,1,1,1
+access_real_estate_agent,access_real_estate_agent,model_real_estate_agent,,1,1,1,1
+access_real_estate_lease,access_real_estate_lease,model_real_estate_lease,,1,1,1,1
+access_real_estate_sale,access_real_estate_sale,model_real_estate_sale,,1,1,1,1
+access_real_estate_tenant,access_real_estate_tenant,model_real_estate_tenant,,1,1,1,1
+access_real_estate_property_type_user,access_real_estate_property_type_user,model_real_estate_property_type,,1,1,1,1
+access_real_estate_property_amenity,access_real_estate_amenity,model_real_estate_amenity,,1,1,1,1
+access_real_estate_property_image,access_real_estate_image,model_real_estate_property_image,,1,1,1,1
+

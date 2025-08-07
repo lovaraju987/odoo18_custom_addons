@@ -1,0 +1,33 @@
+<odoo>
+    <record id="view_unit_create_wizard_form" model="ir.ui.view">
+        <field name="name">unit.create.wizard.form</field>
+        <field name="model">realestate.unit.create.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Auto Create Units">
+                <group>
+                    <field name="property_id"/>
+                    <field name="number_of_units"/>
+                    <field name="base_name"/>
+                    <field name="floor"/>
+                    <field name="area"/>
+                    <field name="num_bedrooms"/>
+                    <field name="num_bathrooms"/>
+                    <field name="price"/>
+                </group>
+                <footer>
+                    <button name="action_create_units" type="object" string="Create Units" class="btn-primary"/>
+                    <button string="Cancel" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <act_window id="action_unit_create_wizard"
+        name="Auto Create Units"
+        res_model="realestate.unit.create.wizard"
+        view_mode="form"
+        target="new"
+        binding_model="realestate.property"
+        binding_type="action"
+    />
+</odoo>
