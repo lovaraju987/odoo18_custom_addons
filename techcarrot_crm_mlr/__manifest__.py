@@ -19,7 +19,6 @@
         'security/ir.model.access.csv',
         'data/crm_practice_data.xml',
         'data/crm_industry_data.xml',
-        'data/crm_lead_type_data.xml',
         'views/crm_practice_views.xml',
         'views/crm_industry_views.xml',
         'views/crm_lead_views.xml',
