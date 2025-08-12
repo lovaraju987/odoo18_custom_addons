@@ -609,13 +609,10 @@ class PortalEmployee(http.Controller):
     @http.route(MY_EMPLOYEE_URL + '/payslips', type='http', auth='user', website=True)
     def portal_payslips_history(self, **kwargs):
         employee = request.env[HR_EMPLOYEE_MODEL].sudo().search([('user_id', '=', request.uid)], limit=1)
-        domain = [('employee_id', '=', employee.id)]
+        # By default, show only confirmed payslips
+        domain = [('employee_id', '=', employee.id), ('state', '=', 'done')]
         
         # Filtering logic
-        status = kwargs.get('status')
-        if status:
-            domain += [('state', '=', status)]
-        
         year = kwargs.get('year')
         if year:
             domain += [('date_from', '>=', f'{year}-01-01'), ('date_from', '<=', f'{year}-12-31')]
@@ -644,7 +641,6 @@ class PortalEmployee(http.Controller):
         return request.render('employee_self_service_portal.portal_payslips', {
             'payslips': payslips,
             'employee': employee,
-            'selected_status': status or '',
             'selected_year': year or '',
             'selected_month': month or '',
             'years': years,
@@ -764,56 +760,3 @@ class PortalEmployee(http.Controller):
             'payslip': payslip,
             'employee': employee,
         })
-
-    @http.route(MY_EMPLOYEE_URL + '/payslips/debug', type='http', auth='user', website=True)
-    def portal_payslips_debug(self, **kwargs):
-        """Debug route to check available reports - remove in production"""
-        import logging
-        _logger = logging.getLogger(__name__)
-        
-        try:
-            # Get all payslip reports using sudo to bypass permissions
-            reports = request.env['ir.actions.report'].sudo().search([
-                ('model', '=', 'hr.payslip')
-            ])
-            
-            debug_info = {
-                'reports_found': len(reports),
-                'reports': []
-            }
-            
-            for report in reports:
-                try:
-                    debug_info['reports'].append({
-                        'id': report.id,
-                        'name': report.name,
-                        'report_name': report.report_name,
-                        'report_file': report.report_file,
-                        'report_type': report.report_type,
-                        'xml_id': report.get_external_id().get(report.id, 'No XML ID')
-                    })
-                except Exception as e:
-                    debug_info['reports'].append({
-                        'id': report.id,
-                        'error': str(e)
-                    })
-            
-            _logger.info("Payslip reports debug info: %s", debug_info)
-            
-            # Return simple text response
-            response_text = f"Found {debug_info['reports_found']} payslip reports:\n\n"
-            for report in debug_info['reports']:
-                if 'error' in report:
-                    response_text += f"ID: {report['id']} - ERROR: {report['error']}\n\n"
-                else:
-                    response_text += f"ID: {report['id']}\n"
-                    response_text += f"Name: {report['name']}\n"
-                    response_text += f"Report Name: {report['report_name']}\n"
-                    response_text += f"XML ID: {report['xml_id']}\n"
-                    response_text += f"Type: {report['report_type']}\n\n"
-            
-            return request.make_response(response_text, headers=[('Content-Type', 'text/plain')])
-            
-        except Exception as e:
-            _logger.error("Debug route error: %s", str(e))
-            return request.make_response(f"Debug route error: {str(e)}", headers=[('Content-Type', 'text/plain')])
