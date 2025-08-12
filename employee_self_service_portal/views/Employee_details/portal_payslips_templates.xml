@@ -62,6 +62,22 @@
                                 <h5 class="mb-0">Payslips History</h5>
                             </div>
                             <div class="card-body">
+                                <!-- Error Messages -->
+                                <t t-if="request.params.get('error')">
+                                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                                        <t t-if="request.params.get('error') == 'report_not_found'">
+                                            <strong>Error:</strong> Payslip report template not found. Please contact your administrator.
+                                        </t>
+                                        <t t-elif="request.params.get('error') == 'pdf_generation_failed'">
+                                            <strong>Error:</strong> Failed to generate PDF. Please try again or contact support.
+                                        </t>
+                                        <t t-else="">
+                                            <strong>Error:</strong> An unexpected error occurred. Please try again.
+                                        </t>
+                                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                                    </div>
+                                </t>
+                                
                                 <t t-if="not payslips">
                                     <div class="alert alert-info text-center">
                                         <i class="fa fa-info-circle fa-2x mb-2"></i>

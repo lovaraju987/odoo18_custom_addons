@@ -662,17 +662,92 @@ class PortalEmployee(http.Controller):
         if not payslip:
             return request.redirect(MY_EMPLOYEE_URL + '/payslips')
         
-        # Generate PDF report
-        report = request.env.ref('om_hr_payroll.payslip_details_report')
-        pdf, _ = report.sudo()._render_qweb_pdf([payslip.id])
-        
-        pdfhttpheaders = [
-            ('Content-Type', 'application/pdf'),
-            ('Content-Length', len(pdf)),
-            ('Content-Disposition', f'attachment; filename="Payslip-{payslip.employee_id.name}-{payslip.date_from}.pdf"')
-        ]
-        
-        return request.make_response(pdf, headers=pdfhttpheaders)
+        try:
+            import logging
+            _logger = logging.getLogger(__name__)
+            _logger.info("Attempting to generate PDF for payslip %s", payslip_id)
+            
+            # Use a simpler approach - try to generate PDF directly using sudo privileges
+            # Try different report XML IDs that might be available
+            report_xml_ids = [
+                'om_hr_payroll.payslip_details_report',
+                'om_hr_payroll.action_report_payslip',
+                'hr_payroll.action_report_payslip',
+                'hr_payroll.payslip_details_report'
+            ]
+            
+            pdf_content = None
+            report_name = None
+            
+            for xml_id in report_xml_ids:
+                try:
+                    _logger.info("Trying to generate PDF with report: %s", xml_id)
+                    # Use sudo() to bypass permission issues and render directly
+                    report = request.env.ref(xml_id, raise_if_not_found=False)
+                    if report:
+                        pdf_content = report.sudo()._render_qweb_pdf(payslip.ids)[0]
+                        if pdf_content:
+                            report_name = xml_id
+                            _logger.info("Successfully generated PDF using report: %s", xml_id)
+                            break
+                except Exception as e:
+                    _logger.debug("Failed with report %s: %s", xml_id, str(e))
+                    continue
+            
+            # Fallback: If no specific report works, try to find any payslip report and use it
+            if not pdf_content:
+                _logger.info("Trying fallback method - searching for any payslip report")
+                try:
+                    # Search for any report on hr.payslip model using sudo
+                    reports = request.env['ir.actions.report'].sudo().search([
+                        ('model', '=', 'hr.payslip'),
+                        ('report_type', '=', 'qweb-pdf')
+                    ], limit=1)
+                    
+                    if reports:
+                        report_name = reports[0].report_name or 'payslip_report'
+                        _logger.info("Found fallback report: %s", report_name)
+                        pdf_content = reports[0].sudo()._render_qweb_pdf(payslip.ids)[0]
+                        _logger.info("Successfully generated PDF using fallback report")
+                except Exception as e:
+                    _logger.error("Fallback method also failed: %s", str(e))
+            
+            # Final fallback: try to use the report model directly
+            if not pdf_content:
+                _logger.info("Trying final fallback - direct report generation")
+                try:
+                    # Try generating with a generic report name
+                    pdf_content = request.env['ir.actions.report'].sudo()._render_qweb_pdf(
+                        'om_hr_payroll.payslip_details_report', payslip.ids)[0]
+                    report_name = 'om_hr_payroll.payslip_details_report'
+                    _logger.info("Final fallback succeeded")
+                except Exception as e:
+                    _logger.error("Final fallback failed: %s", str(e))
+            
+            if not pdf_content:
+                _logger.error("All PDF generation methods failed")
+                return request.redirect(MY_EMPLOYEE_URL + '/payslips?error=no_report_available')
+            
+            # Clean filename
+            safe_name = payslip.employee_id.name.replace(' ', '_').replace('/', '_').replace('\\', '_')
+            filename = f"Payslip-{safe_name}-{payslip.date_from}.pdf"
+            
+            _logger.info("Successfully generated PDF file: %s using report: %s", filename, report_name)
+            
+            pdfhttpheaders = [
+                ('Content-Type', 'application/pdf'),
+                ('Content-Length', len(pdf_content)),
+                ('Content-Disposition', f'attachment; filename="{filename}"')
+            ]
+            
+            return request.make_response(pdf_content, headers=pdfhttpheaders)
+            
+        except Exception as e:
+            import logging
+            _logger = logging.getLogger(__name__)
+            _logger.error("Error generating payslip PDF for payslip %s: %s", payslip_id, str(e))
+            _logger.exception("Full traceback:")
+            return request.redirect(MY_EMPLOYEE_URL + '/payslips?error=pdf_generation_failed')
 
     @http.route(MY_EMPLOYEE_URL + '/payslips/view/<int:payslip_id>', type='http', auth='user', website=True)
     def portal_payslip_view(self, payslip_id, **kwargs):
@@ -689,3 +764,56 @@ class PortalEmployee(http.Controller):
             'payslip': payslip,
             'employee': employee,
         })
+
+    @http.route(MY_EMPLOYEE_URL + '/payslips/debug', type='http', auth='user', website=True)
+    def portal_payslips_debug(self, **kwargs):
+        """Debug route to check available reports - remove in production"""
+        import logging
+        _logger = logging.getLogger(__name__)
+        
+        try:
+            # Get all payslip reports using sudo to bypass permissions
+            reports = request.env['ir.actions.report'].sudo().search([
+                ('model', '=', 'hr.payslip')
+            ])
+            
+            debug_info = {
+                'reports_found': len(reports),
+                'reports': []
+            }
+            
+            for report in reports:
+                try:
+                    debug_info['reports'].append({
+                        'id': report.id,
+                        'name': report.name,
+                        'report_name': report.report_name,
+                        'report_file': report.report_file,
+                        'report_type': report.report_type,
+                        'xml_id': report.get_external_id().get(report.id, 'No XML ID')
+                    })
+                except Exception as e:
+                    debug_info['reports'].append({
+                        'id': report.id,
+                        'error': str(e)
+                    })
+            
+            _logger.info("Payslip reports debug info: %s", debug_info)
+            
+            # Return simple text response
+            response_text = f"Found {debug_info['reports_found']} payslip reports:\n\n"
+            for report in debug_info['reports']:
+                if 'error' in report:
+                    response_text += f"ID: {report['id']} - ERROR: {report['error']}\n\n"
+                else:
+                    response_text += f"ID: {report['id']}\n"
+                    response_text += f"Name: {report['name']}\n"
+                    response_text += f"Report Name: {report['report_name']}\n"
+                    response_text += f"XML ID: {report['xml_id']}\n"
+                    response_text += f"Type: {report['report_type']}\n\n"
+            
+            return request.make_response(response_text, headers=[('Content-Type', 'text/plain')])
+            
+        except Exception as e:
+            _logger.error("Debug route error: %s", str(e))
+            return request.make_response(f"Debug route error: {str(e)}", headers=[('Content-Type', 'text/plain')])
