@@ -18,13 +18,13 @@ You already have:
 So you can develop an internal version of ESS portal with:
 ________________________________________
 🔧 Functional Features to Implement
-Feature	Module Needed	Method
-Profile update	hr	Add portal form view (hr.employee)
-Attendance	hr_attendance	Button: Check-in / Check-out
-View Payslips	hr_payslip	List/filter payslips by employee_id
-Leave Requests	hr_holidays	Show approved leaves
-Timesheet View (optional)	project_timesheet	Display read-only timesheets
-Expense Requests (optional)	hr_expense	Submit/view expenses linked to employee
+Feature	Module Needed	Method	Status
+Profile update	hr	Add portal form view (hr.employee)	✅ Implemented
+Attendance	hr_attendance	Button: Check-in / Check-out	✅ Implemented
+View Payslips	hr_payslip	List/filter payslips by employee_id	✅ Implemented
+Leave Requests	hr_holidays	Show approved leaves	❌ Pending
+Timesheet View (optional)	project_timesheet	Display read-only timesheets	❌ Pending
+Expense Requests (optional)	hr_expense	Submit/view expenses linked to employee	✅ Implemented
 ________________________________________
 🧱 Technical Steps
 1.	Custom Module: employee_self_service_portal

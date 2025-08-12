@@ -605,3 +605,418 @@ class PortalEmployee(http.Controller):
             # Set the report to cancelled (withdraw)
             expense.sheet_id.write({'state': 'cancel'})
         return request.redirect(MY_EMPLOYEE_URL + '/expenses')
+
+    @http.route(MY_EMPLOYEE_URL + '/payslips', type='http', auth='user', website=True)
+    def portal_payslips_history(self, **kwargs):
+        employee = request.env[HR_EMPLOYEE_MODEL].sudo().search([('user_id', '=', request.uid)], limit=1)
+        # By default, show only confirmed payslips
+        domain = [('employee_id', '=', employee.id), ('state', '=', 'done')]
+        
+        # For filter dropdowns and defaults
+        from datetime import datetime
+        current_year = datetime.now().year
+        
+        # Filtering logic - convert to int and set defaults
+        year = kwargs.get('year')
+        if year:
+            try:
+                year = int(year)
+            except (ValueError, TypeError):
+                year = current_year
+        else:
+            year = current_year  # Default to current year
+            
+        month = kwargs.get('month')
+        if month:
+            try:
+                month = int(month)
+            except (ValueError, TypeError):
+                month = None
+        else:
+            month = None  # Default to all months (no month filter)
+        
+        # Apply year filter (always applied)
+        domain += [('date_from', '>=', f'{year}-01-01'), ('date_from', '<=', f'{year}-12-31')]
+        
+        # Apply month filter only if specified
+        if month:
+            domain += [('date_from', '>=', f'{year}-{month:02d}-01')]
+            if month == 12:
+                domain += [('date_from', '<=', f'{year}-{month:02d}-31')]
+            else:
+                # Get last day of month
+                import calendar
+                last_day = calendar.monthrange(year, month)[1]
+                domain += [('date_from', '<=', f'{year}-{month:02d}-{last_day}')]
+        
+        payslips = request.env['hr.payslip'].sudo().search(domain, order='date_from desc', limit=50)
+        
+        # For filter dropdowns - make sure years are in descending order
+        years = list(range(current_year, current_year - 6, -1))  # Current year first
+        months = [
+            {'value': i, 'name': datetime(2000, i, 1).strftime('%B')} for i in range(1, 13)
+        ]
+        
+        return request.render('employee_self_service_portal.portal_payslips', {
+            'payslips': payslips,
+            'employee': employee,
+            'selected_year': year,  # Always show the year being filtered
+            'selected_month': month if month else '',  # Show selected month or empty string for "All Months"
+            'years': years,
+            'months': months,
+        })
+
+    @http.route(MY_EMPLOYEE_URL + '/payslips/download/<int:payslip_id>', type='http', auth='user', website=True)
+    def portal_payslip_download(self, payslip_id, **kwargs):
+        employee = request.env[HR_EMPLOYEE_MODEL].sudo().search([('user_id', '=', request.uid)], limit=1)
+        payslip = request.env['hr.payslip'].sudo().search([
+            ('id', '=', payslip_id),
+            ('employee_id', '=', employee.id)
+        ], limit=1)
+        
+        if not payslip:
+            return request.redirect(MY_EMPLOYEE_URL + '/payslips')
+        
+        try:
+            import logging
+            _logger = logging.getLogger(__name__)
+            _logger.info("Attempting to generate PDF for payslip %s", payslip_id)
+            
+            # Use a simpler approach - try to generate PDF directly using sudo privileges
+            # Try different report XML IDs that might be available
+            report_xml_ids = [
+                'om_hr_payroll.payslip_details_report',
+                'om_hr_payroll.action_report_payslip',
+                'hr_payroll.action_report_payslip',
+                'hr_payroll.payslip_details_report'
+            ]
+            
+            pdf_content = None
+            report_name = None
+            
+            for xml_id in report_xml_ids:
+                try:
+                    _logger.info("Trying to generate PDF with report: %s", xml_id)
+                    # Use sudo() to bypass permission issues and render directly
+                    report = request.env.ref(xml_id, raise_if_not_found=False)
+                    if report:
+                        pdf_content = report.sudo()._render_qweb_pdf(payslip.ids)[0]
+                        if pdf_content:
+                            report_name = xml_id
+                            _logger.info("Successfully generated PDF using report: %s", xml_id)
+                            break
+                except Exception as e:
+                    _logger.debug("Failed with report %s: %s", xml_id, str(e))
+                    continue
+            
+            # Fallback: If no specific report works, try to find any payslip report and use it
+            if not pdf_content:
+                _logger.info("Trying fallback method - searching for any payslip report")
+                try:
+                    # Search for any report on hr.payslip model using sudo
+                    reports = request.env['ir.actions.report'].sudo().search([
+                        ('model', '=', 'hr.payslip'),
+                        ('report_type', '=', 'qweb-pdf')
+                    ], limit=1)
+                    
+                    if reports:
+                        report_name = reports[0].report_name or 'payslip_report'
+                        _logger.info("Found fallback report: %s", report_name)
+                        pdf_content = reports[0].sudo()._render_qweb_pdf(payslip.ids)[0]
+                        _logger.info("Successfully generated PDF using fallback report")
+                except Exception as e:
+                    _logger.error("Fallback method also failed: %s", str(e))
+            
+            # Final fallback: try to use the report model directly
+            if not pdf_content:
+                _logger.info("Trying final fallback - direct report generation")
+                try:
+                    # Try generating with a generic report name
+                    pdf_content = request.env['ir.actions.report'].sudo()._render_qweb_pdf(
+                        'om_hr_payroll.payslip_details_report', payslip.ids)[0]
+                    report_name = 'om_hr_payroll.payslip_details_report'
+                    _logger.info("Final fallback succeeded")
+                except Exception as e:
+                    _logger.error("Final fallback failed: %s", str(e))
+            
+            if not pdf_content:
+                _logger.error("All PDF generation methods failed")
+                return request.redirect(MY_EMPLOYEE_URL + '/payslips?error=no_report_available')
+            
+            # Clean filename
+            safe_name = payslip.employee_id.name.replace(' ', '_').replace('/', '_').replace('\\', '_')
+            filename = f"Payslip-{safe_name}-{payslip.date_from}.pdf"
+            
+            _logger.info("Successfully generated PDF file: %s using report: %s", filename, report_name)
+            
+            pdfhttpheaders = [
+                ('Content-Type', 'application/pdf'),
+                ('Content-Length', len(pdf_content)),
+                ('Content-Disposition', f'attachment; filename="{filename}"')
+            ]
+            
+            return request.make_response(pdf_content, headers=pdfhttpheaders)
+            
+        except Exception as e:
+            import logging
+            _logger = logging.getLogger(__name__)
+            _logger.error("Error generating payslip PDF for payslip %s: %s", payslip_id, str(e))
+            _logger.exception("Full traceback:")
+            return request.redirect(MY_EMPLOYEE_URL + '/payslips?error=pdf_generation_failed')
+
+    @http.route(MY_EMPLOYEE_URL + '/payslips/view/<int:payslip_id>', type='http', auth='user', website=True)
+    def portal_payslip_view(self, payslip_id, **kwargs):
+        employee = request.env[HR_EMPLOYEE_MODEL].sudo().search([('user_id', '=', request.uid)], limit=1)
+        payslip = request.env['hr.payslip'].sudo().search([
+            ('id', '=', payslip_id),
+            ('employee_id', '=', employee.id)
+        ], limit=1)
+        
+        if not payslip:
+            return request.redirect(MY_EMPLOYEE_URL + '/payslips')
+        
+        return request.render('employee_self_service_portal.portal_payslip_view', {
+            'payslip': payslip,
+            'employee': employee,
+        })
+
+    @http.route(MY_EMPLOYEE_URL + '/leaves', type='http', auth='user', website=True)
+    def portal_leave_history(self, **kwargs):
+        employee = request.env[HR_EMPLOYEE_MODEL].sudo().search([('user_id', '=', request.uid)], limit=1)
+        domain = [('employee_id', '=', employee.id)]
+        
+        # Filtering logic
+        status = kwargs.get('status')
+        if status:
+            if status == 'all':
+                pass  # Show all statuses
+            else:
+                domain += [('state', '=', status)]
+        
+        leave_type = kwargs.get('leave_type')
+        if leave_type:
+            domain += [('holiday_status_id', '=', int(leave_type))]
+        
+        year = kwargs.get('year')
+        if year:
+            try:
+                year = int(year)
+                domain += [('date_from', '>=', f'{year}-01-01'), ('date_from', '<=', f'{year}-12-31')]
+            except (ValueError, TypeError):
+                pass
+        
+        leave_requests = request.env['hr.leave'].sudo().search(domain, order='date_from desc', limit=50)
+        
+        # For filter dropdowns
+        from datetime import datetime
+        current_year = datetime.now().year
+        years = list(range(current_year, current_year - 3, -1))
+        leave_types = request.env['hr.leave.type'].sudo().search([('active', '=', True)])
+        
+        # Calculate leave balances for current employee
+        leave_balances = []
+        for leave_type_rec in leave_types:
+            allocation = request.env['hr.leave.allocation'].sudo().search([
+                ('employee_id', '=', employee.id),
+                ('holiday_status_id', '=', leave_type_rec.id),
+                ('state', '=', 'validate')
+            ], limit=1)
+            
+            # Calculate used leaves for this type
+            used_leaves = sum(request.env['hr.leave'].sudo().search([
+                ('employee_id', '=', employee.id),
+                ('holiday_status_id', '=', leave_type_rec.id),
+                ('state', '=', 'validate')
+            ]).mapped('number_of_days'))
+            
+            allocated_days = allocation.number_of_days if allocation else 0
+            remaining_days = allocated_days - used_leaves
+            
+            leave_balances.append({
+                'leave_type': leave_type_rec,
+                'allocated': allocated_days,
+                'used': used_leaves,
+                'remaining': remaining_days
+            })
+        
+        return request.render('employee_self_service_portal.portal_leaves', {
+            'leave_requests': leave_requests,
+            'employee': employee,
+            'leave_types': leave_types,
+            'leave_balances': leave_balances,
+            'years': years,
+            'selected_status': status or '',
+            'selected_leave_type': leave_type or '',
+            'selected_year': year or '',
+        })
+
+    @http.route(MY_EMPLOYEE_URL + '/leaves/request', type='http', auth='user', website=True, methods=['GET', 'POST'])
+    def portal_leave_request(self, **post):
+        employee = request.env[HR_EMPLOYEE_MODEL].sudo().search([('user_id', '=', request.uid)], limit=1)
+        leave_types = request.env['hr.leave.type'].sudo().search([('active', '=', True)])
+        
+        error = None
+        success = None
+        
+        if request.httprequest.method == 'POST':
+            holiday_status_id = post.get('holiday_status_id')
+            date_from = post.get('date_from')
+            date_to = post.get('date_to')
+            description = post.get('description')
+            
+            if not (holiday_status_id and date_from and date_to):
+                error = 'All required fields must be filled.'
+            else:
+                try:
+                    # Convert date strings to proper format for Odoo
+                    from datetime import datetime
+                    import logging
+                    _logger = logging.getLogger(__name__)
+                    
+                    # Log the received dates for debugging
+                    _logger.info("Leave Request Debug: Received date_from='%s', date_to='%s'", date_from, date_to)
+                    
+                    # Parse the date strings - keep as date objects, not datetime
+                    date_from_obj = datetime.strptime(date_from, '%Y-%m-%d').date()
+                    date_to_obj = datetime.strptime(date_to, '%Y-%m-%d').date()
+                    
+                    # Also create datetime objects for compatibility
+                    datetime_from = datetime.strptime(date_from, '%Y-%m-%d')
+                    datetime_to = datetime.strptime(date_to, '%Y-%m-%d').replace(hour=23, minute=59, second=59)
+                    
+                    _logger.info("Leave Request Debug: Parsed date_from_obj='%s', date_to_obj='%s'", date_from_obj, date_to_obj)
+                    
+                    # Use both field naming conventions to ensure compatibility
+                    vals = {
+                        'employee_id': employee.id,
+                        'holiday_status_id': int(holiday_status_id),
+                        'request_date_from': date_from_obj,         # Main field for from date
+                        'request_date_to': date_to_obj,             # Main field for to date
+                        'date_from': datetime_from,                 # Legacy datetime field
+                        'date_to': datetime_to,                     # Legacy datetime field
+                        'name': description or 'Leave Request',
+                        'state': 'confirm',  # Set to confirm state for approval
+                        'request_unit_hours': False,                # Ensure we're requesting full days
+                    }
+                    
+                    _logger.info("Leave Request Debug: Creating leave with vals: %s", vals)
+                    
+                    # Create leave request
+                    leave_request = request.env['hr.leave'].sudo().create(vals)
+                    
+                    # Log the created leave request details
+                    _logger.info("Leave Request Debug: Created leave ID=%s, request_date_from='%s', request_date_to='%s', date_from='%s', date_to='%s'", 
+                                leave_request.id, leave_request.request_date_from, leave_request.request_date_to,
+                                leave_request.date_from, leave_request.date_to)
+                    
+                    success = 'Leave request submitted successfully and is pending approval.'
+                    
+                    # Redirect to leave history to avoid resubmission
+                    return request.redirect(MY_EMPLOYEE_URL + '/leaves?message=' + success)
+                except Exception as e:
+                    error = f'Error submitting leave request: {str(e)}'
+        
+        return request.render('employee_self_service_portal.portal_leave_request', {
+            'employee': employee,
+            'leave_types': leave_types,
+            'error': error,
+            'success': success,
+        })
+
+    @http.route(MY_EMPLOYEE_URL + '/leaves/cancel/<int:leave_id>', type='http', auth='user', website=True, methods=['POST'])
+    def portal_leave_cancel(self, leave_id, **post):
+        employee = request.env[HR_EMPLOYEE_MODEL].sudo().search([('user_id', '=', request.uid)], limit=1)
+        leave_request = request.env['hr.leave'].sudo().search([
+            ('id', '=', leave_id),
+            ('employee_id', '=', employee.id)
+        ], limit=1)
+        
+        # Only allow cancellation if leave is in draft or confirm state
+        if leave_request and leave_request.state in ['draft', 'confirm']:
+            try:
+                # Try different methods for cancellation
+                if hasattr(leave_request, 'action_refuse'):
+                    leave_request.action_refuse()
+                elif hasattr(leave_request, 'action_cancel'):
+                    leave_request.action_cancel()
+                else:
+                    # Fallback: directly set state to cancel
+                    leave_request.write({'state': 'cancel'})
+            except Exception:
+                # Fallback: directly set state to cancel
+                leave_request.write({'state': 'cancel'})
+        
+        return request.redirect(MY_EMPLOYEE_URL + '/leaves')
+
+    @http.route(MY_EMPLOYEE_URL + '/leaves/view/<int:leave_id>', type='http', auth='user', website=True)
+    def portal_leave_view(self, leave_id, **kwargs):
+        employee = request.env[HR_EMPLOYEE_MODEL].sudo().search([('user_id', '=', request.uid)], limit=1)
+        leave_request = request.env['hr.leave'].sudo().search([
+            ('id', '=', leave_id),
+            ('employee_id', '=', employee.id)
+        ], limit=1)
+        
+        if not leave_request:
+            return request.redirect(MY_EMPLOYEE_URL + '/leaves')
+        
+        return request.render('employee_self_service_portal.portal_leave_view', {
+            'leave_request': leave_request,
+            'employee': employee,
+        })
+
+    def _get_leave_balance_data(self, employee):
+        """Helper method to get leave balance information"""
+        leave_types = request.env['hr.leave.type'].sudo().search([
+            ('active', '=', True),
+            ('request_unit', 'in', ['day', 'hour'])
+        ])
+        
+        balance_data = []
+        for leave_type in leave_types:
+            # Get current year allocations
+            current_year = fields.Date.today().year
+            start_date = fields.Date.from_string(f'{current_year}-01-01')
+            end_date = fields.Date.from_string(f'{current_year}-12-31')
+            
+            # Get allocations
+            allocations = request.env['hr.leave.allocation'].sudo().search([
+                ('employee_id', '=', employee.id),
+                ('holiday_status_id', '=', leave_type.id),
+                ('state', '=', 'validate'),
+                ('date_from', '<=', end_date),
+                ('date_to', '>=', start_date),
+            ])
+            
+            # Get used/requested leaves
+            used_leaves = request.env['hr.leave'].sudo().search([
+                ('employee_id', '=', employee.id),
+                ('holiday_status_id', '=', leave_type.id),
+                ('state', 'in', ['validate', 'validate1']),
+                ('date_from', '>=', start_date),
+                ('date_to', '<=', end_date),
+            ])
+            
+            # Get pending leaves
+            pending_leaves = request.env['hr.leave'].sudo().search([
+                ('employee_id', '=', employee.id),
+                ('holiday_status_id', '=', leave_type.id),
+                ('state', 'in', ['confirm', 'validate1']),
+                ('date_from', '>=', start_date),
+                ('date_to', '<=', end_date),
+            ])
+            
+            allocated = sum(allocations.mapped('number_of_days'))
+            used = sum(used_leaves.mapped('number_of_days'))
+            pending = sum(pending_leaves.mapped('number_of_days'))
+            balance = allocated - used - pending
+            
+            balance_data.append({
+                'leave_type': leave_type,
+                'allocated': allocated,
+                'used': used,
+                'pending': pending,
+                'balance': balance,
+                'unit': leave_type.request_unit,
+            })
+        
+        return balance_data

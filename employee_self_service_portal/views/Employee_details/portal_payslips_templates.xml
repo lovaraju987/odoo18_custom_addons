@@ -1,0 +1,366 @@
+<odoo>
+    <!-- Payslips List Template -->
+    <template id="portal_payslips" name="Portal Payslips">
+        <t t-call="portal.portal_layout">
+            <div class="o_portal container my-4">
+                <div class="row">
+                    <div class="col-12">
+                        <div class="d-flex justify-content-between align-items-center mb-4">
+                            <h2>My Payslips</h2>
+                            <a href="/my/ess" class="btn btn-secondary">
+                                <i class="fa fa-arrow-left"></i> Back to Dashboard
+                            </a>
+                        </div>
+
+                        <!-- Filters -->
+                        <div class="card mb-4">
+                            <div class="card-body">
+                                <form method="get" class="row">
+                                    <div class="col-md-4">
+                                        <label for="year" class="form-label">Year</label>
+                                        <select name="year" id="year" class="form-select">
+                                            <t t-foreach="years" t-as="year_option">
+                                                <t t-if="int(selected_year) == int(year_option)">
+                                                    <option t-att-value="year_option" selected="selected">
+                                                        <t t-esc="year_option"/>
+                                                    </option>
+                                                </t>
+                                                <t t-else="">
+                                                    <option t-att-value="year_option">
+                                                        <t t-esc="year_option"/>
+                                                    </option>
+                                                </t>
+                                            </t>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label for="month" class="form-label">Month</label>
+                                        <select name="month" id="month" class="form-select">
+                                            <t t-if="not selected_month or selected_month == ''">
+                                                <option value="" selected="selected">All Months</option>
+                                            </t>
+                                            <t t-else="">
+                                                <option value="">All Months</option>
+                                            </t>
+                                            <t t-foreach="months" t-as="month_option">
+                                                <t t-if="selected_month and int(selected_month) == int(month_option['value'])">
+                                                    <option t-att-value="month_option['value']" selected="selected">
+                                                        <t t-esc="month_option['name']"/>
+                                                    </option>
+                                                </t>
+                                                <t t-else="">
+                                                    <option t-att-value="month_option['value']">
+                                                        <t t-esc="month_option['name']"/>
+                                                    </option>
+                                                </t>
+                                            </t>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-4 d-flex align-items-end">
+                                        <button type="submit" class="btn btn-primary me-2">Filter</button>
+                                        <a href="/my/employee/payslips" class="btn btn-secondary">Clear</a>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+
+                        <!-- Payslips Table -->
+                        <div class="card">
+                            <div class="card-header">
+                                <h5 class="mb-0">Confirmed Payslips</h5>
+                            </div>
+                            <div class="card-body">
+                                <!-- Error Messages -->
+                                <t t-if="request.params.get('error')">
+                                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                                        <t t-if="request.params.get('error') == 'report_not_found'">
+                                            <strong>Error:</strong> Payslip report template not found. Please contact your administrator.
+                                        </t>
+                                        <t t-elif="request.params.get('error') == 'pdf_generation_failed'">
+                                            <strong>Error:</strong> Failed to generate PDF. Please try again or contact support.
+                                        </t>
+                                        <t t-else="">
+                                            <strong>Error:</strong> An unexpected error occurred. Please try again.
+                                        </t>
+                                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                                    </div>
+                                </t>
+                                
+                                <t t-if="not payslips">
+                                    <div class="alert alert-info text-center">
+                                        <i class="fa fa-info-circle fa-2x mb-2"></i>
+                                        <h5>No Payslips Found</h5>
+                                        <p>No payslips match your current filter criteria.</p>
+                                    </div>
+                                </t>
+                                <t t-if="payslips">
+                                    <div class="table-responsive">
+                                        <table class="table table-hover">
+                                            <thead class="table-light">
+                                                <tr>
+                                                    <th>Reference</th>
+                                                    <th>Period</th>
+                                                    <th>Name</th>
+                                                    <th>Status</th>
+                                                    <th>Gross Salary</th>
+                                                    <th>Net Salary</th>
+                                                    <th>Actions</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <t t-foreach="payslips" t-as="payslip">
+                                                    <tr>
+                                                        <td>
+                                                            <strong t-esc="payslip.number or 'Draft'"/>
+                                                        </td>
+                                                        <td>
+                                                            <span t-esc="payslip.date_from" t-options="{'widget': 'date'}"/>
+                                                            -
+                                                            <span t-esc="payslip.date_to" t-options="{'widget': 'date'}"/>
+                                                        </td>
+                                                        <td t-esc="payslip.name"/>
+                                                        <td>
+                                                            <t t-if="payslip.state == 'draft'">
+                                                                <span class="badge bg-secondary">Draft</span>
+                                                            </t>
+                                                            <t t-elif="payslip.state == 'verify'">
+                                                                <span class="badge bg-warning">Waiting</span>
+                                                            </t>
+                                                            <t t-elif="payslip.state == 'done'">
+                                                                <span class="badge bg-success">Done</span>
+                                                            </t>
+                                                            <t t-elif="payslip.state == 'cancel'">
+                                                                <span class="badge bg-danger">Cancelled</span>
+                                                            </t>
+                                                        </td>
+                                                        <td>
+                                                            <t t-set="gross_total" t-value="sum(line.total for line in payslip.line_ids.filtered(lambda l: l.category_id.code == 'GROSS'))"/>
+                                                            <span t-esc="gross_total" t-options="{'widget': 'monetary', 'display_currency': payslip.company_id.currency_id}"/>
+                                                        </td>
+                                                        <td>
+                                                            <t t-set="net_total" t-value="sum(line.total for line in payslip.line_ids.filtered(lambda l: l.category_id.code == 'NET'))"/>
+                                                            <span t-esc="net_total" t-options="{'widget': 'monetary', 'display_currency': payslip.company_id.currency_id}"/>
+                                                        </td>
+                                                        <td>
+                                                            <div class="btn-group" role="group">
+                                                                <a t-attf-href="/my/employee/payslips/view/#{payslip.id}" class="btn btn-sm btn-outline-primary" title="View Details">
+                                                                    <i class="fa fa-eye"></i>
+                                                                </a>
+                                                                <t t-if="payslip.state == 'done'">
+                                                                    <a t-attf-href="/my/employee/payslips/download/#{payslip.id}" class="btn btn-sm btn-outline-success" title="Download PDF">
+                                                                        <i class="fa fa-download"></i>
+                                                                    </a>
+                                                                </t>
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                </t>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </t>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </t>
+    </template>
+
+    <!-- Individual Payslip View Template -->
+    <template id="portal_payslip_view" name="Portal Payslip View">
+        <t t-call="portal.portal_layout">
+            <div class="o_portal container my-4">
+                <div class="row">
+                    <div class="col-12">
+                        <div class="d-flex justify-content-between align-items-center mb-4">
+                            <h2>Payslip Details</h2>
+                            <div>
+                                <t t-if="payslip.state == 'done'">
+                                    <a t-attf-href="/my/employee/payslips/download/#{payslip.id}" class="btn btn-success me-2">
+                                        <i class="fa fa-download"></i> Download PDF
+                                    </a>
+                                </t>
+                                <a href="/my/employee/payslips" class="btn btn-secondary">
+                                    <i class="fa fa-arrow-left"></i> Back to List
+                                </a>
+                            </div>
+                        </div>
+
+                        <!-- Payslip Header Information -->
+                        <div class="card mb-4">
+                            <div class="card-header">
+                                <h5 class="mb-0">Payslip Information</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <table class="table table-borderless">
+                                            <tr>
+                                                <td><strong>Reference:</strong></td>
+                                                <td t-esc="payslip.number or 'Draft'"/>
+                                            </tr>
+                                            <tr>
+                                                <td><strong>Employee:</strong></td>
+                                                <td t-esc="payslip.employee_id.name"/>
+                                            </tr>
+                                            <tr>
+                                                <td><strong>Period:</strong></td>
+                                                <td>
+                                                    <span t-esc="payslip.date_from" t-options="{'widget': 'date'}"/>
+                                                    to
+                                                    <span t-esc="payslip.date_to" t-options="{'widget': 'date'}"/>
+                                                </td>
+                                            </tr>
+                                        </table>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <table class="table table-borderless">
+                                            <tr>
+                                                <td><strong>Status:</strong></td>
+                                                <td>
+                                                    <t t-if="payslip.state == 'draft'">
+                                                        <span class="badge bg-secondary">Draft</span>
+                                                    </t>
+                                                    <t t-elif="payslip.state == 'verify'">
+                                                        <span class="badge bg-warning">Waiting</span>
+                                                    </t>
+                                                    <t t-elif="payslip.state == 'done'">
+                                                        <span class="badge bg-success">Done</span>
+                                                    </t>
+                                                    <t t-elif="payslip.state == 'cancel'">
+                                                        <span class="badge bg-danger">Cancelled</span>
+                                                    </t>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td><strong>Contract:</strong></td>
+                                                <td t-esc="payslip.contract_id.name if payslip.contract_id else 'N/A'"/>
+                                            </tr>
+                                            <tr>
+                                                <td><strong>Company:</strong></td>
+                                                <td t-esc="payslip.company_id.name"/>
+                                            </tr>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Payslip Lines -->
+                        <div class="card">
+                            <div class="card-header">
+                                <h5 class="mb-0">Salary Details</h5>
+                            </div>
+                            <div class="card-body">
+                                <t t-if="not payslip.line_ids">
+                                    <div class="alert alert-info text-center">
+                                        <p class="mb-0">No salary details available for this payslip.</p>
+                                    </div>
+                                </t>
+                                <t t-if="payslip.line_ids">
+                                    <div class="table-responsive">
+                                        <table class="table table-striped">
+                                            <thead class="table-dark">
+                                                <tr>
+                                                    <th>Description</th>
+                                                    <th>Code</th>
+                                                    <th>Category</th>
+                                                    <th class="text-end">Quantity</th>
+                                                    <th class="text-end">Rate (%)</th>
+                                                    <th class="text-end">Amount</th>
+                                                    <th class="text-end">Total</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <t t-foreach="payslip.line_ids.filtered(lambda l: l.appears_on_payslip)" t-as="line">
+                                                    <tr>
+                                                        <td t-esc="line.name"/>
+                                                        <td>
+                                                            <code t-esc="line.code"/>
+                                                        </td>
+                                                        <td>
+                                                            <span class="badge bg-light text-dark" t-esc="line.category_id.name if line.category_id else 'N/A'"/>
+                                                        </td>
+                                                        <td class="text-end" t-esc="line.quantity"/>
+                                                        <td class="text-end" t-esc="line.rate"/>
+                                                        <td class="text-end">
+                                                            <span t-esc="line.amount" t-options="{'widget': 'monetary', 'display_currency': payslip.company_id.currency_id}"/>
+                                                        </td>
+                                                        <td class="text-end">
+                                                            <strong>
+                                                                <span t-esc="line.total" t-options="{'widget': 'monetary', 'display_currency': payslip.company_id.currency_id}"/>
+                                                            </strong>
+                                                        </td>
+                                                    </tr>
+                                                </t>
+                                            </tbody>
+                                            <tfoot class="table-light">
+                                                <tr>
+                                                    <td colspan="6" class="text-end"><strong>Net Salary:</strong></td>
+                                                    <td class="text-end">
+                                                        <strong>
+                                                            <t t-set="net_total" t-value="sum(line.total for line in payslip.line_ids.filtered(lambda l: l.category_id.code == 'NET'))"/>
+                                                            <span t-esc="net_total" t-options="{'widget': 'monetary', 'display_currency': payslip.company_id.currency_id}"/>
+                                                        </strong>
+                                                    </td>
+                                                </tr>
+                                            </tfoot>
+                                        </table>
+                                    </div>
+                                </t>
+                            </div>
+                        </div>
+
+                        <!-- Worked Days -->
+                        <t t-if="payslip.worked_days_line_ids">
+                            <div class="card mt-4">
+                                <div class="card-header">
+                                    <h5 class="mb-0">Worked Days</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="table-responsive">
+                                        <table class="table table-sm">
+                                            <thead class="table-light">
+                                                <tr>
+                                                    <th>Description</th>
+                                                    <th>Code</th>
+                                                    <th class="text-end">Days</th>
+                                                    <th class="text-end">Hours</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <t t-foreach="payslip.worked_days_line_ids" t-as="worked_day">
+                                                    <tr>
+                                                        <td t-esc="worked_day.name"/>
+                                                        <td>
+                                                            <code t-esc="worked_day.code"/>
+                                                        </td>
+                                                        <td class="text-end" t-esc="worked_day.number_of_days"/>
+                                                        <td class="text-end" t-esc="worked_day.number_of_hours"/>
+                                                    </tr>
+                                                </t>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </t>
+
+                        <!-- Notes -->
+                        <t t-if="payslip.note">
+                            <div class="card mt-4">
+                                <div class="card-header">
+                                    <h5 class="mb-0">Notes</h5>
+                                </div>
+                                <div class="card-body">
+                                    <p t-field="payslip.note"/>
+                                </div>
+                            </div>
+                        </t>
+                    </div>
+                </div>
+            </div>
+        </t>
+    </template>
+</odoo>

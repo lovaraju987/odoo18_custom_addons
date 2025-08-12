@@ -26,4 +26,11 @@
         <field name="url">/my/employee/crm</field>
         <field name="target">self</field>
     </record>
+
+    <record id="action_portal_payslips" model="ir.actions.act_url">
+        <field name="name">My Payslips</field>
+        <field name="type">ir.actions.act_url</field>
+        <field name="url">/my/employee/payslips</field>
+        <field name="target">self</field>
+    </record>
 </odoo>

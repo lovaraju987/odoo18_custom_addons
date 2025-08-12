@@ -1,0 +1,493 @@
+<odoo>
+    <!-- Leave Requests List Template -->
+    <template id="portal_leaves" name="Portal Leave Requests">
+        <t t-call="portal.portal_layout">
+            <div class="o_portal container my-4">
+                <div class="row">
+                    <div class="col-12">
+                        <div class="d-flex justify-content-between align-items-center mb-4">
+                            <h2>My Leave Requests</h2>
+                            <div>
+                                <a href="/my/employee/leaves/request" class="btn btn-success me-2">
+                                    <i class="fa fa-plus"></i> Request Leave
+                                </a>
+                                <a href="/my/ess" class="btn btn-secondary">
+                                    <i class="fa fa-arrow-left"></i> Back to Dashboard
+                                </a>
+                            </div>
+                        </div>
+
+                        <!-- Leave Balances Card -->
+                        <div class="card mb-4">
+                            <div class="card-header">
+                                <h5 class="mb-0">Leave Balances</h5>
+                            </div>
+                            <div class="card-body">
+                                <t t-if="not leave_balances">
+                                    <div class="alert alert-info text-center">
+                                        <p class="mb-0">No leave allocations found for this year.</p>
+                                    </div>
+                                </t>
+                                <t t-if="leave_balances">
+                                    <div class="row">
+                                        <t t-foreach="leave_balances" t-as="balance">
+                                            <div class="col-md-4 mb-3">
+                                                <div class="card border-left-primary h-100">
+                                                    <div class="card-body">
+                                                        <div class="d-flex justify-content-between">
+                                                            <div>
+                                                                <h6 class="card-title text-primary" t-esc="balance['leave_type'].name"/>
+                                                                <div class="small text-muted">
+                                                                    <div>Allocated: <span t-esc="balance['allocated']"/> days</div>
+                                                                    <div>Used: <span t-esc="balance['used']"/> days</div>
+                                                                    <div class="fw-bold">Remaining: <span t-esc="balance['remaining']"/> days</div>
+                                                                </div>
+                                                            </div>
+                                                            <div class="text-end">
+                                                                <t t-set="percentage" t-value="(balance['used'] / balance['allocated'] * 100) if balance['allocated'] > 0 else 0"/>
+                                                                <div class="circular-progress" style="position: relative; width: 50px; height: 50px;">
+                                                                    <div class="text-center" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 10px; font-weight: bold;">
+                                                                        <span t-esc="'%.0f' % percentage"/>%
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </t>
+                                    </div>
+                                </t>
+                            </div>
+                        </div>
+
+                        <!-- Filters -->
+                        <div class="card mb-4">
+                            <div class="card-body">
+                                <form method="get" class="row">
+                                    <div class="col-md-3">
+                                        <label for="status" class="form-label">Status</label>
+                                        <select name="status" id="status" class="form-select">
+                                            <option value="">All Statuses</option>
+                                            <t t-if="selected_status == 'draft'">
+                                                <option value="draft" selected="selected">Draft</option>
+                                            </t>
+                                            <t t-else="">
+                                                <option value="draft">Draft</option>
+                                            </t>
+                                            <t t-if="selected_status == 'confirm'">
+                                                <option value="confirm" selected="selected">To Approve</option>
+                                            </t>
+                                            <t t-else="">
+                                                <option value="confirm">To Approve</option>
+                                            </t>
+                                            <t t-if="selected_status == 'validate'">
+                                                <option value="validate" selected="selected">Approved</option>
+                                            </t>
+                                            <t t-else="">
+                                                <option value="validate">Approved</option>
+                                            </t>
+                                            <t t-if="selected_status == 'refuse'">
+                                                <option value="refuse" selected="selected">Refused</option>
+                                            </t>
+                                            <t t-else="">
+                                                <option value="refuse">Refused</option>
+                                            </t>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label for="leave_type" class="form-label">Leave Type</label>
+                                        <select name="leave_type" id="leave_type" class="form-select">
+                                            <option value="">All Types</option>
+                                            <t t-foreach="leave_types" t-as="leave_type">
+                                                <t t-if="str(selected_leave_type) == str(leave_type.id)">
+                                                    <option t-att-value="leave_type.id" selected="selected">
+                                                        <t t-esc="leave_type.name"/>
+                                                    </option>
+                                                </t>
+                                                <t t-else="">
+                                                    <option t-att-value="leave_type.id">
+                                                        <t t-esc="leave_type.name"/>
+                                                    </option>
+                                                </t>
+                                            </t>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label for="year" class="form-label">Year</label>
+                                        <select name="year" id="year" class="form-select">
+                                            <option value="">All Years</option>
+                                            <t t-foreach="years" t-as="year_option">
+                                                <t t-if="str(selected_year) == str(year_option)">
+                                                    <option t-att-value="year_option" selected="selected">
+                                                        <t t-esc="year_option"/>
+                                                    </option>
+                                                </t>
+                                                <t t-else="">
+                                                    <option t-att-value="year_option">
+                                                        <t t-esc="year_option"/>
+                                                    </option>
+                                                </t>
+                                            </t>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-3 d-flex align-items-end">
+                                        <button type="submit" class="btn btn-primary me-2">Filter</button>
+                                        <a href="/my/employee/leaves" class="btn btn-secondary">Clear</a>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+
+                        <!-- Leave Requests Table -->
+                        <div class="card">
+                            <div class="card-header">
+                                <h5 class="mb-0">Leave History</h5>
+                            </div>
+                            <div class="card-body">
+                                <t t-if="not leave_requests">
+                                    <div class="alert alert-info text-center">
+                                        <i class="fa fa-info-circle fa-2x mb-2"></i>
+                                        <h5>No Leave Requests Found</h5>
+                                        <p>No leave requests match your current filter criteria.</p>
+                                        <a href="/my/employee/leaves/request" class="btn btn-success">
+                                            <i class="fa fa-plus"></i> Request Your First Leave
+                                        </a>
+                                    </div>
+                                </t>
+                                <t t-if="leave_requests">
+                                    <div class="table-responsive">
+                                        <table class="table table-hover">
+                                            <thead class="table-light">
+                                                <tr>
+                                                    <th>Leave Type</th>
+                                                    <th>From Date</th>
+                                                    <th>To Date</th>
+                                                    <th>Days</th>
+                                                    <th>Status</th>
+                                                    <th>Description</th>
+                                                    <th>Actions</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <t t-foreach="leave_requests" t-as="leave">
+                                                    <tr>
+                                                        <td>
+                                                            <strong t-esc="leave.holiday_status_id.name"/>
+                                                        </td>
+                                                        <td>
+                                                            <span t-esc="leave.date_from" t-options="{'widget': 'date'}"/>
+                                                        </td>
+                                                        <td>
+                                                            <span t-esc="leave.date_to" t-options="{'widget': 'date'}"/>
+                                                        </td>
+                                                        <td>
+                                                            <span t-esc="leave.number_of_days"/>
+                                                            <t t-if="leave.request_unit_hours"> hours</t>
+                                                            <t t-else=""> days</t>
+                                                        </td>
+                                                        <td>
+                                                            <t t-if="leave.state == 'draft'">
+                                                                <span class="badge bg-secondary">Draft</span>
+                                                            </t>
+                                                            <t t-elif="leave.state == 'confirm'">
+                                                                <span class="badge bg-warning">To Approve</span>
+                                                            </t>
+                                                            <t t-elif="leave.state == 'validate1'">
+                                                                <span class="badge bg-info">Second Approval</span>
+                                                            </t>
+                                                            <t t-elif="leave.state == 'validate'">
+                                                                <span class="badge bg-success">Approved</span>
+                                                            </t>
+                                                            <t t-elif="leave.state == 'refuse'">
+                                                                <span class="badge bg-danger">Refused</span>
+                                                            </t>
+                                                        </td>
+                                                        <td>
+                                                            <span t-esc="leave.name or 'Leave Request'"/>
+                                                        </td>
+                                                        <td>
+                                                            <div class="btn-group" role="group">
+                                                                <a t-attf-href="/my/employee/leaves/view/#{leave.id}" class="btn btn-sm btn-outline-primary" title="View Details">
+                                                                    <i class="fa fa-eye"></i>
+                                                                </a>
+                                                                <t t-if="leave.state in ['draft', 'confirm']">
+                                                                    <form method="post" t-attf-action="/my/employee/leaves/cancel/#{leave.id}" style="display: inline;">
+                                                                        <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
+                                                                        <button type="submit" class="btn btn-sm btn-outline-danger" title="Cancel Request" onclick="return confirm('Are you sure you want to cancel this leave request?')">
+                                                                            <i class="fa fa-times"></i>
+                                                                        </button>
+                                                                    </form>
+                                                                </t>
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                </t>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </t>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </t>
+    </template>
+
+    <!-- Leave Request Form Template -->
+    <template id="portal_leave_request" name="Portal Leave Request Form">
+        <t t-call="portal.portal_layout">
+            <div class="o_portal container my-4">
+                <div class="row justify-content-center">
+                    <div class="col-lg-8">
+                        <div class="d-flex justify-content-between align-items-center mb-4">
+                            <h2>Request Leave</h2>
+                            <a href="/my/employee/leaves" class="btn btn-secondary">
+                                <i class="fa fa-arrow-left"></i> Back to Leave List
+                            </a>
+                        </div>
+
+                        <!-- Success/Error Messages -->
+                        <t t-if="error">
+                            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                                <strong>Error:</strong> <span t-esc="error"/>
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                            </div>
+                        </t>
+                        <t t-if="success">
+                            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                                <strong>Success:</strong> <span t-esc="success"/>
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                            </div>
+                        </t>
+
+                        <!-- Leave Request Form -->
+                        <div class="card">
+                            <div class="card-header">
+                                <h5 class="mb-0">Leave Request Details</h5>
+                            </div>
+                            <div class="card-body">
+                                <form method="post" class="row g-3">
+                                    <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
+                                    
+                                    <div class="col-md-6">
+                                        <label for="holiday_status_id" class="form-label">Leave Type *</label>
+                                        <select name="holiday_status_id" id="holiday_status_id" class="form-select" required="">
+                                            <option value="">Select Leave Type</option>
+                                            <t t-foreach="leave_types" t-as="leave_type">
+                                                <option t-att-value="leave_type.id">
+                                                    <t t-esc="leave_type.name"/>
+                                                </option>
+                                            </t>
+                                        </select>
+                                    </div>
+                                    
+                                    <div class="col-md-6">
+                                        <label for="request_unit_hours" class="form-label">Request Unit</label>
+                                        <select name="request_unit_hours" id="request_unit_hours" class="form-select">
+                                            <option value="False">Days</option>
+                                            <option value="True">Hours</option>
+                                        </select>
+                                    </div>
+                                    
+                                    <div class="col-md-6">
+                                        <label for="date_from" class="form-label">From Date *</label>
+                                        <input type="date" name="date_from" id="date_from" class="form-control" required=""/>
+                                    </div>
+                                    
+                                    <div class="col-md-6">
+                                        <label for="date_to" class="form-label">To Date *</label>
+                                        <input type="date" name="date_to" id="date_to" class="form-control" required=""/>
+                                    </div>
+                                    
+                                    <div class="col-12">
+                                        <label for="description" class="form-label">Description</label>
+                                        <textarea name="description" id="description" class="form-control" rows="3" placeholder="Reason for leave request..."></textarea>
+                                    </div>
+                                    
+                                    <div class="col-12">
+                                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                                            <a href="/my/employee/leaves" class="btn btn-secondary me-md-2">Cancel</a>
+                                            <button type="submit" class="btn btn-primary">Submit Request</button>
+                                        </div>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </t>
+    </template>
+
+    <!-- Individual Leave View Template -->
+    <template id="portal_leave_view" name="Portal Leave View">
+        <t t-call="portal.portal_layout">
+            <div class="o_portal container my-4">
+                <div class="row justify-content-center">
+                    <div class="col-lg-8">
+                        <div class="d-flex justify-content-between align-items-center mb-4">
+                            <h2>Leave Request Details</h2>
+                            <div>
+                                <t t-if="leave_request.state in ['draft', 'confirm']">
+                                    <form method="post" t-attf-action="/my/employee/leaves/cancel/#{leave_request.id}" style="display: inline;">
+                                        <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
+                                        <button type="submit" class="btn btn-danger me-2" onclick="return confirm('Are you sure you want to cancel this leave request?')">
+                                            <i class="fa fa-times"></i> Cancel Request
+                                        </button>
+                                    </form>
+                                </t>
+                                <a href="/my/employee/leaves" class="btn btn-secondary">
+                                    <i class="fa fa-arrow-left"></i> Back to List
+                                </a>
+                            </div>
+                        </div>
+
+                        <!-- Leave Request Information -->
+                        <div class="card mb-4">
+                            <div class="card-header">
+                                <h5 class="mb-0">Request Information</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <table class="table table-borderless">
+                                            <tr>
+                                                <td><strong>Employee:</strong></td>
+                                                <td t-esc="leave_request.employee_id.name"/>
+                                            </tr>
+                                            <tr>
+                                                <td><strong>Leave Type:</strong></td>
+                                                <td t-esc="leave_request.holiday_status_id.name"/>
+                                            </tr>
+                                            <tr>
+                                                <td><strong>From Date:</strong></td>
+                                                <td>
+                                                    <span t-esc="leave_request.date_from" t-options="{'widget': 'date'}"/>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td><strong>To Date:</strong></td>
+                                                <td>
+                                                    <span t-esc="leave_request.date_to" t-options="{'widget': 'date'}"/>
+                                                </td>
+                                            </tr>
+                                        </table>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <table class="table table-borderless">
+                                            <tr>
+                                                <td><strong>Duration:</strong></td>
+                                                <td>
+                                                    <span t-esc="leave_request.number_of_days"/>
+                                                    <t t-if="leave_request.request_unit_hours"> hours</t>
+                                                    <t t-else=""> days</t>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td><strong>Status:</strong></td>
+                                                <td>
+                                                    <t t-if="leave_request.state == 'draft'">
+                                                        <span class="badge bg-secondary">Draft</span>
+                                                    </t>
+                                                    <t t-elif="leave_request.state == 'confirm'">
+                                                        <span class="badge bg-warning">To Approve</span>
+                                                    </t>
+                                                    <t t-elif="leave_request.state == 'validate1'">
+                                                        <span class="badge bg-info">Second Approval</span>
+                                                    </t>
+                                                    <t t-elif="leave_request.state == 'validate'">
+                                                        <span class="badge bg-success">Approved</span>
+                                                    </t>
+                                                    <t t-elif="leave_request.state == 'refuse'">
+                                                        <span class="badge bg-danger">Refused</span>
+                                                    </t>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td><strong>Request Date:</strong></td>
+                                                <td>
+                                                    <span t-esc="leave_request.create_date" t-options="{'widget': 'datetime'}"/>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td><strong>Manager:</strong></td>
+                                                <td t-esc="leave_request.manager_id.name if leave_request.manager_id else 'N/A'"/>
+                                            </tr>
+                                        </table>
+                                    </div>
+                                </div>
+                                
+                                <t t-if="leave_request.name and leave_request.name != 'Leave Request'">
+                                    <div class="row mt-3">
+                                        <div class="col-12">
+                                            <strong>Description:</strong>
+                                            <p class="mt-2" t-esc="leave_request.name"/>
+                                        </div>
+                                    </div>
+                                </t>
+                            </div>
+                        </div>
+
+                        <!-- Approval History -->
+                        <t t-if="leave_request.state != 'draft'">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h5 class="mb-0">Approval Timeline</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="timeline">
+                                        <div class="timeline-item">
+                                            <div class="timeline-marker bg-primary"></div>
+                                            <div class="timeline-content">
+                                                <h6>Request Submitted</h6>
+                                                <p class="text-muted">
+                                                    <span t-esc="leave_request.create_date" t-options="{'widget': 'datetime'}"/>
+                                                </p>
+                                            </div>
+                                        </div>
+                                        
+                                        <t t-if="leave_request.state in ['confirm', 'validate1', 'validate', 'refuse']">
+                                            <div class="timeline-item">
+                                                <div class="timeline-marker bg-warning"></div>
+                                                <div class="timeline-content">
+                                                    <h6>Under Review</h6>
+                                                    <p class="text-muted">Pending manager approval</p>
+                                                </div>
+                                            </div>
+                                        </t>
+                                        
+                                        <t t-if="leave_request.state == 'validate'">
+                                            <div class="timeline-item">
+                                                <div class="timeline-marker bg-success"></div>
+                                                <div class="timeline-content">
+                                                    <h6>Approved</h6>
+                                                    <p class="text-muted">
+                                                        By: <span t-esc="leave_request.manager_id.name if leave_request.manager_id else 'Manager'"/>
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </t>
+                                        
+                                        <t t-if="leave_request.state == 'refuse'">
+                                            <div class="timeline-item">
+                                                <div class="timeline-marker bg-danger"></div>
+                                                <div class="timeline-content">
+                                                    <h6>Refused</h6>
+                                                    <p class="text-muted">
+                                                        By: <span t-esc="leave_request.manager_id.name if leave_request.manager_id else 'Manager'"/>
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </t>
+                                    </div>
+                                </div>
+                            </div>
+                        </t>
+                    </div>
+                </div>
+            </div>
+        </t>
+    </template>
+</odoo>

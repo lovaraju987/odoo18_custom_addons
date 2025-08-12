@@ -49,7 +49,16 @@
                             </div>
                         </a>
                     </div>
-                    <!-- Add more sections as needed: Leaves, Timesheets, Announcements -->
+                    <div class="col-md-4 mb-4">
+                        <a href="/my/employee/leaves" class="card text-center h-100 shadow-sm text-decoration-none">
+                            <div class="card-body">
+                                <i class="fa fa-calendar fa-2x mb-2"></i>
+                                <h5 class="card-title">Leave Requests</h5>
+                                <p class="card-text">Request and manage your leave applications.</p>
+                            </div>
+                        </a>
+                    </div>
+                    <!-- Add more sections as needed: Timesheets, Announcements -->
                 </div>
             </div>
         </t>
