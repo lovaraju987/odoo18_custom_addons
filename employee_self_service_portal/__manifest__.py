@@ -35,6 +35,7 @@
         "views/employee_details/portal_employee_crm_activity_edit.xml",  # Activity edit form for CRM
         "views/employee_details/portal_expense_templates.xml",
         "views/employee_details/portal_expense_submit.xml",  # New expense submission template
+        "views/employee_details/portal_payslips_templates.xml",  # Payslips templates
     ],
     "installable": True,
     "application": True,

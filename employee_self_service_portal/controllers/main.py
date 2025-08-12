@@ -605,3 +605,87 @@ class PortalEmployee(http.Controller):
             # Set the report to cancelled (withdraw)
             expense.sheet_id.write({'state': 'cancel'})
         return request.redirect(MY_EMPLOYEE_URL + '/expenses')
+
+    @http.route(MY_EMPLOYEE_URL + '/payslips', type='http', auth='user', website=True)
+    def portal_payslips_history(self, **kwargs):
+        employee = request.env[HR_EMPLOYEE_MODEL].sudo().search([('user_id', '=', request.uid)], limit=1)
+        domain = [('employee_id', '=', employee.id)]
+        
+        # Filtering logic
+        status = kwargs.get('status')
+        if status:
+            domain += [('state', '=', status)]
+        
+        year = kwargs.get('year')
+        if year:
+            domain += [('date_from', '>=', f'{year}-01-01'), ('date_from', '<=', f'{year}-12-31')]
+        
+        month = kwargs.get('month')
+        if month and year:
+            domain += [('date_from', '>=', f'{year}-{month:02d}-01')]
+            if month == 12:
+                domain += [('date_from', '<=', f'{year}-{month:02d}-31')]
+            else:
+                # Get last day of month
+                import calendar
+                last_day = calendar.monthrange(int(year), int(month))[1]
+                domain += [('date_from', '<=', f'{year}-{month:02d}-{last_day}')]
+        
+        payslips = request.env['hr.payslip'].sudo().search(domain, order='date_from desc', limit=50)
+        
+        # For filter dropdowns
+        from datetime import datetime
+        current_year = datetime.now().year
+        years = list(range(current_year - 5, current_year + 1))
+        months = [
+            {'value': i, 'name': datetime(2000, i, 1).strftime('%B')} for i in range(1, 13)
+        ]
+        
+        return request.render('employee_self_service_portal.portal_payslips', {
+            'payslips': payslips,
+            'employee': employee,
+            'selected_status': status or '',
+            'selected_year': year or '',
+            'selected_month': month or '',
+            'years': years,
+            'months': months,
+        })
+
+    @http.route(MY_EMPLOYEE_URL + '/payslips/download/<int:payslip_id>', type='http', auth='user', website=True)
+    def portal_payslip_download(self, payslip_id, **kwargs):
+        employee = request.env[HR_EMPLOYEE_MODEL].sudo().search([('user_id', '=', request.uid)], limit=1)
+        payslip = request.env['hr.payslip'].sudo().search([
+            ('id', '=', payslip_id),
+            ('employee_id', '=', employee.id)
+        ], limit=1)
+        
+        if not payslip:
+            return request.redirect(MY_EMPLOYEE_URL + '/payslips')
+        
+        # Generate PDF report
+        report = request.env.ref('om_hr_payroll.payslip_details_report')
+        pdf, _ = report.sudo()._render_qweb_pdf([payslip.id])
+        
+        pdfhttpheaders = [
+            ('Content-Type', 'application/pdf'),
+            ('Content-Length', len(pdf)),
+            ('Content-Disposition', f'attachment; filename="Payslip-{payslip.employee_id.name}-{payslip.date_from}.pdf"')
+        ]
+        
+        return request.make_response(pdf, headers=pdfhttpheaders)
+
+    @http.route(MY_EMPLOYEE_URL + '/payslips/view/<int:payslip_id>', type='http', auth='user', website=True)
+    def portal_payslip_view(self, payslip_id, **kwargs):
+        employee = request.env[HR_EMPLOYEE_MODEL].sudo().search([('user_id', '=', request.uid)], limit=1)
+        payslip = request.env['hr.payslip'].sudo().search([
+            ('id', '=', payslip_id),
+            ('employee_id', '=', employee.id)
+        ], limit=1)
+        
+        if not payslip:
+            return request.redirect(MY_EMPLOYEE_URL + '/payslips')
+        
+        return request.render('employee_self_service_portal.portal_payslip_view', {
+            'payslip': payslip,
+            'employee': employee,
+        })
