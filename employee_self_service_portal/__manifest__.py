@@ -1,7 +1,7 @@
 # __manifest__.py
 {
     "name": "Employee Self Service Portal MLR",
-    "version": "18.1.6",  # Enhanced Leave Requests with JavaScript utilities
+    "version": "18.1.8",  # Fixed leave request date handling issues
     "depends": ["portal", "hr", "hr_attendance", "om_hr_payroll", "hr_holidays"],
     "category": "Human Resources",
     "author": "Lovaraju Mylapalli",

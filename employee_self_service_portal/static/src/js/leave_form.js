@@ -28,7 +28,16 @@ odoo.define('employee_self_service_portal.leave_form', function (require) {
          */
         _setMinimumDates: function() {
             var today = new Date().toISOString().split('T')[0];
-            this.$('input[name="date_from"], input[name="date_to"]').attr('min', today);
+            // Only set minimum date, don't override existing values
+            var fromInput = this.$('input[name="date_from"]');
+            var toInput = this.$('input[name="date_to"]');
+            
+            if (!fromInput.val()) {
+                fromInput.attr('min', today);
+            }
+            if (!toInput.val()) {
+                toInput.attr('min', today);
+            }
         },
 
         /**

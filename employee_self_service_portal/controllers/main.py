@@ -855,9 +855,6 @@ class PortalEmployee(http.Controller):
         employee = request.env[HR_EMPLOYEE_MODEL].sudo().search([('user_id', '=', request.uid)], limit=1)
         leave_types = request.env['hr.leave.type'].sudo().search([('active', '=', True)])
         
-        # Get leave balance data
-        leave_balances = self._get_leave_balance_data(employee)
-        
         error = None
         success = None
         
@@ -866,38 +863,62 @@ class PortalEmployee(http.Controller):
             date_from = post.get('date_from')
             date_to = post.get('date_to')
             description = post.get('description')
-            request_unit_hours = post.get('request_unit_hours') == 'True'
             
             if not (holiday_status_id and date_from and date_to):
                 error = 'All required fields must be filled.'
             else:
                 try:
+                    # Convert date strings to proper format for Odoo
+                    from datetime import datetime
+                    import logging
+                    _logger = logging.getLogger(__name__)
+                    
+                    # Log the received dates for debugging
+                    _logger.info("Leave Request Debug: Received date_from='%s', date_to='%s'", date_from, date_to)
+                    
+                    # Parse the date strings - keep as date objects, not datetime
+                    date_from_obj = datetime.strptime(date_from, '%Y-%m-%d').date()
+                    date_to_obj = datetime.strptime(date_to, '%Y-%m-%d').date()
+                    
+                    # Also create datetime objects for compatibility
+                    datetime_from = datetime.strptime(date_from, '%Y-%m-%d')
+                    datetime_to = datetime.strptime(date_to, '%Y-%m-%d').replace(hour=23, minute=59, second=59)
+                    
+                    _logger.info("Leave Request Debug: Parsed date_from_obj='%s', date_to_obj='%s'", date_from_obj, date_to_obj)
+                    
+                    # Use both field naming conventions to ensure compatibility
                     vals = {
                         'employee_id': employee.id,
                         'holiday_status_id': int(holiday_status_id),
-                        'date_from': date_from,
-                        'date_to': date_to,
+                        'request_date_from': date_from_obj,         # Main field for from date
+                        'request_date_to': date_to_obj,             # Main field for to date
+                        'date_from': datetime_from,                 # Legacy datetime field
+                        'date_to': datetime_to,                     # Legacy datetime field
                         'name': description or 'Leave Request',
-                        'request_unit_hours': request_unit_hours,
+                        'state': 'confirm',  # Set to confirm state for approval
+                        'request_unit_hours': False,                # Ensure we're requesting full days
                     }
+                    
+                    _logger.info("Leave Request Debug: Creating leave with vals: %s", vals)
                     
                     # Create leave request
                     leave_request = request.env['hr.leave'].sudo().create(vals)
                     
-                    # Auto-submit if configured
-                    if leave_request.holiday_status_id.leave_validation_type == 'no_validation':
-                        leave_request.action_approve()
-                    else:
-                        leave_request.action_confirm()
+                    # Log the created leave request details
+                    _logger.info("Leave Request Debug: Created leave ID=%s, request_date_from='%s', request_date_to='%s', date_from='%s', date_to='%s'", 
+                                leave_request.id, leave_request.request_date_from, leave_request.request_date_to,
+                                leave_request.date_from, leave_request.date_to)
                     
-                    success = 'Leave request submitted successfully.'
+                    success = 'Leave request submitted successfully and is pending approval.'
+                    
+                    # Redirect to leave history to avoid resubmission
+                    return request.redirect(MY_EMPLOYEE_URL + '/leaves?message=' + success)
                 except Exception as e:
                     error = f'Error submitting leave request: {str(e)}'
         
         return request.render('employee_self_service_portal.portal_leave_request', {
             'employee': employee,
             'leave_types': leave_types,
-            'leave_balances': leave_balances,
             'error': error,
             'success': success,
         })
@@ -913,9 +934,17 @@ class PortalEmployee(http.Controller):
         # Only allow cancellation if leave is in draft or confirm state
         if leave_request and leave_request.state in ['draft', 'confirm']:
             try:
-                leave_request.action_refuse()
+                # Try different methods for cancellation
+                if hasattr(leave_request, 'action_refuse'):
+                    leave_request.action_refuse()
+                elif hasattr(leave_request, 'action_cancel'):
+                    leave_request.action_cancel()
+                else:
+                    # Fallback: directly set state to cancel
+                    leave_request.write({'state': 'cancel'})
             except Exception:
-                pass  # Handle any workflow errors silently
+                # Fallback: directly set state to cancel
+                leave_request.write({'state': 'cancel'})
         
         return request.redirect(MY_EMPLOYEE_URL + '/leaves')
 
