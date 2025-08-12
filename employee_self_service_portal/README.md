@@ -34,9 +34,21 @@ This module provides a comprehensive Employee Self Service (ESS) portal for Odoo
 ### 📄 Payslip Management
 - **Payslip Viewing**: View detailed payslip information with salary breakdown
 - **Download Functionality**: Download payslips as PDF documents
-- **Filter Options**: Filter payslips by status, year, and month
+- **Filter Options**: Filter payslips by year and month with intuitive dropdowns
 - **Salary Details**: View comprehensive salary components, deductions, and totals
 - **Worked Days**: Track worked days and hours for each pay period
+
+### 🏖️ Leave Request Management
+- **Leave Request Submission**: Submit leave applications with comprehensive form validation
+- **Real-time Balance Tracking**: View allocated, used, pending, and remaining leave balances
+- **Status Monitoring**: Track leave request approval workflow with color-coded badges
+- **Advanced Filtering**: Filter leave history by status, type, and year with instant results
+- **Smart Form Validation**: JavaScript-powered date validation and conflict checking
+- **Request Management**: Cancel pending requests and view detailed leave information
+- **Leave Type Intelligence**: Dynamic form behavior based on selected leave type
+- **Mobile-Responsive**: Optimized for desktop and mobile device access
+- **Approval Timeline**: Visual progress indicators and status tracking
+- **Automatic Calculations**: Real-time days calculation and balance updates
 
 ## Installation
 
@@ -70,6 +82,7 @@ The module automatically configures security rules to ensure:
    - **My Attendance**: Check-in/out and view attendance history
    - **My CRM**: Manage leads and customer interactions
    - **My Payslips**: View and download payslips
+   - **My Leaves**: Request and manage leave applications
    - **Expenses**: Submit and track expense claims
 
 ### For Administrators
@@ -97,6 +110,7 @@ The module automatically configures security rules to ensure:
 - `/my/employee/attendance`: Attendance tracking
 - `/my/employee/crm`: CRM lead management
 - `/my/employee/payslips`: Payslip viewing and downloading
+- `/my/employee/leaves`: Leave request management
 - `/my/employee/expenses`: Expense management
 
 ## Customization

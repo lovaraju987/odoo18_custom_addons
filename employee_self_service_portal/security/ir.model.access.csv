@@ -6,3 +6,6 @@ access_crm_lead_portal_user,crm.lead.portal.user.access,crm.model_crm_lead,base.
 access_hr_payslip_portal_user,hr.payslip.portal.user.access,om_hr_payroll.model_hr_payslip,base.group_portal,1,0,0,0
 access_hr_payslip_line_portal_user,hr.payslip.line.portal.user.access,om_hr_payroll.model_hr_payslip_line,base.group_portal,1,0,0,0
 access_ir_actions_report_portal_user,ir.actions.report.portal.user.access,base.model_ir_actions_report,base.group_portal,1,0,0,0
+access_hr_leave_portal_user,hr.leave.portal.user.access,hr_holidays.model_hr_leave,base.group_portal,1,1,1,0
+access_hr_leave_type_portal_user,hr.leave.type.portal.user.access,hr_holidays.model_hr_leave_type,base.group_portal,1,0,0,0
+access_hr_leave_allocation_portal_user,hr.leave.allocation.portal.user.access,hr_holidays.model_hr_leave_allocation,base.group_portal,1,0,0,0

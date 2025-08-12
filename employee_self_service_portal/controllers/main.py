@@ -779,3 +779,215 @@ class PortalEmployee(http.Controller):
             'payslip': payslip,
             'employee': employee,
         })
+
+    @http.route(MY_EMPLOYEE_URL + '/leaves', type='http', auth='user', website=True)
+    def portal_leave_history(self, **kwargs):
+        employee = request.env[HR_EMPLOYEE_MODEL].sudo().search([('user_id', '=', request.uid)], limit=1)
+        domain = [('employee_id', '=', employee.id)]
+        
+        # Filtering logic
+        status = kwargs.get('status')
+        if status:
+            if status == 'all':
+                pass  # Show all statuses
+            else:
+                domain += [('state', '=', status)]
+        
+        leave_type = kwargs.get('leave_type')
+        if leave_type:
+            domain += [('holiday_status_id', '=', int(leave_type))]
+        
+        year = kwargs.get('year')
+        if year:
+            try:
+                year = int(year)
+                domain += [('date_from', '>=', f'{year}-01-01'), ('date_from', '<=', f'{year}-12-31')]
+            except (ValueError, TypeError):
+                pass
+        
+        leave_requests = request.env['hr.leave'].sudo().search(domain, order='date_from desc', limit=50)
+        
+        # For filter dropdowns
+        from datetime import datetime
+        current_year = datetime.now().year
+        years = list(range(current_year, current_year - 3, -1))
+        leave_types = request.env['hr.leave.type'].sudo().search([('active', '=', True)])
+        
+        # Calculate leave balances for current employee
+        leave_balances = []
+        for leave_type_rec in leave_types:
+            allocation = request.env['hr.leave.allocation'].sudo().search([
+                ('employee_id', '=', employee.id),
+                ('holiday_status_id', '=', leave_type_rec.id),
+                ('state', '=', 'validate')
+            ], limit=1)
+            
+            # Calculate used leaves for this type
+            used_leaves = sum(request.env['hr.leave'].sudo().search([
+                ('employee_id', '=', employee.id),
+                ('holiday_status_id', '=', leave_type_rec.id),
+                ('state', '=', 'validate')
+            ]).mapped('number_of_days'))
+            
+            allocated_days = allocation.number_of_days if allocation else 0
+            remaining_days = allocated_days - used_leaves
+            
+            leave_balances.append({
+                'leave_type': leave_type_rec,
+                'allocated': allocated_days,
+                'used': used_leaves,
+                'remaining': remaining_days
+            })
+        
+        return request.render('employee_self_service_portal.portal_leaves', {
+            'leave_requests': leave_requests,
+            'employee': employee,
+            'leave_types': leave_types,
+            'leave_balances': leave_balances,
+            'years': years,
+            'selected_status': status or '',
+            'selected_leave_type': leave_type or '',
+            'selected_year': year or '',
+        })
+
+    @http.route(MY_EMPLOYEE_URL + '/leaves/request', type='http', auth='user', website=True, methods=['GET', 'POST'])
+    def portal_leave_request(self, **post):
+        employee = request.env[HR_EMPLOYEE_MODEL].sudo().search([('user_id', '=', request.uid)], limit=1)
+        leave_types = request.env['hr.leave.type'].sudo().search([('active', '=', True)])
+        
+        # Get leave balance data
+        leave_balances = self._get_leave_balance_data(employee)
+        
+        error = None
+        success = None
+        
+        if request.httprequest.method == 'POST':
+            holiday_status_id = post.get('holiday_status_id')
+            date_from = post.get('date_from')
+            date_to = post.get('date_to')
+            description = post.get('description')
+            request_unit_hours = post.get('request_unit_hours') == 'True'
+            
+            if not (holiday_status_id and date_from and date_to):
+                error = 'All required fields must be filled.'
+            else:
+                try:
+                    vals = {
+                        'employee_id': employee.id,
+                        'holiday_status_id': int(holiday_status_id),
+                        'date_from': date_from,
+                        'date_to': date_to,
+                        'name': description or 'Leave Request',
+                        'request_unit_hours': request_unit_hours,
+                    }
+                    
+                    # Create leave request
+                    leave_request = request.env['hr.leave'].sudo().create(vals)
+                    
+                    # Auto-submit if configured
+                    if leave_request.holiday_status_id.leave_validation_type == 'no_validation':
+                        leave_request.action_approve()
+                    else:
+                        leave_request.action_confirm()
+                    
+                    success = 'Leave request submitted successfully.'
+                except Exception as e:
+                    error = f'Error submitting leave request: {str(e)}'
+        
+        return request.render('employee_self_service_portal.portal_leave_request', {
+            'employee': employee,
+            'leave_types': leave_types,
+            'leave_balances': leave_balances,
+            'error': error,
+            'success': success,
+        })
+
+    @http.route(MY_EMPLOYEE_URL + '/leaves/cancel/<int:leave_id>', type='http', auth='user', website=True, methods=['POST'])
+    def portal_leave_cancel(self, leave_id, **post):
+        employee = request.env[HR_EMPLOYEE_MODEL].sudo().search([('user_id', '=', request.uid)], limit=1)
+        leave_request = request.env['hr.leave'].sudo().search([
+            ('id', '=', leave_id),
+            ('employee_id', '=', employee.id)
+        ], limit=1)
+        
+        # Only allow cancellation if leave is in draft or confirm state
+        if leave_request and leave_request.state in ['draft', 'confirm']:
+            try:
+                leave_request.action_refuse()
+            except Exception:
+                pass  # Handle any workflow errors silently
+        
+        return request.redirect(MY_EMPLOYEE_URL + '/leaves')
+
+    @http.route(MY_EMPLOYEE_URL + '/leaves/view/<int:leave_id>', type='http', auth='user', website=True)
+    def portal_leave_view(self, leave_id, **kwargs):
+        employee = request.env[HR_EMPLOYEE_MODEL].sudo().search([('user_id', '=', request.uid)], limit=1)
+        leave_request = request.env['hr.leave'].sudo().search([
+            ('id', '=', leave_id),
+            ('employee_id', '=', employee.id)
+        ], limit=1)
+        
+        if not leave_request:
+            return request.redirect(MY_EMPLOYEE_URL + '/leaves')
+        
+        return request.render('employee_self_service_portal.portal_leave_view', {
+            'leave_request': leave_request,
+            'employee': employee,
+        })
+
+    def _get_leave_balance_data(self, employee):
+        """Helper method to get leave balance information"""
+        leave_types = request.env['hr.leave.type'].sudo().search([
+            ('active', '=', True),
+            ('request_unit', 'in', ['day', 'hour'])
+        ])
+        
+        balance_data = []
+        for leave_type in leave_types:
+            # Get current year allocations
+            current_year = fields.Date.today().year
+            start_date = fields.Date.from_string(f'{current_year}-01-01')
+            end_date = fields.Date.from_string(f'{current_year}-12-31')
+            
+            # Get allocations
+            allocations = request.env['hr.leave.allocation'].sudo().search([
+                ('employee_id', '=', employee.id),
+                ('holiday_status_id', '=', leave_type.id),
+                ('state', '=', 'validate'),
+                ('date_from', '<=', end_date),
+                ('date_to', '>=', start_date),
+            ])
+            
+            # Get used/requested leaves
+            used_leaves = request.env['hr.leave'].sudo().search([
+                ('employee_id', '=', employee.id),
+                ('holiday_status_id', '=', leave_type.id),
+                ('state', 'in', ['validate', 'validate1']),
+                ('date_from', '>=', start_date),
+                ('date_to', '<=', end_date),
+            ])
+            
+            # Get pending leaves
+            pending_leaves = request.env['hr.leave'].sudo().search([
+                ('employee_id', '=', employee.id),
+                ('holiday_status_id', '=', leave_type.id),
+                ('state', 'in', ['confirm', 'validate1']),
+                ('date_from', '>=', start_date),
+                ('date_to', '<=', end_date),
+            ])
+            
+            allocated = sum(allocations.mapped('number_of_days'))
+            used = sum(used_leaves.mapped('number_of_days'))
+            pending = sum(pending_leaves.mapped('number_of_days'))
+            balance = allocated - used - pending
+            
+            balance_data.append({
+                'leave_type': leave_type,
+                'allocated': allocated,
+                'used': used,
+                'pending': pending,
+                'balance': balance,
+                'unit': leave_type.request_unit,
+            })
+        
+        return balance_data
