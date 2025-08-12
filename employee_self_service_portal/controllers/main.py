@@ -612,28 +612,47 @@ class PortalEmployee(http.Controller):
         # By default, show only confirmed payslips
         domain = [('employee_id', '=', employee.id), ('state', '=', 'done')]
         
-        # Filtering logic
+        # For filter dropdowns and defaults
+        from datetime import datetime
+        current_year = datetime.now().year
+        
+        # Filtering logic - convert to int and set defaults
         year = kwargs.get('year')
         if year:
-            domain += [('date_from', '>=', f'{year}-01-01'), ('date_from', '<=', f'{year}-12-31')]
-        
+            try:
+                year = int(year)
+            except (ValueError, TypeError):
+                year = current_year
+        else:
+            year = current_year  # Default to current year
+            
         month = kwargs.get('month')
-        if month and year:
+        if month:
+            try:
+                month = int(month)
+            except (ValueError, TypeError):
+                month = None
+        else:
+            month = None  # Default to all months (no month filter)
+        
+        # Apply year filter (always applied)
+        domain += [('date_from', '>=', f'{year}-01-01'), ('date_from', '<=', f'{year}-12-31')]
+        
+        # Apply month filter only if specified
+        if month:
             domain += [('date_from', '>=', f'{year}-{month:02d}-01')]
             if month == 12:
                 domain += [('date_from', '<=', f'{year}-{month:02d}-31')]
             else:
                 # Get last day of month
                 import calendar
-                last_day = calendar.monthrange(int(year), int(month))[1]
+                last_day = calendar.monthrange(year, month)[1]
                 domain += [('date_from', '<=', f'{year}-{month:02d}-{last_day}')]
         
         payslips = request.env['hr.payslip'].sudo().search(domain, order='date_from desc', limit=50)
         
-        # For filter dropdowns
-        from datetime import datetime
-        current_year = datetime.now().year
-        years = list(range(current_year - 5, current_year + 1))
+        # For filter dropdowns - make sure years are in descending order
+        years = list(range(current_year, current_year - 6, -1))  # Current year first
         months = [
             {'value': i, 'name': datetime(2000, i, 1).strftime('%B')} for i in range(1, 13)
         ]
@@ -641,8 +660,8 @@ class PortalEmployee(http.Controller):
         return request.render('employee_self_service_portal.portal_payslips', {
             'payslips': payslips,
             'employee': employee,
-            'selected_year': year or '',
-            'selected_month': month or '',
+            'selected_year': year,  # Always show the year being filtered
+            'selected_month': month if month else '',  # Show selected month or empty string for "All Months"
             'years': years,
             'months': months,
         })

@@ -1,7 +1,7 @@
 # __manifest__.py
 {
     "name": "Employee Self Service Portal MLR",
-    "version": "1.0",
+    "version": "18.1.4",  # Clean version without debug
     "depends": ["portal", "hr", "hr_attendance", "om_hr_payroll", "hr_holidays"],
     "category": "Human Resources",
     "author": "Lovaraju Mylapalli",

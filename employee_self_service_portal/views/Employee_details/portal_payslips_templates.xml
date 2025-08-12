@@ -19,22 +19,40 @@
                                     <div class="col-md-4">
                                         <label for="year" class="form-label">Year</label>
                                         <select name="year" id="year" class="form-select">
-                                            <option value="">All Years</option>
-                                            <t t-foreach="years" t-as="year">
-                                                <option t-att-value="year" t-att-selected="'selected' if str(selected_year) == str(year) else ''">
-                                                    <t t-esc="year"/>
-                                                </option>
+                                            <t t-foreach="years" t-as="year_option">
+                                                <t t-if="int(selected_year) == int(year_option)">
+                                                    <option t-att-value="year_option" selected="selected">
+                                                        <t t-esc="year_option"/>
+                                                    </option>
+                                                </t>
+                                                <t t-else="">
+                                                    <option t-att-value="year_option">
+                                                        <t t-esc="year_option"/>
+                                                    </option>
+                                                </t>
                                             </t>
                                         </select>
                                     </div>
                                     <div class="col-md-4">
                                         <label for="month" class="form-label">Month</label>
                                         <select name="month" id="month" class="form-select">
-                                            <option value="">All Months</option>
-                                            <t t-foreach="months" t-as="month">
-                                                <option t-att-value="month['value']" t-att-selected="'selected' if str(selected_month) == str(month['value']) else ''">
-                                                    <t t-esc="month['name']"/>
-                                                </option>
+                                            <t t-if="not selected_month or selected_month == ''">
+                                                <option value="" selected="selected">All Months</option>
+                                            </t>
+                                            <t t-else="">
+                                                <option value="">All Months</option>
+                                            </t>
+                                            <t t-foreach="months" t-as="month_option">
+                                                <t t-if="selected_month and int(selected_month) == int(month_option['value'])">
+                                                    <option t-att-value="month_option['value']" selected="selected">
+                                                        <t t-esc="month_option['name']"/>
+                                                    </option>
+                                                </t>
+                                                <t t-else="">
+                                                    <option t-att-value="month_option['value']">
+                                                        <t t-esc="month_option['name']"/>
+                                                    </option>
+                                                </t>
                                             </t>
                                         </select>
                                     </div>
