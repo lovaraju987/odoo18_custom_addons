@@ -1,15 +1,15 @@
 # __manifest__.py
 {
     "name": "Employee Self Service Portal MLR",
-    "version": "18.1.8",  # Fixed leave request date handling issues
-    "depends": ["portal", "hr", "hr_attendance", "om_hr_payroll", "hr_holidays"],
+    "version": "18.1.13",  # Fixed XML syntax error in templates
+    "depends": ["portal", "hr", "hr_attendance", "om_hr_payroll", "hr_holidays", "hr_timesheet", "project", "analytic"],
     "category": "Human Resources",
     "author": "Lovaraju Mylapalli",
     "website": "https://www.mlr.com",
     "description": """
         Employee Self Service Portal MLR
         =================================
-        This module provides a portal for employees to manage their personal information, attendance, CRM activities, expenses, payslips, and leave requests through the portal interface.
+        This module provides a portal for employees to manage their personal information, attendance, CRM activities, expenses, payslips, leave requests, and timesheets through the portal interface.
         
         Features:
         - Personal Profile Management
@@ -18,6 +18,7 @@
         - Expense Management
         - Payslip Viewing and Download
         - Leave Request Management
+        - Timesheet Management with Project/Task Integration
         - Comprehensive Filtering and Search
     """,
     "images": ["static/description/banner.png"],
@@ -46,12 +47,14 @@
         "views/employee_details/portal_expense_submit.xml",  # New expense submission template
         "views/employee_details/portal_payslips_templates.xml",  # Payslips templates
         "views/employee_details/portal_leaves_templates.xml",    # Leave requests templates
+        "views/employee_details/portal_timesheets_templates.xml", # Timesheet templates
     ],
     "assets": {
         "web.assets_frontend": [
             "employee_self_service_portal/static/src/css/portal_style.css",
             "employee_self_service_portal/static/src/js/portal_utils.js",
             "employee_self_service_portal/static/src/js/leave_form.js",
+            "employee_self_service_portal/static/src/js/timesheet_form.js",
         ],
     },
     "installable": True,

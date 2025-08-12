@@ -1,5 +1,58 @@
 /* Custom styles for ESS Portal */
 
+/* Timesheet specific styles */
+.timesheet-card {
+    border-left: 4px solid #007bff;
+    transition: transform 0.2s;
+}
+
+.timesheet-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.timesheet-date {
+    font-weight: 600;
+    color: #007bff;
+}
+
+.timesheet-hours {
+    font-size: 1.1em;
+    font-weight: bold;
+    color: #28a745;
+}
+
+.timesheet-project {
+    color: #6c757d;
+    font-size: 0.9em;
+}
+
+.timesheet-description {
+    font-style: italic;
+    color: #495057;
+}
+
+.timesheet-actions {
+    opacity: 0.7;
+    transition: opacity 0.3s;
+}
+
+.timesheet-card:hover .timesheet-actions {
+    opacity: 1;
+}
+
+.form-timesheet {
+    background: #f8f9fa;
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+.btn-timesheet {
+    border-radius: 20px;
+    padding: 8px 20px;
+}
+
 /* Timeline styles */
 .timeline {
     position: relative;

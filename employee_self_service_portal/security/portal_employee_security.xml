@@ -80,4 +80,40 @@
         <field name="perm_create" eval="False"/>
         <field name="perm_unlink" eval="False"/>
     </record>
+    
+    <!-- Timesheet Rules -->
+    <record id="rule_timesheet_portal_user" model="ir.rule">
+        <field name="name">Portal: Manage Own Timesheet Entries</field>
+        <field name="model_id" ref="analytic.model_account_analytic_line"/>
+        <field name="groups" eval="[(4, ref('base.group_portal'))]"/>
+        <field name="domain_force">[('employee_id.user_id', '=', user.id)]</field>
+        <field name="perm_read" eval="True"/>
+        <field name="perm_write" eval="True"/>
+        <field name="perm_create" eval="True"/>
+        <field name="perm_unlink" eval="True"/>
+    </record>
+    
+    <!-- Project Rules (Read-only access to projects that allow timesheets) -->
+    <record id="rule_project_portal_user" model="ir.rule">
+        <field name="name">Portal: Read Projects That Allow Timesheets</field>
+        <field name="model_id" ref="project.model_project_project"/>
+        <field name="groups" eval="[(4, ref('base.group_portal'))]"/>
+        <field name="domain_force">[('allow_timesheets', '=', True), ('active', '=', True)]</field>
+        <field name="perm_read" eval="True"/>
+        <field name="perm_write" eval="False"/>
+        <field name="perm_create" eval="False"/>
+        <field name="perm_unlink" eval="False"/>
+    </record>
+    
+    <!-- Task Rules (Read-only access to tasks in projects that allow timesheets) -->
+    <record id="rule_task_timesheet_portal_user" model="ir.rule">
+        <field name="name">Portal: Read Tasks in Timesheet Projects</field>
+        <field name="model_id" ref="project.model_project_task"/>
+        <field name="groups" eval="[(4, ref('base.group_portal'))]"/>
+        <field name="domain_force">[('project_id.allow_timesheets', '=', True), ('active', '=', True)]</field>
+        <field name="perm_read" eval="True"/>
+        <field name="perm_write" eval="False"/>
+        <field name="perm_create" eval="False"/>
+        <field name="perm_unlink" eval="False"/>
+    </record>
 </odoo>

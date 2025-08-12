@@ -58,7 +58,16 @@
                             </div>
                         </a>
                     </div>
-                    <!-- Add more sections as needed: Timesheets, Announcements -->
+                    <div class="col-md-4 mb-4">
+                        <a href="/my/employee/timesheets" class="card text-center h-100 shadow-sm text-decoration-none">
+                            <div class="card-body">
+                                <i class="fa fa-clock-o fa-2x mb-2"></i>
+                                <h5 class="card-title">Timesheets</h5>
+                                <p class="card-text">Record and manage your project timesheets.</p>
+                            </div>
+                        </a>
+                    </div>
+                    <!-- Add more sections as needed: Announcements -->
                 </div>
             </div>
         </t>

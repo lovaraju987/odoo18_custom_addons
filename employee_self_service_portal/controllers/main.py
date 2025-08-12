@@ -1,7 +1,10 @@
 # controllers/main.py
 from odoo import http, fields
 from odoo.http import request
+import logging
+import base64
 import html
+import calendar
 
 # Constants for model names and URLs
 CRM_TAG_MODEL = 'crm.tag'
@@ -964,6 +967,372 @@ class PortalEmployee(http.Controller):
             'employee': employee,
         })
 
+    @http.route(MY_EMPLOYEE_URL + '/timesheets', type='http', auth='user', website=True)
+    def portal_timesheet_history(self, **kwargs):
+        employee = request.env[HR_EMPLOYEE_MODEL].sudo().search([('user_id', '=', request.uid)], limit=1)
+        domain = [('employee_id', '=', employee.id), ('project_id', '!=', False)]
+        
+        # Filtering logic
+        from datetime import datetime, timedelta
+        current_date = datetime.now()
+        
+        # Date range filter
+        date_range = kwargs.get('date_range', 'this_month')
+        if date_range == 'this_week':
+            start_date = current_date - timedelta(days=current_date.weekday())
+            end_date = start_date + timedelta(days=6)
+        elif date_range == 'last_week':
+            start_date = current_date - timedelta(days=current_date.weekday() + 7)
+            end_date = start_date + timedelta(days=6)
+        elif date_range == 'this_month':
+            start_date = current_date.replace(day=1)
+            next_month = start_date.replace(month=start_date.month + 1) if start_date.month < 12 else start_date.replace(year=start_date.year + 1, month=1)
+            end_date = next_month - timedelta(days=1)
+        elif date_range == 'last_month':
+            if current_date.month == 1:
+                start_date = current_date.replace(year=current_date.year - 1, month=12, day=1)
+            else:
+                start_date = current_date.replace(month=current_date.month - 1, day=1)
+            end_date = current_date.replace(day=1) - timedelta(days=1)
+        else:
+            # Default to this month
+            start_date = current_date.replace(day=1)
+            next_month = start_date.replace(month=start_date.month + 1) if start_date.month < 12 else start_date.replace(year=start_date.year + 1, month=1)
+            end_date = next_month - timedelta(days=1)
+        
+        # Apply date filter
+        domain += [('date', '>=', start_date.strftime('%Y-%m-%d')), ('date', '<=', end_date.strftime('%Y-%m-%d'))]
+        
+        # Project filter
+        project_id = kwargs.get('project_id')
+        if project_id:
+            try:
+                domain += [('project_id', '=', int(project_id))]
+            except (ValueError, TypeError):
+                pass
+        
+        # Task filter
+        task_id = kwargs.get('task_id')
+        if task_id:
+            try:
+                domain += [('task_id', '=', int(task_id))]
+            except (ValueError, TypeError):
+                pass
+        
+        # Status filter (for timesheet approval if module is available)
+        status = kwargs.get('status')
+        if status and hasattr(request.env, 'timesheet.approval'):
+            # This will be used for approval status if timesheet_approval module is installed
+            pass
+        
+        timesheets = request.env['account.analytic.line'].sudo().search(domain, order='date desc, id desc', limit=100)
+        
+        # Get projects available to this employee (only allocated projects)
+        allocated_project_ids = request.env['project.sale.line.employee.map'].sudo().search([
+            ('employee_id', '=', employee.id),
+            ('allocation_percentage', '>', 0)
+        ]).mapped('project_id.id')
+        
+        projects = request.env['project.project'].sudo().search([
+            ('id', 'in', allocated_project_ids),
+            ('allow_timesheets', '=', True),
+            ('active', '=', True)
+        ])
+        
+        # Get tasks for selected project
+        tasks = request.env['project.task'].sudo().search([
+            ('project_id', '=', int(project_id)) if project_id else ('project_id.allow_timesheets', '=', True),
+            ('active', '=', True)
+        ]) if project_id else request.env['project.task']
+        
+        # Calculate summary statistics
+        total_hours = sum(timesheets.mapped('unit_amount'))
+        total_days = len(set(timesheets.mapped('date')))
+        
+        # Date range options for dropdown
+        date_range_options = [
+            {'value': 'this_week', 'name': 'This Week'},
+            {'value': 'last_week', 'name': 'Last Week'},
+            {'value': 'this_month', 'name': 'This Month'},
+            {'value': 'last_month', 'name': 'Last Month'},
+        ]
+        
+        return request.render('employee_self_service_portal.portal_timesheets', {
+            'timesheets': timesheets,
+            'employee': employee,
+            'projects': projects,
+            'tasks': tasks,
+            'total_hours': total_hours,
+            'total_days': total_days,
+            'date_range_options': date_range_options,
+            'selected_date_range': date_range,
+            'selected_project_id': project_id or '',
+            'selected_task_id': task_id or '',
+            'selected_status': status or '',
+            'date_range_display': f"{start_date.strftime('%Y-%m-%d')} to {end_date.strftime('%Y-%m-%d')}",
+        })
+
+    @http.route(MY_EMPLOYEE_URL + '/timesheets/submit', type='http', auth='user', website=True, methods=['GET', 'POST'])
+    def portal_timesheet_submit(self, **post):
+        employee = request.env[HR_EMPLOYEE_MODEL].sudo().search([('user_id', '=', request.uid)], limit=1)
+        
+        # Get only projects where employee is allocated
+        allocated_project_ids = request.env['project.sale.line.employee.map'].sudo().search([
+            ('employee_id', '=', employee.id),
+            ('allocation_percentage', '>', 0)
+        ]).mapped('project_id.id')
+        
+        projects = request.env['project.project'].sudo().search([
+            ('id', 'in', allocated_project_ids),
+            ('allow_timesheets', '=', True),
+            ('active', '=', True)
+        ])
+        
+        error = None
+        success = None
+        
+        if request.httprequest.method == 'POST':
+            project_id = post.get('project_id')
+            task_id = post.get('task_id')
+            date = post.get('date')
+            hours = post.get('hours')
+            description = post.get('description')
+            
+            if not (project_id and task_id and date and hours and description):
+                error = 'All required fields must be filled, including task selection.'
+            else:
+                try:
+                    # Validate inputs
+                    hours_float = float(hours)
+                    if hours_float <= 0 or hours_float > 24:
+                        error = 'Hours must be between 0 and 24.'
+                    else:
+                        from datetime import datetime
+                        _logger = logging.getLogger(__name__)
+                        
+                        # Parse date
+                        date_obj = datetime.strptime(date, '%Y-%m-%d').date()
+                        
+                        # Create timesheet entry
+                        vals = {
+                            'name': description,
+                            'date': date_obj,
+                            'employee_id': employee.id,
+                            'user_id': request.uid,
+                            'project_id': int(project_id),
+                            'task_id': int(task_id),  # Task is now mandatory
+                            'unit_amount': hours_float,
+                            'product_uom_id': request.env.ref('uom.product_uom_hour').id,
+                        }
+                        
+                        _logger.info("Timesheet Debug: Creating timesheet with vals: %s", vals)
+                        
+                        # Create timesheet entry
+                        timesheet = request.env['account.analytic.line'].sudo().create(vals)
+                        
+                        _logger.info("Timesheet Debug: Created timesheet ID=%s", timesheet.id)
+                        
+                        success = 'Timesheet entry submitted successfully.'
+                        
+                        # Redirect to timesheet history to avoid resubmission
+                        return request.redirect(MY_EMPLOYEE_URL + '/timesheets?message=' + success)
+                        
+                except ValueError:
+                    error = 'Invalid hours format. Please enter a valid number.'
+                except Exception as e:
+                    error = f'Error submitting timesheet: {str(e)}'
+        
+        return request.render('employee_self_service_portal.portal_timesheet_submit', {
+            'employee': employee,
+            'projects': projects,
+            'error': error,
+            'success': success,
+        })
+
+    @http.route(MY_EMPLOYEE_URL + '/timesheets/edit/<int:timesheet_id>', type='http', auth='user', website=True, methods=['GET', 'POST'])
+    def portal_timesheet_edit(self, timesheet_id, **post):
+        employee = request.env[HR_EMPLOYEE_MODEL].sudo().search([('user_id', '=', request.uid)], limit=1)
+        timesheet = request.env['account.analytic.line'].sudo().search([
+            ('id', '=', timesheet_id),
+            ('employee_id', '=', employee.id)
+        ], limit=1)
+        
+        if not timesheet:
+            return request.redirect(MY_EMPLOYEE_URL + '/timesheets')
+        
+        # Get only projects where employee is allocated
+        allocated_project_ids = request.env['project.sale.line.employee.map'].sudo().search([
+            ('employee_id', '=', employee.id),
+            ('allocation_percentage', '>', 0)
+        ]).mapped('project_id.id')
+        
+        projects = request.env['project.project'].sudo().search([
+            ('id', 'in', allocated_project_ids),
+            ('allow_timesheets', '=', True),
+            ('active', '=', True)
+        ])
+        
+        tasks = request.env['project.task'].sudo().search([
+            ('project_id', '=', timesheet.project_id.id),
+            ('active', '=', True)
+        ]) if timesheet.project_id else request.env['project.task']
+        
+        error = None
+        success = None
+        
+        if request.httprequest.method == 'POST':
+            project_id = post.get('project_id')
+            task_id = post.get('task_id')
+            date = post.get('date')
+            hours = post.get('hours')
+            description = post.get('description')
+            
+            if not (project_id and task_id and date and hours and description):
+                error = 'All required fields must be filled, including task selection.'
+            else:
+                try:
+                    # Validate inputs
+                    hours_float = float(hours)
+                    if hours_float <= 0 or hours_float > 24:
+                        error = 'Hours must be between 0 and 24.'
+                    else:
+                        from datetime import datetime
+                        
+                        # Parse date
+                        date_obj = datetime.strptime(date, '%Y-%m-%d').date()
+                        
+                        # Update timesheet entry
+                        vals = {
+                            'name': description,
+                            'date': date_obj,
+                            'project_id': int(project_id),
+                            'task_id': int(task_id),  # Task is now mandatory
+                            'unit_amount': hours_float,
+                        }
+                        
+                        timesheet.sudo().write(vals)
+                        success = 'Timesheet entry updated successfully.'
+                        
+                        # Redirect to timesheet history
+                        return request.redirect(MY_EMPLOYEE_URL + '/timesheets?message=' + success)
+                        
+                except ValueError:
+                    error = 'Invalid hours format. Please enter a valid number.'
+                except Exception as e:
+                    error = f'Error updating timesheet: {str(e)}'
+        
+        return request.render('employee_self_service_portal.portal_timesheet_edit', {
+            'employee': employee,
+            'timesheet': timesheet,
+            'projects': projects,
+            'tasks': tasks,
+            'error': error,
+            'success': success,
+        })
+
+    @http.route(MY_EMPLOYEE_URL + '/timesheets/delete/<int:timesheet_id>', type='http', auth='user', website=True, methods=['POST'])
+    def portal_timesheet_delete(self, timesheet_id, **post):
+        employee = request.env[HR_EMPLOYEE_MODEL].sudo().search([('user_id', '=', request.uid)], limit=1)
+        timesheet = request.env['account.analytic.line'].sudo().search([
+            ('id', '=', timesheet_id),
+            ('employee_id', '=', employee.id)
+        ], limit=1)
+        
+        if timesheet:
+            try:
+                timesheet.sudo().unlink()
+            except Exception:
+                pass  # Ignore errors, just redirect
+        
+        return request.redirect(MY_EMPLOYEE_URL + '/timesheets')
+
+    @http.route(MY_EMPLOYEE_URL + '/timesheets/view/<int:timesheet_id>', type='http', auth='user', website=True)
+    def portal_timesheet_view(self, timesheet_id, **kwargs):
+        employee = request.env[HR_EMPLOYEE_MODEL].sudo().search([('user_id', '=', request.uid)], limit=1)
+        timesheet = request.env['account.analytic.line'].sudo().search([
+            ('id', '=', timesheet_id),
+            ('employee_id', '=', employee.id)
+        ], limit=1)
+        
+        if not timesheet:
+            return request.redirect(MY_EMPLOYEE_URL + '/timesheets')
+        
+        return request.render('employee_self_service_portal.portal_timesheet_view', {
+            'timesheet': timesheet,
+            'employee': employee,
+        })
+
+    @http.route(MY_EMPLOYEE_URL + '/timesheets/get_tasks', type='http', auth='user', website=True, methods=['GET'])
+    def get_tasks_for_project_http(self, project_id=None, **kwargs):
+        """HTTP endpoint to get tasks for a specific project (used by AJAX)"""
+        try:
+            if project_id:
+                # Get the user's employee record
+                employee = request.env.user.employee_id
+                if not employee:
+                    return request.make_json_response({
+                        'success': False,
+                        'error': 'Employee record not found'
+                    })
+                
+                # Verify the project is allocated to this employee
+                allocation = request.env['project.sale.line.employee.map'].search([
+                    ('project_id', '=', int(project_id)),
+                    ('employee_id', '=', employee.id),
+                    ('allocation_percentage', '>', 0)
+                ], limit=1)
+                
+                if not allocation:
+                    return request.make_json_response({
+                        'success': False,
+                        'error': 'Project not allocated to employee'
+                    })
+                
+                # Get tasks for the project
+                tasks = request.env['project.task'].sudo().search([
+                    ('project_id', '=', int(project_id)),
+                    ('active', '=', True)
+                ])
+                
+                task_list = [{
+                    'id': task.id,
+                    'name': task.name,
+                    'stage': task.stage_id.name if task.stage_id else '',
+                } for task in tasks]
+                
+                return request.make_json_response({
+                    'success': True,
+                    'tasks': task_list
+                })
+            else:
+                return request.make_json_response({
+                    'success': False,
+                    'error': 'No project_id provided'
+                })
+        except Exception as e:
+            return request.make_json_response({
+                'success': False,
+                'error': str(e)
+            })
+
+    @http.route('/api/timesheets/get_tasks', type='json', auth='user')
+    def get_tasks_for_project(self, project_id):
+        """API endpoint to get tasks for a specific project (used by AJAX)"""
+        try:
+            tasks = request.env['project.task'].sudo().search([
+                ('project_id', '=', int(project_id)),
+                ('active', '=', True)
+            ])
+            return {
+                'success': True,
+                'tasks': [{'id': task.id, 'name': task.name} for task in tasks]
+            }
+        except Exception as e:
+            return {
+                'success': False,
+                'error': str(e)
+            }
+
     def _get_leave_balance_data(self, employee):
         """Helper method to get leave balance information"""
         leave_types = request.env['hr.leave.type'].sudo().search([
@@ -1020,3 +1389,141 @@ class PortalEmployee(http.Controller):
             })
         
         return balance_data
+
+    @http.route(MY_EMPLOYEE_URL + '/timesheets/bulk', type='http', auth='user', website=True, methods=['GET', 'POST'])
+    def portal_timesheet_bulk(self, **post):
+        """Bulk timesheet entry for multiple tasks"""
+        employee = request.env[HR_EMPLOYEE_MODEL].sudo().search([('user_id', '=', request.uid)], limit=1)
+        
+        # Get only projects where employee is allocated
+        allocated_project_ids = request.env['project.sale.line.employee.map'].sudo().search([
+            ('employee_id', '=', employee.id),
+            ('allocation_percentage', '>', 0)
+        ]).mapped('project_id.id')
+        
+        projects = request.env['project.project'].sudo().search([
+            ('id', 'in', allocated_project_ids),
+            ('allow_timesheets', '=', True),
+            ('active', '=', True)
+        ])
+        
+        error = None
+        success = None
+        
+        if request.httprequest.method == 'POST':
+            project_id = post.get('project_id')
+            date = post.get('date')
+            task_ids = post.getlist('task_ids[]')
+            hours_list = post.getlist('hours[]')
+            descriptions_list = post.getlist('descriptions[]')
+            
+            if not (project_id and date and task_ids and hours_list and descriptions_list):
+                error = 'All required fields must be filled for all task entries.'
+            elif len(task_ids) != len(hours_list) or len(task_ids) != len(descriptions_list):
+                error = 'Mismatch in task entries. Please ensure all fields are filled.'
+            else:
+                try:
+                    from datetime import datetime
+                    _logger = logging.getLogger(__name__)
+                    
+                    # Parse date
+                    date_obj = datetime.strptime(date, '%Y-%m-%d').date()
+                    
+                    # Validate all hours first
+                    validated_hours = []
+                    for hours in hours_list:
+                        hours_float = float(hours)
+                        if hours_float <= 0 or hours_float > 24:
+                            error = f'Hours must be between 0 and 24. Invalid value: {hours}'
+                            break
+                        validated_hours.append(hours_float)
+                    
+                    if not error:
+                        # Create timesheet entries for each task
+                        created_entries = []
+                        for i, (task_id, hours, description) in enumerate(zip(task_ids, validated_hours, descriptions_list)):
+                            if not task_id or not description.strip():
+                                error = f'Task and description are required for entry {i+1}.'
+                                break
+                                
+                            vals = {
+                                'name': description.strip(),
+                                'date': date_obj,
+                                'employee_id': employee.id,
+                                'user_id': request.uid,
+                                'project_id': int(project_id),
+                                'task_id': int(task_id),
+                                'unit_amount': hours,
+                                'product_uom_id': request.env.ref('uom.product_uom_hour').id,
+                            }
+                            
+                            _logger.info("Bulk Timesheet Debug: Creating entry %d with vals: %s", i+1, vals)
+                            
+                            # Create timesheet entry
+                            timesheet = request.env['account.analytic.line'].sudo().create(vals)
+                            created_entries.append(timesheet.id)
+                            
+                            _logger.info("Bulk Timesheet Debug: Created timesheet ID=%s", timesheet.id)
+                        
+                        if not error:
+                            success = f'Successfully created {len(created_entries)} timesheet entries.'
+                            # Redirect to timesheet history
+                            return request.redirect(MY_EMPLOYEE_URL + '/timesheets?message=' + success)
+                        
+                except ValueError as e:
+                    error = f'Invalid hours format. Please enter valid numbers. Error: {str(e)}'
+                except Exception as e:
+                    error = f'Error submitting timesheet entries: {str(e)}'
+        
+        return request.render('employee_self_service_portal.portal_timesheet_bulk', {
+            'employee': employee,
+            'projects': projects,
+            'error': error,
+            'success': success,
+        })
+
+    @http.route('/my/employee/timesheets/create_task', type='json', auth='user', website=True)
+    def create_task(self, project_id, task_name):
+        """Create a new task for the given project via AJAX"""
+        try:
+            if not project_id or not task_name:
+                return {'error': 'Project ID and task name are required'}
+            
+            # Get the user's employee record
+            employee = request.env.user.employee_id
+            if not employee:
+                return {'error': 'Employee record not found'}
+            
+            # Verify the project is allocated to this employee
+            allocation = request.env['project.sale.line.employee.map'].search([
+                ('project_id', '=', int(project_id)),
+                ('employee_id', '=', employee.id),
+                ('allocation_percentage', '>', 0)
+            ], limit=1)
+            
+            if not allocation:
+                return {'error': 'Project not allocated to employee'}
+            
+            # Get the project
+            project = request.env['project.project'].browse(int(project_id))
+            if not project.exists():
+                return {'error': 'Project not found'}
+            
+            # Create the new task
+            task_vals = {
+                'name': task_name.strip(),
+                'project_id': int(project_id),
+                'user_ids': [(4, request.env.user.id)],  # Assign to current user
+                'partner_id': project.partner_id.id if project.partner_id else False,
+            }
+            
+            new_task = request.env['project.task'].sudo().create(task_vals)
+            
+            return {
+                'success': True,
+                'task_id': new_task.id,
+                'task_name': new_task.name
+            }
+            
+        except Exception as e:
+            return {'error': str(e)}
