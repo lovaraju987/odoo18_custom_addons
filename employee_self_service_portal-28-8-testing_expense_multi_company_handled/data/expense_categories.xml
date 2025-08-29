@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        <!-- Default Expense Categories -->
+        <record id="expense_category_travel" model="product.product">
+            <field name="name">Travel Expenses</field>
+            <field name="can_be_expensed">True</field>
+            <field name="type">service</field>
+            <field name="list_price">0.0</field>
+            <field name="default_code">EXP-TRAVEL</field>
+            <field name="description">Transportation, accommodation, and travel-related expenses</field>
+            <field name="categ_id" ref="product.product_category_all"/>
+        </record>
+
+        <record id="expense_category_meal" model="product.product">
+            <field name="name">Meals &amp; Entertainment</field>
+            <field name="can_be_expensed">True</field>
+            <field name="type">service</field>
+            <field name="list_price">0.0</field>
+            <field name="default_code">EXP-MEAL</field>
+            <field name="description">Business meals, client entertainment, and food expenses</field>
+            <field name="categ_id" ref="product.product_category_all"/>
+        </record>
+
+        <record id="expense_category_office" model="product.product">
+            <field name="name">Office Supplies</field>
+            <field name="can_be_expensed">True</field>
+            <field name="type">service</field>
+            <field name="list_price">0.0</field>
+            <field name="default_code">EXP-OFFICE</field>
+            <field name="description">Office supplies, stationery, and equipment</field>
+            <field name="categ_id" ref="product.product_category_all"/>
+        </record>
+
+        <record id="expense_category_communication" model="product.product">
+            <field name="name">Communication</field>
+            <field name="can_be_expensed">True</field>
+            <field name="type">service</field>
+            <field name="list_price">0.0</field>
+            <field name="default_code">EXP-COMM</field>
+            <field name="description">Phone bills, internet, and communication expenses</field>
+            <field name="categ_id" ref="product.product_category_all"/>
+        </record>
+
+        <record id="expense_category_training" model="product.product">
+            <field name="name">Training &amp; Development</field>
+            <field name="can_be_expensed">True</field>
+            <field name="type">service</field>
+            <field name="list_price">0.0</field>
+            <field name="default_code">EXP-TRAINING</field>
+            <field name="description">Training courses, conferences, and professional development</field>
+            <field name="categ_id" ref="product.product_category_all"/>
+        </record>
+
+        <record id="expense_category_fuel" model="product.product">
+            <field name="name">Fuel &amp; Mileage</field>
+            <field name="can_be_expensed">True</field>
+            <field name="type">service</field>
+            <field name="list_price">0.0</field>
+            <field name="default_code">EXP-FUEL</field>
+            <field name="description">Vehicle fuel, mileage, and transportation costs</field>
+            <field name="categ_id" ref="product.product_category_all"/>
+        </record>
+
+        <record id="expense_category_marketing" model="product.product">
+            <field name="name">Marketing &amp; Advertising</field>
+            <field name="can_be_expensed">True</field>
+            <field name="type">service</field>
+            <field name="list_price">0.0</field>
+            <field name="default_code">EXP-MARKETING</field>
+            <field name="description">Marketing materials, advertising, and promotional expenses</field>
+            <field name="categ_id" ref="product.product_category_all"/>
+        </record>
+
+        <record id="expense_category_miscellaneous" model="product.product">
+            <field name="name">Miscellaneous</field>
+            <field name="can_be_expensed">True</field>
+            <field name="type">service</field>
+            <field name="list_price">0.0</field>
+            <field name="default_code">EXP-MISC</field>
+            <field name="description">Other business-related expenses not covered by other categories</field>
+            <field name="categ_id" ref="product.product_category_all"/>
+        </record>
+    </data>
+</odoo>

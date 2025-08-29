@@ -1,0 +1,16 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_hr_employee_portal_user,hr.employee.portal.user.access,hr.model_hr_employee,base.group_portal,1,1,0,0
+access_hr_attendance_portal_user,hr.attendance.portal.user.access,hr_attendance.model_hr_attendance,employee_self_service_portal.group_portal_attendance,1,1,1,0
+access_project_task_portal_user,project.task.portal.user.access,project.model_project_task,base.group_portal,1,0,0,0
+access_crm_lead_portal_user,crm.lead.portal.user.access,crm.model_crm_lead,employee_self_service_portal.group_portal_crm,1,1,1,1
+access_crm_practice_portal_user,crm.practice.portal.user.access,techcarrot_crm_mlr.model_crm_practice,employee_self_service_portal.group_portal_crm,1,0,0,0
+access_crm_industry_portal_user,crm.industry.portal.user.access,techcarrot_crm_mlr.model_crm_industry,employee_self_service_portal.group_portal_crm,1,0,0,0
+access_crm_lead_type_portal_user,crm.lead.type.portal.user.access,techcarrot_crm_mlr.model_crm_lead_type,employee_self_service_portal.group_portal_crm,1,0,0,0
+access_res_partner_portal_user,res.partner.portal.user.access,base.model_res_partner,base.group_portal,1,1,1,0
+access_hr_payslip_portal_user,hr.payslip.portal.user.access,hr_payroll.model_hr_payslip,employee_self_service_portal.group_portal_payslip,1,0,0,0
+access_hr_payslip_line_portal_user,hr.payslip.line.portal.user.access,hr_payroll.model_hr_payslip_line,employee_self_service_portal.group_portal_payslip,1,0,0,0
+access_hr_salary_rule_category_portal_user,hr.salary.rule.category.portal.user.access,hr_payroll.model_hr_salary_rule_category,employee_self_service_portal.group_portal_payslip,1,0,0,0
+access_hr_expense_portal_user,hr.expense.portal.user.access,hr_expense.model_hr_expense,employee_self_service_portal.group_portal_expenses,1,1,1,0
+access_hr_expense_sheet_portal_user,hr.expense.sheet.portal.user.access,hr_expense.model_hr_expense_sheet,employee_self_service_portal.group_portal_expenses,1,1,1,0
+access_product_product_portal_user,product.product.portal.user.access,product.model_product_product,base.group_portal,1,0,0,0
+access_ir_attachment_portal_user,ir.attachment.portal.user.access,base.model_ir_attachment,base.group_portal,1,1,1,0

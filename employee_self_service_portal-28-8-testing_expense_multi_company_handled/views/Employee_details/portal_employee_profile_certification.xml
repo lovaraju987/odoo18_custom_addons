@@ -1,0 +1,17 @@
+<odoo>
+  <template id="portal_employee_profile_certification">
+    <t t-call="employee_self_service_portal.portal_employee_profile_base">
+      <t t-set="section" t-value="'certification'"/>
+      <t t-set="section_content">
+        <form action="/my/employee/certification" method="post" class="card p-3">
+          <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
+          <div class="mb-2">
+            <label>Certifications</label>
+            <textarea name="x_certifications" class="form-control" rows="2"><t t-esc="employee.x_certifications"/></textarea>
+          </div>
+          <button type="submit" class="btn btn-primary mt-3">Save</button>
+        </form>
+      </t>
+    </t>
+  </template>
+</odoo>

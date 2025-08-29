@@ -1,0 +1,734 @@
+<odoo>
+  <template id="portal_employee_crm" name="My CRM Leads">
+    <t t-call="portal.portal_layout">
+      <div class="o_portal container my-4">
+        <!-- CSRF Token for JavaScript -->
+        <meta name="csrf-token" t-att-content="request.csrf_token()"/>
+        
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h2>My CRM Leads &amp; Opportunities</h2>
+          <div>
+            <a href="/my/employee/crm?view=enhanced" class="btn btn-outline-primary mr-2">
+              <i class="fa fa-th-large"></i> Card View
+            </a>
+            <a href="/my/employee/crm/create" class="btn btn-success">Create New Lead</a>
+          </div>
+        </div>
+        
+        <!-- Filter Section -->
+        <div class="card mb-4 filter-card">
+          <div class="card-header">
+            <h5 class="mb-0">
+              <button class="btn btn-link" type="button" data-toggle="collapse" data-target="#filterCollapse">
+                <i class="fa fa-filter"></i> Filters
+                <t t-if="any(current_filters.values())">
+                  <span class="badge badge-primary ml-2">Active</span>
+                </t>
+              </button>
+            </h5>
+          </div>
+          <div id="filterCollapse" class="collapse show">
+            <div class="card-body">
+              <form method="GET" action="/my/employee/crm" id="filterForm">
+                <div class="row">
+                  <div class="col-md-2">
+                    <label for="stage">Stage</label>
+                    <select name="stage" id="stage" class="form-control">
+                      <option value="">All Stages</option>
+                      <t t-foreach="filter_stages" t-as="stage">
+                        <option t-att-value="stage.id" t-att-selected="'selected' if str(stage.id) == current_filters['stage'] else None">
+                          <t t-esc="stage.name"/>
+                        </option>
+                      </t>
+                    </select>
+                  </div>
+                  <div class="col-md-2">
+                    <label for="priority">Priority</label>
+                    <select name="priority" id="priority" class="form-control">
+                      <option value="">All Priorities</option>
+                      <option value="0" t-att-selected="'selected' if current_filters['priority'] == '0' else None">Low</option>
+                      <option value="1" t-att-selected="'selected' if current_filters['priority'] == '1' else None">Normal</option>
+                      <option value="2" t-att-selected="'selected' if current_filters['priority'] == '2' else None">High</option>
+                      <option value="3" t-att-selected="'selected' if current_filters['priority'] == '3' else None">Very High</option>
+                    </select>
+                  </div>
+                  <div class="col-md-3">
+                    <label for="industry">Industry</label>
+                    <select name="industry" id="industry" class="form-control">
+                      <option value="">All Industries</option>
+                      <t t-foreach="filter_industries" t-as="industry">
+                        <option t-att-value="industry.id" t-att-selected="'selected' if str(industry.id) == current_filters['industry'] else None">
+                          <t t-esc="industry.name"/>
+                        </option>
+                      </t>
+                    </select>
+                  </div>
+                  <div class="col-md-2">
+                    <label for="activity_due_from">Activity Due From</label>
+                    <input type="date" name="activity_due_from" id="activity_due_from" class="form-control" t-att-value="current_filters['activity_due_from']"/>
+                  </div>
+                  <div class="col-md-2">
+                    <label for="activity_due_to">Activity Due To</label>
+                    <input type="date" name="activity_due_to" id="activity_due_to" class="form-control" t-att-value="current_filters['activity_due_to']"/>
+                  </div>
+                  <div class="col-md-2">
+                    <label for="quick_activity">Quick Activity</label>
+                    <select name="quick_activity" id="quick_activity" class="form-control">
+                      <option value="">All</option>
+                      <option value="today" t-att-selected="'selected' if current_filters['quick_activity'] == 'today' else None">Today</option>
+                      <option value="yesterday" t-att-selected="'selected' if current_filters['quick_activity'] == 'yesterday' else None">Yesterday</option>
+                      <option value="tomorrow" t-att-selected="'selected' if current_filters['quick_activity'] == 'tomorrow' else None">Tomorrow</option>
+                      <option value="past" t-att-selected="'selected' if current_filters['quick_activity'] == 'past' else None">Past Due</option>
+                      <option value="future" t-att-selected="'selected' if current_filters['quick_activity'] == 'future' else None">Future</option>
+                      <option value="this_week" t-att-selected="'selected' if current_filters['quick_activity'] == 'this_week' else None">This Week</option>
+                      <option value="overdue" t-att-selected="'selected' if current_filters['quick_activity'] == 'overdue' else None">Overdue</option>
+                      <option value="no_activities" t-att-selected="'selected' if current_filters['quick_activity'] == 'no_activities' else None">No Activities</option>
+                    </select>
+                  </div>
+                </div>
+                <div class="row mt-3">
+                  <t t-if="filter_practices">
+                    <div class="col-md-3">
+                      <label for="practice">Practice</label>
+                      <select name="practice" id="practice" class="form-control">
+                        <option value="">All Practices</option>
+                        <t t-foreach="filter_practices" t-as="practice">
+                          <option t-att-value="practice.id" t-att-selected="'selected' if str(practice.id) == current_filters['practice'] else None">
+                            <t t-esc="practice.name"/>
+                          </option>
+                        </t>
+                      </select>
+                    </div>
+                  </t>
+                  <t t-if="filter_tags">
+                    <div class="col-md-3">
+                      <label for="tags">Tags</label>
+                      <select name="tags" id="tags" class="form-control">
+                        <option value="">All Tags</option>
+                        <t t-foreach="filter_tags" t-as="tag">
+                          <option t-att-value="tag.id" t-att-selected="'selected' if str(tag.id) == current_filters['tags'] else None">
+                            <t t-esc="tag.name"/>
+                          </option>
+                        </t>
+                      </select>
+                    </div>
+                  </t>
+                  <div class="col-md-2">
+                    <label for="date_from">Created From</label>
+                    <input type="date" name="date_from" id="date_from" class="form-control" t-att-value="current_filters['date_from']"/>
+                  </div>
+                  <div class="col-md-2">
+                    <label for="date_to">Created To</label>
+                    <input type="date" name="date_to" id="date_to" class="form-control" t-att-value="current_filters['date_to']"/>
+                  </div>
+                  <div class="col-md-5">
+                    <label>&amp;nbsp;</label>
+                    <div class="d-flex">
+                      <button type="submit" class="btn btn-primary mr-2">
+                        <i class="fa fa-search"></i> Apply Filters
+                      </button>
+                      <a href="/my/employee/crm" class="btn btn-secondary">
+                        <i class="fa fa-times"></i> Clear All
+                      </a>
+                    </div>
+                  </div>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+        <style>
+          .crm-table {
+            font-size: 0.875rem;
+          }
+          .crm-table th {
+            white-space: nowrap;
+            background-color: #f8f9fa;
+            border-bottom: 2px solid #dee2e6;
+          }
+          .crm-table td {
+            vertical-align: middle;
+            padding: 0.5rem 0.25rem;
+          }
+          .stage-select {
+            min-width: 120px;
+          }
+          .description-cell {
+            max-width: 200px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+          }
+          .filter-card {
+            border: 1px solid #e3e6f0;
+            box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
+          }
+          .quick-filter-group {
+            flex-wrap: wrap;
+            gap: 0.25rem;
+          }
+          @media (max-width: 768px) {
+            .quick-filter-group {
+              justify-content: center;
+            }
+            .crm-table {
+              font-size: 0.75rem;
+            }
+          }
+        </style>
+        
+        <!-- Results Summary and Quick Filters -->
+        <t t-if="leads">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <div>
+              <h6 class="mb-0">
+                <span class="badge badge-info"><t t-esc="len(leads)"/> leads found</span>
+                <t t-if="any(current_filters.values())">
+                  <span class="text-muted ml-2">
+                    (filtered)
+                    <a href="/my/employee/crm" class="btn btn-sm btn-outline-secondary ml-1">
+                      <i class="fa fa-times"></i> Clear
+                    </a>
+                  </span>
+                </t>
+              </h6>
+            </div>
+            <div>
+              <!-- Quick Filters -->
+              <div class="btn-group quick-filter-group" role="group">
+                <a href="/my/employee/crm?priority=2" class="btn btn-sm btn-outline-danger quick-filter" 
+                   data-filter="priority" data-value="2" title="High Priority">
+                  <i class="fa fa-exclamation-triangle"></i> High Priority
+                </a>
+                <a href="/my/employee/crm" class="btn btn-sm btn-outline-warning quick-filter" 
+                   data-filter="stage" data-value="" title="All Stages">
+                  <i class="fa fa-star-o"></i> All
+                </a>
+                <button type="button" class="btn btn-sm btn-outline-success quick-filter" 
+                        data-filter="date_from" data-value="" title="Recent (Last 7 days)" onclick="setRecentFilter()">
+                  <i class="fa fa-clock-o"></i> Recent
+                </button>
+              </div>
+            </div>
+          </div>
+        </t>
+        
+        <t t-if="not leads">
+          <div class="alert alert-info">
+            <t t-if="any(current_filters.values())">
+              No leads found matching your filters. 
+              <a href="/my/employee/crm" class="alert-link">Clear filters</a> to see all leads.
+            </t>
+            <t t-if="not any(current_filters.values())">
+              No leads or opportunities assigned to you.
+            </t>
+          </div>
+        </t>
+        <t t-if="leads">
+          <div class="table-responsive">
+            <table class="table table-striped crm-table">
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Stage</th>
+                  <th>Customer</th>
+                  <th>Practice</th>
+                  <th>Industry</th>
+                  <th>Deal Manager</th>
+                  <th>Email</th>
+                  <th>Phone</th>
+                  <th>Expected Revenue</th>
+                  <th>Lead Description</th>
+                  <th>Activities</th>
+                  <th>Next Activity</th>
+                  <th>Recent Note</th>
+                  <th>Engaged Presales</th>
+                  <th>Tags</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+            <tbody>
+              <t t-foreach="processed_leads" t-as="lead_data">
+                <t t-set="lead" t-value="lead_data['record']"/>
+                <t t-set="activity_info" t-value="lead_data['activity_summary']"/>
+                <t t-set="next_activity_info" t-value="lead_data['next_activity_info']"/>
+                <t t-set="recent_note_info" t-value="lead_data['recent_note_info']"/>
+                <tr>
+                  <td><t t-esc="lead.name"/></td>
+                  <td>
+                    <!-- Editable Stage Dropdown -->
+                    <select t-att-data-lead-id="lead.id" t-att-data-original-value="lead.stage_id.id" t-att-data-lead-name="lead.name" class="form-control form-control-sm stage-select" onchange="updateLeadStage(this)">
+                      <t t-foreach="stages" t-as="stage">
+                        <t t-if="lead.stage_id.id == stage.id">
+                          <option t-att-value="stage.id" selected="selected">
+                            <t t-esc="stage.name"/>
+                          </option>
+                        </t>
+                        <t t-if="lead.stage_id.id != stage.id">
+                          <option t-att-value="stage.id">
+                            <t t-esc="stage.name"/>
+                          </option>
+                        </t>
+                      </t>
+                    </select>
+                  </td>
+                  <td><t t-esc="lead.partner_id.name or ''"/></td>
+                  <td><t t-esc="lead.practice_id.name or '-'"/></td>
+                  <td><t t-esc="lead.industry_id.name or '-'"/></td>
+                  <td><t t-esc="lead.deal_manager_id.name or '-'"/></td>
+                  <td><t t-esc="lead.email_from or ''"/></td>
+                  <td><t t-esc="lead.phone or ''"/></td>
+                  <td><t t-esc="lead.expected_revenue or 0.0"/></td>
+                  <td class="description-cell">
+                    <!-- Lead Description Notes -->
+                    <t t-if="lead.description">
+                      <div class="text-muted" t-att-title="lead.description">
+                        <t t-esc="lead.description"/>
+                      </div>
+                    </t>
+                    <t t-if="not lead.description">
+                      <span class="text-muted">-</span>
+                    </t>
+                  </td>
+                  <td>
+                    <!-- Activity Summary -->
+                    <t t-if="activity_info['has_activities']">
+                      <span class="badge badge-info" t-att-title="str(activity_info['count']) + ' activities'">
+                        <i class="fa fa-clock-o"></i> <t t-esc="activity_info['count']"/>
+                      </span>
+                      <!-- Quick Activity Actions -->
+                      <div class="btn-group-sm mt-1" role="group">
+                        <button type="button" class="btn btn-sm btn-outline-success" 
+                                t-att-onclick="'showActivityModal(' + str(lead.id) + ', \'add\')'">
+                          <i class="fa fa-plus" title="Add Activity"></i>
+                        </button>
+                        <button type="button" class="btn btn-sm btn-outline-info" 
+                                t-att-onclick="'showActivityModal(' + str(lead.id) + ', \'view\')'">
+                          <i class="fa fa-eye" title="View Activities"></i>
+                        </button>
+                      </div>
+                    </t>
+                    <t t-else="">
+                      <span class="text-muted">No activities</span>
+                      <button type="button" class="btn btn-sm btn-outline-success mt-1" 
+                              t-att-onclick="'showActivityModal(' + str(lead.id) + ', \'add\')'">
+                        <i class="fa fa-plus"></i> Add
+                      </button>
+                    </t>
+                  </td>
+                  <td>
+                    <!-- Next Activity Due -->
+                    <t t-if="next_activity_info['has_activity']">
+                      <div class="text-sm">
+                        <strong><t t-esc="next_activity_info['activity_type']"/></strong><br/>
+                        <span t-att-class="'badge ' + next_activity_info['badge_class']">
+                          <i class="fa fa-calendar"></i>
+                          <t t-esc="next_activity_info['relative_date']"/>
+                        </span>
+                      </div>
+                    </t>
+                    <t t-else="">
+                      <span class="text-muted">-</span>
+                    </t>
+                  </td>
+                  <td>
+                    <!-- Recent Log Note -->
+                    <t t-if="recent_note_info['has_note']">
+                      <div class="text-sm" style="max-width: 180px;">
+                        <div class="mb-1" style="font-size: 0.85em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" t-att-title="recent_note_info['full_body']">
+                          <t t-esc="recent_note_info['clean_body']"/>
+                        </div>
+                        <button type="button" class="btn btn-sm btn-outline-info" 
+                                t-att-onclick="'showNotesModal(' + str(lead.id) + ')'">
+                          <i class="fa fa-eye"></i>
+                        </button>
+                      </div>
+                    </t>
+                    <t t-else="">
+                      <div class="text-center">
+                        <span class="text-muted d-block">No notes</span>
+                        <button type="button" class="btn btn-sm btn-outline-success mt-1" 
+                                t-att-onclick="'showNotesModal(' + str(lead.id) + ')'">
+                          <i class="fa fa-plus"></i> Add Note
+                        </button>
+                      </div>
+                    </t>
+                  </td>
+                  <td>
+                    <t t-if="lead.engaged_presales">
+                      <span class="badge badge-success">Yes</span>
+                    </t>
+                    <t t-else="">
+                      <span class="badge badge-secondary">No</span>
+                    </t>
+                  </td>
+                  <td>
+                    <t t-set="tag_str" t-value="', '.join([tag.name for tag in lead.tag_ids]) if lead.tag_ids else ''"/>
+                    <t t-esc="tag_str"/>
+                  </td>
+                  <td>
+                    <div class="btn-group" role="group">
+                      <a t-att-href="'/my/employee/crm/edit/' + str(lead.id)" class="btn btn-sm btn-primary">Edit</a>
+                      <form t-att-action="'/my/employee/crm/delete/' + str(lead.id)" method="post" style="display:inline;">
+                        <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
+                        <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure you want to delete this lead?');">Delete</button>
+                      </form>
+                    </div>
+                  </td>
+                </tr>
+              </t>
+            </tbody>
+          </table>
+          </div>
+        </t>
+        
+        <!-- Activity Management Modal -->
+        <div class="modal fade" id="activityModal" tabindex="-1" role="dialog" aria-labelledby="activityModalLabel" aria-hidden="true">
+          <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h5 class="modal-title" id="activityModalLabel">Activity Management</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                  <span aria-hidden="true">×</span>
+                </button>
+              </div>
+              <div class="modal-body">
+                <div id="activityModalContent">
+                  <!-- Content will be loaded dynamically -->
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Notes Management Modal -->
+        <div class="modal fade" id="notesModal" tabindex="-1" role="dialog" aria-labelledby="notesModalLabel" aria-hidden="true">
+          <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h5 class="modal-title" id="notesModalLabel">Notes History</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                  <span aria-hidden="true">×</span>
+                </button>
+              </div>
+              <div class="modal-body">
+                <div id="notesModalContent">
+                  <!-- Content will be loaded dynamically -->
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- JavaScript for Activity Management -->
+        <script type="text/javascript">
+        <![CDATA[
+          // Ensure jQuery and Bootstrap are loaded
+          $(document).ready(function() {
+            // Initialize modal event handlers
+            $('#activityModal, #notesModal').on('hidden.bs.modal', function () {
+              $(this).find('.modal-body').html('<div class="text-center"><i class="fa fa-spinner fa-spin"></i> Loading...</div>');
+            });
+            
+            // Initialize filter functionality
+            initializeFilters();
+          });
+          
+          function initializeFilters() {
+            // Auto-submit form when filter values change (optional)
+            $('#filterForm select, #filterForm input[type="date"]').on('change', function() {
+              // Optional: uncomment to auto-submit on change
+              // $('#filterForm').submit();
+            });
+            
+            // Handle quick activity filter changes
+            $('#quick_activity').on('change', function() {
+              var quickValue = $(this).val();
+              if (quickValue) {
+                // Clear conflicting date filters when quick activity is selected
+                $('#activity_due_from').val('');
+                $('#activity_due_to').val('');
+              }
+              // Auto-submit when quick activity is selected
+              $('#filterForm').submit();
+            });
+            
+            // Clear quick activity when manual date filters are used
+            $('#activity_due_from, #activity_due_to').on('change', function() {
+              if ($(this).val()) {
+                $('#quick_activity').val('');
+              }
+            });
+            
+            // Search on Enter key
+            $('#search').on('keypress', function(e) {
+              if (e.which === 13) {
+                $('#filterForm').submit();
+              }
+            });
+            
+            // Quick filter buttons
+            $('.quick-filter').on('click', function(e) {
+              e.preventDefault();
+              var filter = $(this).data('filter');
+              var value = $(this).data('value');
+              
+              // Clear form
+              $('#filterForm')[0].reset();
+              
+              // Set specific filter
+              if (filter && value !== undefined) {
+                $('#' + filter).val(value);
+              }
+              
+              $('#filterForm').submit();
+            });
+            
+            // Clear all filters
+            $('.clear-filters').on('click', function(e) {
+              window.location.href = '/my/employee/crm';
+            });
+            
+            // Auto-expand filters if any are active
+            if ($('.badge:contains("Active")').length > 0) {
+              $('#filterCollapse').addClass('show');
+            }
+          }
+          
+          function setRecentFilter() {
+            // Set date_from to 7 days ago
+            var sevenDaysAgo = new Date();
+            sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+            var dateString = sevenDaysAgo.toISOString().split('T')[0];
+            
+            // Clear form and set recent filter
+            $('#filterForm')[0].reset();
+            $('#date_from').val(dateString);
+            $('#filterForm').submit();
+          }
+          
+          function showActivityModal(leadId, action) {
+            var modal = $('#activityModal');
+            var content = $('#activityModalContent');
+            
+            // Show loading
+            content.html('<div class="text-center"><i class="fa fa-spinner fa-spin"></i> Loading...</div>');
+            modal.modal('show');
+            
+            // Prepare URL based on action
+            var url = '';
+            if (action === 'add') {
+              url = '/my/employee/crm/activity_modal/' + leadId + '/add';
+            } else if (action === 'view') {
+              url = '/my/employee/crm/activity_modal/' + leadId + '/view';
+            }
+            
+            // Load content via AJAX
+            fetch(url)
+              .then(response => response.text())
+              .then(html => {
+                content.html(html);
+              })
+              .catch(error => {
+                content.html('<div class="alert alert-danger">Error loading activity data</div>');
+              });
+          }
+          
+          function showNotesModal(leadId) {
+            var modal = $('#notesModal');
+            var content = $('#notesModalContent');
+            
+            // Show loading
+            content.html('<div class="text-center"><i class="fa fa-spinner fa-spin"></i> Loading...</div>');
+            modal.modal('show');
+            
+            // Load content via AJAX
+            fetch('/my/employee/crm/notes_modal/' + leadId)
+              .then(response => response.text())
+              .then(html => {
+                content.html(html);
+              })
+              .catch(error => {
+                content.html('<div class="alert alert-danger">Error loading notes data</div>');
+              });
+          }
+          
+          function updateLeadStage(selectElement) {
+            var leadId = selectElement.getAttribute('data-lead-id');
+            var leadName = selectElement.getAttribute('data-lead-name');
+            var stageId = selectElement.value;
+            var originalValue = selectElement.getAttribute('data-original-value') || selectElement.value;
+            
+            // Get stage name for confirmation
+            var stageName = selectElement.options[selectElement.selectedIndex].text;
+            var originalStageName = '';
+            
+            // Find original stage name
+            for (var i = 0; i < selectElement.options.length; i++) {
+              if (selectElement.options[i].value == originalValue) {
+                originalStageName = selectElement.options[i].text;
+                break;
+              }
+            }
+            
+            // If no change, do nothing
+            if (stageId == originalValue) {
+              return;
+            }
+            
+            // Show confirmation dialog with lead name
+            var confirmMessage = 'Change stage for "' + leadName + '" from "' + originalStageName + '" to "' + stageName + '"?';
+            if (!confirm(confirmMessage)) {
+              // User cancelled - revert to original value
+              selectElement.value = originalValue;
+              return;
+            }
+            
+            // Store original value for rollback
+            if (!selectElement.getAttribute('data-original-value')) {
+              selectElement.setAttribute('data-original-value', originalValue);
+            }
+            
+            // Show loading state
+            selectElement.disabled = true;
+            
+            // Create form data
+            var formData = new FormData();
+            formData.append('stage_id', stageId);
+            formData.append('csrf_token', document.querySelector('meta[name="csrf-token"]').getAttribute('content'));
+            
+            // Send AJAX request
+            fetch('/my/employee/crm/update_stage/' + leadId, {
+              method: 'POST',
+              body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+              if (data.success) {
+                // Update successful - show brief success indicator
+                selectElement.style.backgroundColor = '#d4edda';
+                selectElement.style.borderColor = '#28a745';
+                
+                // Show a brief success tooltip
+                var originalTitle = selectElement.title;
+                selectElement.title = 'Stage updated to ' + stageName + ' successfully!';
+                
+                setTimeout(() => {
+                  selectElement.style.backgroundColor = '';
+                  selectElement.style.borderColor = '';
+                  selectElement.title = originalTitle;
+                }, 2000);
+                
+                // Update the original value to the new stage for future comparisons
+                selectElement.setAttribute('data-original-value', stageId);
+              } else {
+                // Revert to original value
+                selectElement.value = originalValue;
+                alert('Error updating stage: ' + (data.error || 'Unknown error'));
+              }
+            })
+            .catch(error => {
+              // Revert to original value
+              selectElement.value = originalValue;
+              alert('Error updating stage. Please try again.');
+            })
+            .finally(() => {
+              selectElement.disabled = false;
+            });
+          }
+          
+          function completeActivity(activityId, leadId) {
+            if (confirm('Mark this activity as completed?')) {
+              var form = document.createElement('form');
+              form.method = 'POST';
+              form.action = '/my/employee/crm/activity_done/' + activityId + '?lead_id=' + leadId;
+              
+              var csrf = document.createElement('input');
+              csrf.type = 'hidden';
+              csrf.name = 'csrf_token';
+              csrf.value = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+              form.appendChild(csrf);
+              
+              document.body.appendChild(form);
+              form.submit();
+            }
+          }
+          
+          function deleteActivity(activityId, leadId) {
+            if (confirm('Are you sure you want to delete this activity?')) {
+              var form = document.createElement('form');
+              form.method = 'POST';
+              form.action = '/my/employee/crm/activity_delete/' + activityId + '?lead_id=' + leadId;
+              
+              var csrf = document.createElement('input');
+              csrf.type = 'hidden';
+              csrf.name = 'csrf_token';
+              csrf.value = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+              form.appendChild(csrf);
+              
+              document.body.appendChild(form);
+              form.submit();
+            }
+          }
+        ]]>
+        </script>
+        
+        <!-- Bootstrap and jQuery for modal functionality -->
+        <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet"/>
+        <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+        <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+        
+        <!-- Custom CSS for improved table layout -->
+        <style>
+          .table th, .table td {
+            vertical-align: middle;
+            padding: 0.5rem;
+          }
+          .table th:nth-child(10), .table td:nth-child(10) { /* Activities column */
+            width: 120px;
+            text-align: center;
+          }
+          .table th:nth-child(11), .table td:nth-child(11) { /* Next Activity column */
+            width: 150px;
+          }
+          .table th:nth-child(12), .table td:nth-child(12) { /* Recent Note column */
+            width: 200px;
+          }
+          .table th:nth-child(13), .table td:nth-child(13) { /* Engaged Presales column */
+            width: 100px;
+            text-align: center;
+          }
+          .table th:nth-child(14), .table td:nth-child(14) { /* Tags column */
+            width: 120px;
+          }
+          .table th:nth-child(15), .table td:nth-child(15) { /* Actions column */
+            width: 120px;
+          }
+          .badge-danger { background-color: #dc3545; }
+          .badge-warning { background-color: #ffc107; color: #212529; }
+          .badge-info { background-color: #17a2b8; }
+          .badge-secondary { background-color: #6c757d; }
+          .text-sm { font-size: 0.875rem; }
+          
+          /* Responsive table handling */
+          @media (max-width: 1200px) {
+            .table-responsive {
+              font-size: 0.85rem;
+            }
+            .table th:nth-child(7), .table td:nth-child(7), /* Email */
+            .table th:nth-child(8), .table td:nth-child(8) { /* Phone */
+              display: none;
+            }
+          }
+          @media (max-width: 992px) {
+            .table th:nth-child(4), .table td:nth-child(4), /* Practice */
+            .table th:nth-child(5), .table td:nth-child(5) { /* Industry */
+              display: none;
+            }
+          }
+        </style>
+        
+      </div>
+    </t>
+  </template>
+</odoo>

@@ -1,0 +1,662 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+  <template id="portal_employee_crm_enhanced" name="My CRM Leads Enhanced">
+    <t t-call="portal.portal_layout">
+      <div class="o_portal container-fluid my-4">
+        <!-- CSRF Token for JavaScript -->
+        <meta name="csrf-token" t-att-content="request.csrf_token()"/>
+        
+        <!-- Enhanced Header Section -->
+        <div class="row mb-4">
+          <div class="col-lg-8">
+            <div class="d-flex align-items-center mb-3">
+              <div class="bg-primary bg-opacity-10 p-3 rounded-circle me-3">
+                <i class="fa fa-users fa-2x text-primary"></i>
+              </div>
+              <div>
+                <h2 class="mb-1">My CRM Dashboard</h2>
+                <p class="text-muted mb-0">Manage your leads, opportunities and customer relationships</p>
+              </div>
+            </div>
+          </div>
+          <div class="col-lg-4 text-end">
+            <div class="d-flex gap-2 justify-content-end">
+              <a href="/my/employee/crm?view=list" class="btn btn-outline-primary" id="viewToggle">
+                <i class="fa fa-list me-1"></i>
+                <span id="viewToggleText">List View</span>
+              </a>
+              <a href="/my/employee/crm/create" class="btn btn-success">
+                <i class="fa fa-plus me-1"></i>Create Lead
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <!-- KPI Dashboard Cards -->
+        <div class="row mb-4">
+          <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card border-0 shadow-sm h-100">
+              <div class="card-body">
+                <div class="d-flex align-items-center">
+                  <div class="bg-primary bg-opacity-10 p-3 rounded me-3">
+                    <i class="fa fa-database text-primary"></i>
+                  </div>
+                  <div>
+                    <h5 class="card-title mb-1" t-esc="len(leads) if leads else 0"/>
+                    <p class="text-muted mb-0 small">Total Leads</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card border-0 shadow-sm h-100">
+              <div class="card-body">
+                <div class="d-flex align-items-center">
+                  <div class="bg-success bg-opacity-10 p-3 rounded me-3">
+                    <i class="fa fa-handshake-o text-success"></i>
+                  </div>
+                  <div>
+                    <t t-set="won_count" t-value="len([l for l in leads if l.stage_id and 'won' in l.stage_id.name.lower()]) if leads else 0"/>
+                    <h5 class="card-title mb-1" t-esc="won_count"/>
+                    <p class="text-muted mb-0 small">Won Deals</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card border-0 shadow-sm h-100">
+              <div class="card-body">
+                <div class="d-flex align-items-center">
+                  <div class="bg-warning bg-opacity-10 p-3 rounded me-3">
+                    <i class="fa fa-calendar text-warning"></i>
+                  </div>
+                  <div>
+                    <t t-set="overdue_count" t-value="0"/>
+                    <t t-foreach="leads" t-as="lead">
+                      <t t-foreach="lead.activity_ids" t-as="activity">
+                        <t t-if="activity.date_deadline and activity.date_deadline &lt; datetime.date.today()">
+                          <t t-set="overdue_count" t-value="overdue_count + 1"/>
+                        </t>
+                      </t>
+                    </t>
+                    <h5 class="card-title mb-1" t-esc="overdue_count"/>
+                    <p class="text-muted mb-0 small">Overdue Activities</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card border-0 shadow-sm h-100">
+              <div class="card-body">
+                <div class="d-flex align-items-center">
+                  <div class="bg-info bg-opacity-10 p-3 rounded me-3">
+                    <i class="fa fa-dollar text-info"></i>
+                  </div>
+                  <div>
+                    <t t-set="total_revenue" t-value="sum(l.expected_revenue for l in leads if l.expected_revenue) if leads else 0"/>
+                    <h5 class="card-title mb-1">$<t t-esc="'{:,.0f}'.format(total_revenue)"/></h5>
+                    <p class="text-muted mb-0 small">Pipeline Value</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Enhanced Filter Section -->
+        <div class="card border-0 shadow-sm mb-4">
+          <div class="card-header bg-light border-0 d-flex justify-content-between align-items-center">
+            <h6 class="mb-0">
+              <i class="fa fa-filter text-primary me-2"></i>Smart Filters
+              <t t-if="any(current_filters.values())">
+                <span class="badge bg-primary ms-2">Active</span>
+              </t>
+            </h6>
+            <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="collapse" data-bs-target="#filterCollapse">
+              <i class="fa fa-chevron-down"></i>
+            </button>
+          </div>
+          <div id="filterCollapse" class="collapse show">
+            <div class="card-body">
+              <form method="GET" action="/my/employee/crm" id="filterForm">
+                <div class="row g-3">
+                  <!-- Quick Filter Buttons -->
+                  <div class="col-12">
+                    <div class="d-flex gap-2 flex-wrap mb-3">
+                      <button type="button" class="btn btn-sm btn-outline-primary quick-filter" onclick="setQuickFilter('today')">
+                        <i class="fa fa-calendar-check-o me-1"></i>Due Today
+                      </button>
+                      <button type="button" class="btn btn-sm btn-outline-warning quick-filter" onclick="setQuickFilter('overdue')">
+                        <i class="fa fa-exclamation-triangle me-1"></i>Overdue
+                      </button>
+                      <button type="button" class="btn btn-sm btn-outline-success quick-filter" onclick="setQuickFilter('won')">
+                        <i class="fa fa-trophy me-1"></i>Won Deals
+                      </button>
+                      <button type="button" class="btn btn-sm btn-outline-info quick-filter" onclick="setQuickFilter('high_value')">
+                        <i class="fa fa-dollar me-1"></i>High Value
+                      </button>
+                      <button type="button" class="btn btn-sm btn-outline-secondary" onclick="clearAllFilters()">
+                        <i class="fa fa-times me-1"></i>Clear All
+                      </button>
+                    </div>
+                  </div>
+                  
+                  <!-- Detailed Filters -->
+                  <div class="col-md-3">
+                    <label for="stage" class="form-label fw-medium">Stage</label>
+                    <select name="stage" id="stage" class="form-select">
+                      <option value="">All Stages</option>
+                      <t t-foreach="filter_stages" t-as="stage">
+                        <option t-att-value="stage.id" t-att-selected="'selected' if str(stage.id) == current_filters['stage'] else None">
+                          <t t-esc="stage.name"/>
+                        </option>
+                      </t>
+                    </select>
+                  </div>
+                  
+                  <div class="col-md-3">
+                    <label for="priority" class="form-label fw-medium">Priority</label>
+                    <select name="priority" id="priority" class="form-select">
+                      <option value="">All Priorities</option>
+                      <option value="0" t-att-selected="'selected' if current_filters['priority'] == '0' else None">Low</option>
+                      <option value="1" t-att-selected="'selected' if current_filters['priority'] == '1' else None">Normal</option>
+                      <option value="2" t-att-selected="'selected' if current_filters['priority'] == '2' else None">High</option>
+                      <option value="3" t-att-selected="'selected' if current_filters['priority'] == '3' else None">Very High</option>
+                    </select>
+                  </div>
+                  
+                  <div class="col-md-3">
+                    <label for="industry" class="form-label fw-medium">Industry</label>
+                    <select name="industry" id="industry" class="form-select">
+                      <option value="">All Industries</option>
+                      <t t-foreach="filter_industries" t-as="industry">
+                        <option t-att-value="industry.id" t-att-selected="'selected' if str(industry.id) == current_filters['industry'] else None">
+                          <t t-esc="industry.name"/>
+                        </option>
+                      </t>
+                    </select>
+                  </div>
+                  
+                  <div class="col-md-3">
+                    <label for="search" class="form-label fw-medium">Search</label>
+                    <div class="input-group">
+                      <input type="text" name="search" id="search" class="form-control" 
+                             placeholder="Search leads..." t-att-value="current_filters.get('search', '')"/>
+                      <button type="submit" class="btn btn-primary">
+                        <i class="fa fa-search"></i>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+                
+                <div class="row g-3 mt-2">
+                  <t t-if="filter_practices">
+                    <div class="col-md-3">
+                      <label for="practice" class="form-label fw-medium">Practice</label>
+                      <select name="practice" id="practice" class="form-select">
+                        <option value="">All Practices</option>
+                        <t t-foreach="filter_practices" t-as="practice">
+                          <option t-att-value="practice.id" t-att-selected="'selected' if str(practice.id) == current_filters['practice'] else None">
+                            <t t-esc="practice.name"/>
+                          </option>
+                        </t>
+                      </select>
+                    </div>
+                  </t>
+                  
+                  <div class="col-md-3">
+                    <label for="date_from" class="form-label fw-medium">Created From</label>
+                    <input type="date" name="date_from" id="date_from" class="form-control" t-att-value="current_filters['date_from']"/>
+                  </div>
+                  
+                  <div class="col-md-3">
+                    <label for="date_to" class="form-label fw-medium">Created To</label>
+                    <input type="date" name="date_to" id="date_to" class="form-control" t-att-value="current_filters['date_to']"/>
+                  </div>
+                  
+                  <div class="col-md-3 d-flex align-items-end">
+                    <div class="d-grid gap-2 d-md-flex w-100">
+                      <button type="submit" class="btn btn-primary flex-fill">
+                        <i class="fa fa-search me-1"></i>Apply
+                      </button>
+                      <a href="/my/employee/crm" class="btn btn-outline-secondary">
+                        <i class="fa fa-refresh"></i>
+                      </a>
+                    </div>
+                  </div>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+
+        <!-- Results Section -->
+        <t t-if="not leads">
+          <div class="text-center py-5">
+            <div class="mb-4">
+              <i class="fa fa-database fa-4x text-muted opacity-50"></i>
+            </div>
+            <h5 class="text-muted">No leads found</h5>
+            <p class="text-muted mb-4">
+              <t t-if="any(current_filters.values())">
+                No leads match your current filters. Try adjusting your search criteria.
+              </t>
+              <t t-else="">
+                You don't have any leads assigned yet. Create your first lead to get started!
+              </t>
+            </p>
+            <div class="d-flex gap-2 justify-content-center">
+              <a href="/my/employee/crm/create" class="btn btn-success">
+                <i class="fa fa-plus me-1"></i>Create First Lead
+              </a>
+              <t t-if="any(current_filters.values())">
+                <a href="/my/employee/crm" class="btn btn-outline-primary">
+                  <i class="fa fa-times me-1"></i>Clear Filters
+                </a>
+              </t>
+            </div>
+          </div>
+        </t>
+
+        <!-- Card View (Default) -->
+        <div id="cardView" t-if="leads">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <h6 class="text-muted mb-0">
+              <i class="fa fa-list me-1"></i>
+              <span t-esc="len(leads)"/> lead<t t-if="len(leads) != 1">s</t> found
+            </h6>
+            <div class="dropdown">
+              <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                <i class="fa fa-sort me-1"></i>Sort by
+              </button>
+              <ul class="dropdown-menu">
+                <li><a class="dropdown-item" href="#" onclick="sortCards('name')">Name</a></li>
+                <li><a class="dropdown-item" href="#" onclick="sortCards('stage')">Stage</a></li>
+                <li><a class="dropdown-item" href="#" onclick="sortCards('revenue')">Revenue</a></li>
+                <li><a class="dropdown-item" href="#" onclick="sortCards('date')">Date Created</a></li>
+              </ul>
+            </div>
+          </div>
+          
+          <div class="row" id="leadsContainer">
+            <t t-foreach="leads" t-as="lead">
+              <div class="col-lg-4 col-md-6 mb-4 lead-card" t-att-data-stage="lead.stage_id.name if lead.stage_id else ''">
+                <div class="card border-0 shadow-sm h-100 position-relative">
+                  <!-- Priority Indicator -->
+                  <div class="position-absolute top-0 end-0 p-2">
+                    <t t-if="lead.priority == '3'">
+                      <span class="badge bg-danger" title="Very High Priority">
+                        <i class="fa fa-exclamation"></i>
+                      </span>
+                    </t>
+                    <t t-elif="lead.priority == '2'">
+                      <span class="badge bg-warning" title="High Priority">
+                        <i class="fa fa-arrow-up"></i>
+                      </span>
+                    </t>
+                  </div>
+                  
+                  <div class="card-header border-0 bg-light">
+                    <div class="d-flex justify-content-between align-items-start">
+                      <div class="flex-grow-1">
+                        <h6 class="card-title mb-1 fw-bold">
+                          <a t-attf-href="/my/employee/crm/edit/#{lead.id}" class="text-decoration-none text-dark">
+                            <t t-esc="lead.name"/>
+                          </a>
+                        </h6>
+                        <small class="text-muted">
+                          <i class="fa fa-building me-1"></i>
+                          <t t-esc="lead.partner_id.name if lead.partner_id else 'No Customer'"/>
+                        </small>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div class="card-body">
+                    <!-- Stage Badge -->
+                    <div class="mb-3">
+                      <span t-attf-class="badge bg-{{lead.stage_id.name.lower().replace(' ', '-') if lead.stage_id else 'secondary'}} px-3 py-2">
+                        <t t-esc="lead.stage_id.name if lead.stage_id else 'No Stage'"/>
+                      </span>
+                    </div>
+                    
+                    <!-- Key Information -->
+                    <div class="row g-2 mb-3">
+                      <div class="col-6">
+                        <div class="d-flex align-items-center">
+                          <i class="fa fa-dollar text-success me-2"></i>
+                          <div>
+                            <div class="fw-bold small">
+                              $<t t-esc="'{:,.0f}'.format(lead.expected_revenue) if lead.expected_revenue else '0'"/>
+                            </div>
+                            <div class="text-muted" style="font-size: 0.75rem;">Expected</div>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="col-6">
+                        <div class="d-flex align-items-center">
+                          <i class="fa fa-calendar text-primary me-2"></i>
+                          <div>
+                            <div class="fw-bold small">
+                              <t t-esc="lead.create_date.strftime('%b %d') if lead.create_date else 'N/A'"/>
+                            </div>
+                            <div class="text-muted" style="font-size: 0.75rem;">Created</div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <!-- Description Preview -->
+                    <t t-if="lead.description">
+                      <p class="text-muted small mb-3" style="height: 2.5rem; overflow: hidden;">
+                        <t t-esc="lead.description[:100]"/>
+                        <t t-if="len(lead.description) > 100">...</t>
+                      </p>
+                    </t>
+                    
+                    <!-- Contact Information -->
+                    <div class="mb-3">
+                      <t t-if="lead.email_from">
+                        <div class="small mb-1">
+                          <i class="fa fa-envelope text-muted me-2"></i>
+                          <a t-attf-href="mailto:#{lead.email_from}" class="text-decoration-none">
+                            <t t-esc="lead.email_from"/>
+                          </a>
+                        </div>
+                      </t>
+                      <t t-if="lead.phone">
+                        <div class="small">
+                          <i class="fa fa-phone text-muted me-2"></i>
+                          <a t-attf-href="tel:#{lead.phone}" class="text-decoration-none">
+                            <t t-esc="lead.phone"/>
+                          </a>
+                        </div>
+                      </t>
+                    </div>
+                    
+                    <!-- Tags -->
+                    <t t-if="lead.tag_ids">
+                      <div class="mb-3">
+                        <t t-foreach="lead.tag_ids[:3]" t-as="tag">
+                          <span class="badge bg-light text-dark me-1" style="font-size: 0.7rem;">
+                            <t t-esc="tag.name"/>
+                          </span>
+                        </t>
+                        <t t-if="len(lead.tag_ids) > 3">
+                          <span class="badge bg-light text-muted" style="font-size: 0.7rem;">
+                            +<t t-esc="len(lead.tag_ids) - 3"/> more
+                          </span>
+                        </t>
+                      </div>
+                    </t>
+                    
+                    <!-- Activity Indicator -->
+                    <t t-set="next_activity" t-value="lead.activity_ids.filtered(lambda a: a.date_deadline >= datetime.date.today()).sorted('date_deadline')[:1]"/>
+                    <t t-if="next_activity">
+                      <div class="d-flex align-items-center mb-3 p-2 bg-light rounded">
+                        <i class="fa fa-clock-o text-warning me-2"></i>
+                        <div class="flex-grow-1">
+                          <div class="small fw-bold">
+                            <t t-esc="next_activity.summary or next_activity.activity_type_id.name"/>
+                          </div>
+                          <div class="text-muted" style="font-size: 0.75rem;">
+                            Due <t t-esc="next_activity.date_deadline.strftime('%b %d, %Y')"/>
+                          </div>
+                        </div>
+                      </div>
+                    </t>
+                  </div>
+                  
+                  <!-- Card Footer with Actions -->
+                  <div class="card-footer border-0 bg-transparent">
+                    <div class="d-flex gap-1">
+                      <a t-attf-href="/my/employee/crm/edit/#{lead.id}" 
+                         class="btn btn-sm btn-outline-primary flex-fill">
+                        <i class="fa fa-edit me-1"></i>Edit
+                      </a>
+                      <button class="btn btn-sm btn-outline-success" 
+                              onclick="addActivity({{ lead.id }})" title="Add Activity">
+                        <i class="fa fa-plus"></i>
+                      </button>
+                      <button class="btn btn-sm btn-outline-info" 
+                              onclick="addNote({{ lead.id }})" title="Add Note">
+                        <i class="fa fa-comment"></i>
+                      </button>
+                      <div class="dropdown">
+                        <button class="btn btn-sm btn-outline-secondary dropdown-toggle" 
+                                type="button" data-bs-toggle="dropdown">
+                          <i class="fa fa-ellipsis-h"></i>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                          <li>
+                            <a class="dropdown-item" t-attf-href="/my/employee/crm/edit/#{lead.id}">
+                              <i class="fa fa-edit me-2"></i>Edit Details
+                            </a>
+                          </li>
+                          <li>
+                            <a class="dropdown-item" href="#" onclick="duplicateLead({{ lead.id }})">
+                              <i class="fa fa-copy me-2"></i>Duplicate
+                            </a>
+                          </li>
+                          <li><hr class="dropdown-divider"/></li>
+                          <li>
+                            <a class="dropdown-item text-danger" href="#" onclick="deleteLead({{ lead.id }})">
+                              <i class="fa fa-trash me-2"></i>Delete
+                            </a>
+                          </li>
+                        </ul>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </t>
+          </div>
+        </div>
+
+        <!-- Floating Action Button -->
+        <div class="position-fixed bottom-0 end-0 p-4" style="z-index: 1030;">
+          <div class="btn-group-vertical" role="group">
+            <a href="/my/employee/crm/create" class="btn btn-success rounded-circle shadow-lg mb-2" 
+               style="width: 56px; height: 56px;" title="Create New Lead">
+              <i class="fa fa-plus fa-lg"></i>
+            </a>
+            <button class="btn btn-primary rounded-circle shadow" 
+                    style="width: 48px; height: 48px;" onclick="scrollToTop()" title="Back to Top">
+              <i class="fa fa-arrow-up"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- Enhanced JavaScript -->
+        <script>
+          // View Toggle functionality is now handled by the href in the button
+          
+          // Quick Filters
+          function setQuickFilter(type) {
+            const form = document.getElementById('filterForm');
+            
+            // Clear existing filters
+            clearAllFilters();
+            
+            switch(type) {
+              case 'today':
+                document.getElementById('quick_activity').value = 'today';
+                break;
+              case 'overdue':
+                document.getElementById('quick_activity').value = 'overdue';
+                break;
+              case 'won':
+                // Filter by won stage
+                const stageSelect = document.getElementById('stage');
+                for (let option of stageSelect.options) {
+                  if (option.text.toLowerCase().includes('won')) {
+                    option.selected = true;
+                    break;
+                  }
+                }
+                break;
+              case 'high_value':
+                // This would need backend implementation
+                console.log('High value filter needs backend support');
+                break;
+            }
+            
+            form.submit();
+          }
+          
+          function clearAllFilters() {
+            const form = document.getElementById('filterForm');
+            const inputs = form.querySelectorAll('select, input[type="text"], input[type="date"]');
+            inputs.forEach(input => {
+              if (input.type === 'select-one') {
+                input.selectedIndex = 0;
+              } else {
+                input.value = '';
+              }
+            });
+          }
+          
+          // Card Sorting
+          function sortCards(criteria) {
+            const container = document.getElementById('leadsContainer');
+            const cards = Array.from(container.children);
+            
+            cards.sort((a, b) => {
+              let aValue, bValue;
+              
+              switch(criteria) {
+                case 'name':
+                  aValue = a.querySelector('.card-title').textContent.trim();
+                  bValue = b.querySelector('.card-title').textContent.trim();
+                  break;
+                case 'stage':
+                  aValue = a.getAttribute('data-stage') || '';
+                  bValue = b.getAttribute('data-stage') || '';
+                  break;
+                case 'revenue':
+                  aValue = parseFloat(a.querySelector('.fw-bold').textContent.replace(/[$,]/g, '')) || 0;
+                  bValue = parseFloat(b.querySelector('.fw-bold').textContent.replace(/[$,]/g, '')) || 0;
+                  return bValue - aValue; // Descending for revenue
+                case 'date':
+                  // This would need date parsing from the card
+                  return 0;
+              }
+              
+              return aValue.localeCompare(bValue);
+            });
+            
+            cards.forEach(card => container.appendChild(card));
+          }
+          
+          // Action Functions
+          function addActivity(leadId) {
+            window.location.href = `/my/employee/crm/activity/modal/${leadId}/add`;
+          }
+          
+          function addNote(leadId) {
+            window.location.href = `/my/employee/crm/notes/modal/${leadId}`;
+          }
+          
+          function duplicateLead(leadId) {
+            if (confirm('Are you sure you want to duplicate this lead?')) {
+              // This would need backend implementation
+              console.log('Duplicate lead:', leadId);
+            }
+          }
+          
+          function deleteLead(leadId) {
+            if (confirm('Are you sure you want to delete this lead? This action cannot be undone.')) {
+              fetch(`/my/employee/crm/delete/${leadId}`, {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  'X-CSRFToken': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                }
+              }).then(response => {
+                if (response.ok) {
+                  location.reload();
+                } else {
+                  alert('Error deleting lead. Please try again.');
+                }
+              });
+            }
+          }
+          
+          function scrollToTop() {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+          }
+          
+          // Initialize
+          document.addEventListener('DOMContentLoaded', function() {
+            console.log('Enhanced CRM Dashboard loaded');
+          });
+        </script>
+
+        <!-- Enhanced CSS -->
+        <style>
+          .lead-card .card {
+            transition: all 0.3s ease;
+            border-left: 4px solid #e9ecef;
+          }
+          
+          .lead-card .card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
+          }
+          
+          .lead-card .card[data-stage*="won"] {
+            border-left-color: #28a745;
+          }
+          
+          .lead-card .card[data-stage*="qualified"] {
+            border-left-color: #17a2b8;
+          }
+          
+          .lead-card .card[data-stage*="proposal"] {
+            border-left-color: #ffc107;
+          }
+          
+          .lead-card .card[data-stage*="new"] {
+            border-left-color: #6c757d;
+          }
+          
+          .quick-filter {
+            transition: all 0.2s ease;
+          }
+          
+          .quick-filter:hover {
+            transform: translateY(-1px);
+          }
+          
+          .btn-group-vertical .btn + .btn {
+            margin-top: 0.5rem;
+            margin-left: 0;
+          }
+          
+          @media (max-width: 768px) {
+            .lead-card {
+              margin-bottom: 1rem;
+            }
+            
+            .row.g-2 .col-6 {
+              margin-bottom: 0.5rem;
+            }
+          }
+          
+          .badge.bg-new { background-color: #6c757d !important; }
+          .badge.bg-qualified { background-color: #17a2b8 !important; }
+          .badge.bg-proposal { background-color: #ffc107 !important; color: #000 !important; }
+          .badge.bg-won { background-color: #28a745 !important; }
+          .badge.bg-lost { background-color: #dc3545 !important; }
+        </style>
+      </div>
+    </t>
+  </template>
+</odoo>
