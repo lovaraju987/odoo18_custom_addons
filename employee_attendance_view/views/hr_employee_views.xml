@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Extend the hr.employee form view to add the attendance notebook page -->
+    <record id="hr_employee_view_form_attendance_extension" model="ir.ui.view">
+        <field name="name">hr.employee.view.form.attendance.extension</field>
+        <field name="model">hr.employee</field>
+        <field name="inherit_id" ref="hr.view_employee_form"/>
+        <field name="arch" type="xml">
+            <notebook position="inside">
+                <page string="Attendances" name="attendances">
+                    <field name="attendance_ids" readonly="1"/>
+                </page>
+            </notebook>
+        </field>
+    </record>
+</odoo>
