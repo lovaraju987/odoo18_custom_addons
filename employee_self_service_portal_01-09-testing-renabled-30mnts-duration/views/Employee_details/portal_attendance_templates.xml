@@ -1,0 +1,828 @@
+<odoo>
+    <template id="portal_attendance" name="My Attendance">
+        <t t-call="portal.portal_layout">
+            <div class="o_portal">
+                <div class="row">
+                    <div class="col-lg-8">
+                        <h2><i class="fa fa-clock-o"></i> Attendance Management</h2>
+                    </div>
+                    <div class="col-lg-4 text-right">
+                        <a href="/my/employee/attendance/analytics" class="btn btn-info">
+                            <i class="fa fa-bar-chart"></i> Analytics
+                        </a>
+                    </div>
+                </div>
+                
+                <!-- Status Messages -->
+                <t t-if="success_message">
+                    <div class="alert alert-success alert-dismissible fade show" role="alert">
+                        <i class="fa fa-check-circle"></i> <t t-esc="success_message"/>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                </t>
+                <t t-if="error_message">
+                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                        <i class="fa fa-exclamation-triangle"></i> <t t-esc="error_message"/>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                </t>
+                
+                <!-- Geolocation Error -->
+                <div id="geo-error" class="alert alert-warning d-none" role="alert">
+                    <i class="fa fa-map-marker"></i> Unable to get your location. Please allow location access in your browser to record attendance location.
+                    <button type="button" class="btn-close float-end" aria-label="Close" onclick="this.parentElement.classList.add('d-none')"></button>
+                </div>
+                
+                <!-- Quick Action Buttons -->
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <div class="card h-100">
+                            <div class="card-body text-center">
+                                <i class="fa fa-sign-in fa-3x text-success mb-3"></i>
+                                <h5>Check In</h5>
+                                <form id="checkin-form" action="/my/employee/attendance/checkin" method="post">
+                                    <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
+                                    <input type="hidden" name="in_latitude" id="in_latitude" />
+                                    <input type="hidden" name="in_longitude" id="in_longitude" />
+                                    <input type="hidden" name="check_in_location" id="check_in_location" />
+                                    <button type="submit" class="btn btn-success btn-lg" 
+                                            t-att-disabled="today_att and not today_att.check_out">
+                                        <i class="fa fa-clock-o"></i> Check In
+                                    </button>
+                                </form>
+                                <t t-if="today_att and not today_att.check_out">
+                                    <small class="text-muted">Already checked in today</small>
+                                </t>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card h-100">
+                            <div class="card-body text-center">
+                                <i class="fa fa-sign-out fa-3x text-danger mb-3"></i>
+                                <h5>Check Out</h5>
+                                <form id="checkout-form" action="/my/employee/attendance/checkout" method="post">
+                                    <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
+                                    <input type="hidden" name="out_latitude" id="out_latitude" />
+                                    <input type="hidden" name="out_longitude" id="out_longitude" />
+                                    <input type="hidden" name="check_out_location" id="check_out_location" />
+                                    <button type="submit" class="btn btn-danger btn-lg" 
+                                            t-att-disabled="not today_att or today_att.check_out">
+                                        <i class="fa fa-clock-o"></i> Check Out
+                                    </button>
+                                </form>
+                                <t t-if="not today_att">
+                                    <small class="text-muted">Check in first</small>
+                                </t>
+                                <t t-if="today_att and today_att.check_out">
+                                    <small class="text-muted">Already checked out today</small>
+                                </t>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Today's Status Card -->
+                <t t-if="today_att">
+                    <div class="card mb-4 border-primary">
+                        <div class="card-header bg-primary text-white">
+                            <h5 class="mb-0"><i class="fa fa-calendar-o"></i> Today's Attendance</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-3">
+                                    <div class="text-center">
+                                        <i class="fa fa-sign-in text-success fa-2x"></i>
+                                        <h6 class="mt-2">Check-In</h6>
+                                        <p class="mb-0"><strong><t t-esc="format_datetime(today_att.check_in)"/></strong></p>
+                                        <t t-if="today_att.check_in_location">
+                                            <small class="text-muted"><t t-esc="today_att.check_in_location[:30]"/>...</small>
+                                        </t>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="text-center">
+                                        <i class="fa fa-sign-out text-danger fa-2x"></i>
+                                        <h6 class="mt-2">Check-Out</h6>
+                                        <t t-if="today_att.check_out">
+                                            <p class="mb-0"><strong><t t-esc="format_datetime(today_att.check_out)"/></strong></p>
+                                            <t t-if="today_att.is_auto_checkout">
+                                                <small class="text-danger">Auto-checkout by system</small>
+                                            </t>
+                                            <t t-elif="today_att.check_out_location">
+                                                <small class="text-muted"><t t-esc="today_att.check_out_location[:30]"/>...</small>
+                                            </t>
+                                        </t>
+                                        <t t-else="">
+                                            <p class="mb-0 text-muted">Not yet</p>
+                                        </t>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="text-center">
+                                        <i class="fa fa-hourglass-half text-info fa-2x"></i>
+                                        <h6 class="mt-2">Hours Worked</h6>
+                                        <t t-if="today_att.worked_hours">
+                                            <p class="mb-0"><strong><t t-esc="'%.2f' % today_att.worked_hours"/> hrs</strong></p>
+                                        </t>
+                                        <t t-else="">
+                                            <p class="mb-0 text-muted" id="live-timer">In progress...</p>
+                                        </t>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="text-center">
+                                        <t t-if="today_att.is_auto_checkout">
+                                            <i class="fa fa-clock-o text-secondary fa-2x"></i>
+                                            <h6 class="mt-2">Status</h6>
+                                            <span class="badge bg-secondary">Auto Check-out</span>
+                                        </t>
+                                        <t t-elif="today_att.check_out">
+                                            <i class="fa fa-check-circle text-success fa-2x"></i>
+                                            <h6 class="mt-2">Status</h6>
+                                            <span class="badge bg-success">Completed</span>
+                                        </t>
+                                        <t t-else="">
+                                            <i class="fa fa-clock-o text-warning fa-2x"></i>
+                                            <h6 class="mt-2">Status</h6>
+                                            <span class="badge bg-warning text-dark">Active</span>
+                                        </t>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </t>
+                
+                <!-- Monthly Analytics Summary -->
+                <t t-if="analytics">
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h5 class="mb-0"><i class="fa fa-bar-chart"></i> <t t-esc="analytics['month_name']"/> Summary</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-2">
+                                    <div class="text-center">
+                                        <h4 class="text-primary"><t t-esc="analytics['total_days']"/></h4>
+                                        <small class="text-muted">Days Present</small>
+                                    </div>
+                                </div>
+                                <div class="col-md-2">
+                                    <div class="text-center">
+                                        <h4 class="text-success"><t t-esc="analytics['total_hours']"/></h4>
+                                        <small class="text-muted">Total Hours</small>
+                                    </div>
+                                </div>
+                                <div class="col-md-2">
+                                    <div class="text-center">
+                                        <h4 class="text-info"><t t-esc="analytics['avg_hours']"/></h4>
+                                        <small class="text-muted">Avg Hours/Day</small>
+                                    </div>
+                                </div>
+                                <div class="col-md-2">
+                                    <div class="text-center">
+                                        <h4 class="text-primary"><t t-esc="analytics['attendance_percentage']"/>%</h4>
+                                        <small class="text-muted">Attendance</small>
+                                    </div>
+                                </div>
+                                <div class="col-md-2">
+                                    <div class="text-center">
+                                        <h4 class="text-warning"><t t-esc="analytics['late_arrivals']"/></h4>
+                                        <small class="text-muted">Late Arrivals</small>
+                                    </div>
+                                </div>
+                                <div class="col-md-2">
+                                    <div class="text-center">
+                                        <h4 class="text-info"><t t-esc="analytics['this_week_hours']"/></h4>
+                                        <small class="text-muted">This Week</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </t>
+                <!-- Filters and Controls -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <div class="row align-items-center">
+                            <div class="col-md-6">
+                                <h5 class="mb-0"><i class="fa fa-filter"></i> Attendance History</h5>
+                            </div>
+                            <div class="col-md-6 text-right">
+                                <a href="/my/employee/attendance/export" class="btn btn-outline-primary btn-sm">
+                                    <i class="fa fa-download"></i> Export
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <form method="get" action="/my/employee/attendance" class="row g-3 align-items-end">
+                            <div class="col-md-3">
+                                <label for="month" class="form-label">Month</label>
+                                <select name="month" id="month" class="form-select">
+                                    <t t-foreach="months" t-as="m">
+                                        <option t-att-value="m['value']" t-att-selected="m['value'] == selected_month">
+                                            <t t-esc="m['name']"/>
+                                        </option>
+                                    </t>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label for="year" class="form-label">Year</label>
+                                <select name="year" id="year" class="form-select">
+                                    <t t-foreach="years" t-as="y">
+                                        <option t-att-value="y" t-att-selected="y == selected_year">
+                                            <t t-esc="y"/>
+                                        </option>
+                                    </t>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <button type="submit" class="btn btn-primary w-100">
+                                    <i class="fa fa-search"></i> Filter
+                                </button>
+                            </div>
+                            <div class="col-md-3">
+                                <a href="/my/employee/attendance" class="btn btn-secondary w-100">
+                                    <i class="fa fa-refresh"></i> Reset
+                                </a>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                
+                <!-- Attendance Records Table -->
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fa fa-list"></i> Attendance Records 
+                            <span class="badge bg-primary ms-2"><t t-esc="len(attendances)"/> records</span>
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <t t-if="attendances">
+                            <div class="table-responsive">
+                                <table class="table table-striped table-hover">
+                                    <thead class="table-dark">
+                                        <tr>
+                                            <th><i class="fa fa-calendar"></i> Date</th>
+                                            <th><i class="fa fa-sign-in"></i> Check-In</th>
+                                            <th><i class="fa fa-map-marker"></i> In Location</th>
+                                            <th><i class="fa fa-sign-out"></i> Check-Out</th>
+                                            <th><i class="fa fa-map-marker"></i> Out Location</th>
+                                            <th><i class="fa fa-clock-o"></i> Hours</th>
+                                            <th><i class="fa fa-info-circle"></i> Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <t t-foreach="attendances" t-as="att">
+                                            <tr>
+                                                <!-- Date -->
+                                                <td>
+                                                    <t t-if="att.check_in">
+                                                        <strong><t t-esc="format_date(att.check_in)"/></strong><br/>
+                                                        <small class="text-muted"><t t-esc="format_day(att.check_in)"/></small>
+                                                    </t>
+                                                    <t t-else="">-</t>
+                                                </td>
+                                                <!-- Check-In Time -->
+                                                <td>
+                                                    <t t-if="att.check_in">
+                                                        <strong><t t-esc="format_datetime(att.check_in)"/></strong>
+                                                        <!-- Late arrival indicator -->
+                                                        <t t-if="att.is_late_arrival">
+                                                            <br/><span class="badge bg-warning text-dark">Late</span>
+                                                        </t>
+                                                        <t t-else="">
+                                                            <br/><span class="badge bg-success">On Time</span>
+                                                        </t>
+                                                    </t>
+                                                    <t t-else="">-</t>
+                                                </td>
+                                                <!-- Check-In Location -->
+                                                <td>
+                                                    <t t-if="att.check_in_location">
+                                                        <small><t t-esc="att.check_in_location[:40]"/><t t-if="len(att.check_in_location) > 40">...</t></small>
+                                                    </t>
+                                                    <t t-else="">
+                                                        <span class="text-muted">-</span>
+                                                    </t>
+                                                </td>
+                                                <!-- Check-Out Time -->
+                                                <td>
+                                                    <t t-if="att.check_out">
+                                                        <strong><t t-esc="format_datetime(att.check_out)"/></strong>
+                                                        <!-- Auto-checkout indicator -->
+                                                        <t t-if="att.is_auto_checkout">
+                                                            <br/><span class="badge bg-secondary">Auto</span>
+                                                        </t>
+                                                        <!-- Early departure indicator -->
+                                                        <t t-elif="att.is_early_departure">
+                                                            <br/><span class="badge bg-warning text-dark">Early</span>
+                                                        </t>
+                                                        <t t-else="">
+                                                            <br/><span class="badge bg-success">Normal</span>
+                                                        </t>
+                                                    </t>
+                                                    <t t-else="">
+                                                        <span class="text-warning">Pending</span>
+                                                    </t>
+                                                </td>
+                                                <!-- Check-Out Location -->
+                                                <td>
+                                                    <t t-if="att.check_out_location">
+                                                        <small><t t-esc="att.check_out_location[:40]"/><t t-if="len(att.check_out_location) > 40">...</t></small>
+                                                        <t t-if="att.is_auto_checkout">
+                                                            <br/><span class="badge bg-secondary" title="This check-out was performed automatically by the system">Auto Check-out</span>
+                                                        </t>
+                                                    </t>
+                                                    <t t-else="">
+                                                        <span class="text-muted">-</span>
+                                                    </t>
+                                                </td>
+                                                <!-- Worked Hours -->
+                                                <td>
+                                                    <t t-if="att.worked_hours">
+                                                        <strong><t t-esc="'%.2f' % att.worked_hours"/></strong>
+                                                        <!-- Overtime indicator -->
+                                                        <t t-if="att.is_overtime">
+                                                            <br/><span class="badge bg-info">Overtime</span>
+                                                        </t>
+                                                        <t t-elif="att.worked_hours &lt; 6">
+                                                            <br/><span class="badge bg-warning text-dark">Short</span>
+                                                        </t>
+                                                        <t t-else="">
+                                                            <br/><span class="badge bg-success">Normal</span>
+                                                        </t>
+                                                    </t>
+                                                    <t t-else="">
+                                                        <span class="text-muted">-</span>
+                                                    </t>
+                                                </td>
+                                                <!-- Status -->
+                                                <td>
+                                                    <t t-if="att.is_auto_checkout">
+                                                        <i class="fa fa-clock-o text-secondary"></i>
+                                                        <span class="badge bg-secondary">Auto Check-out</span>
+                                                    </t>
+                                                    <t t-elif="att.check_out">
+                                                        <i class="fa fa-check-circle text-success"></i>
+                                                        <span class="badge bg-success">Complete</span>
+                                                    </t>
+                                                    <t t-else="">
+                                                        <i class="fa fa-clock-o text-warning"></i>
+                                                        <span class="badge bg-warning text-dark">Active</span>
+                                                    </t>
+                                                </td>
+                                            </tr>
+                                        </t>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </t>
+                        <t t-else="">
+                            <div class="text-center py-5">
+                                <i class="fa fa-calendar-times-o fa-3x text-muted mb-3"></i>
+                                <h5 class="text-muted">No attendance records found</h5>
+                                <p class="text-muted">No attendance data available for the selected period.</p>
+                            </div>
+                        </t>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Enhanced JavaScript -->
+            <script>
+            <![CDATA[
+            document.addEventListener('DOMContentLoaded', function() {
+                console.log("Enhanced Attendance JS loaded");
+                
+                // Live timer for current session with timezone awareness
+                function updateLiveTimer() {
+                    const timerElement = document.getElementById('live-timer');
+                    if (timerElement) {
+                        // We'll use a data attribute to store the check-in time
+                        // This will be in ISO format and we'll convert to the browser's local time
+                        const checkInTimeISO = '{{ today_att.check_in if today_att else "" }}';
+                        if (checkInTimeISO) {
+                            const checkInTime = new Date(checkInTimeISO);
+                            if (!isNaN(checkInTime.getTime())) {
+                                const now = new Date();
+                                const diff = now - checkInTime;
+                                const hours = Math.floor(diff / (1000 * 60 * 60));
+                                const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+                                timerElement.innerHTML = `<strong>${hours}h ${minutes}m</strong>`;
+                                timerElement.title = `Using timezone: ${Intl.DateTimeFormat().resolvedOptions().timeZone}`;
+                            }
+                        }
+                    }
+                }
+                
+                // Update timer every minute
+                setInterval(updateLiveTimer, 60000);
+                updateLiveTimer(); // Initial call
+                
+                // Helper: Reverse geocode using Nominatim (OpenStreetMap) with error handling and retries
+                function reverseGeocode(lat, lon, callback) {
+                    console.log(`Attempting to reverse geocode: ${lat}, ${lon}`);
+                    
+                    // Add cache to prevent excessive API calls
+                    const cacheKey = `${lat.toFixed(6)},${lon.toFixed(6)}`;
+                    const cachedResult = sessionStorage.getItem(`geo_${cacheKey}`);
+                    if (cachedResult) {
+                        console.log(`Using cached location: ${cachedResult}`);
+                        callback(cachedResult);
+                        return;
+                    }
+                    
+                    // Add a user agent header to comply with Nominatim usage policy
+                    fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&zoom=18`, {
+                        headers: {
+                            'User-Agent': 'TechcarrotESS/1.0'
+                        }
+                    })
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error(`HTTP error! Status: ${response.status}`);
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        if (data && data.display_name) {
+                            console.log(`Got location: ${data.display_name}`);
+                            // Cache the result for future use
+                            sessionStorage.setItem(`geo_${cacheKey}`, data.display_name);
+                            callback(data.display_name);
+                        } else {
+                            console.warn('No location name in response', data);
+                            callback(`Location at ${lat.toFixed(6)},${lon.toFixed(6)}`);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error in reverse geocoding:', error);
+                        // Fallback to coordinates
+                        callback(`Location at ${lat.toFixed(6)},${lon.toFixed(6)}`);
+                    });
+                }
+                
+                // Enhanced Check-In with better UX
+                const checkinForm = document.getElementById('checkin-form');
+                if (checkinForm) {
+                    const checkinBtn = checkinForm.querySelector('button[type="submit"]');
+                    
+                    checkinForm.addEventListener('submit', function(e) {
+                        e.preventDefault();
+                        
+                        // Show loading state
+                        const originalText = checkinBtn.innerHTML;
+                        checkinBtn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Checking In...';
+                        checkinBtn.disabled = true;
+                        
+                        if (navigator.geolocation) {
+                            navigator.geolocation.getCurrentPosition(function(position) {
+                                document.getElementById('in_latitude').value = position.coords.latitude;
+                                document.getElementById('in_longitude').value = position.coords.longitude;
+                                document.getElementById('geo-error').classList.add('d-none');
+                                
+                                reverseGeocode(position.coords.latitude, position.coords.longitude, function(address) {
+                                    document.getElementById('check_in_location').value = address;
+                                    checkinForm.submit();
+                                });
+                            }, function(error) {
+                                console.error('Geolocation error:', error);
+                                document.getElementById('geo-error').classList.remove('d-none');
+                                
+                                // Reset button state
+                                checkinBtn.innerHTML = originalText;
+                                checkinBtn.disabled = false;
+                                
+                                // Submit without location
+                                if (confirm('Location access failed. Continue without location data?')) {
+                                    checkinForm.submit();
+                                }
+                            }, {
+                                enableHighAccuracy: true,
+                                timeout: 10000,
+                                maximumAge: 60000
+                            });
+                        } else {
+                            document.getElementById('geo-error').classList.remove('d-none');
+                            checkinBtn.innerHTML = originalText;
+                            checkinBtn.disabled = false;
+                        }
+                    });
+                }
+                
+                // Enhanced Check-Out with better UX
+                const checkoutForm = document.getElementById('checkout-form');
+                if (checkoutForm) {
+                    const checkoutBtn = checkoutForm.querySelector('button[type="submit"]');
+                    
+                    checkoutForm.addEventListener('submit', function(e) {
+                        e.preventDefault();
+                        
+                        // Show loading state
+                        const originalText = checkoutBtn.innerHTML;
+                        checkoutBtn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Checking Out...';
+                        checkoutBtn.disabled = true;
+                        
+                        if (navigator.geolocation) {
+                            navigator.geolocation.getCurrentPosition(function(position) {
+                                document.getElementById('out_latitude').value = position.coords.latitude;
+                                document.getElementById('out_longitude').value = position.coords.longitude;
+                                document.getElementById('geo-error').classList.add('d-none');
+                                
+                                reverseGeocode(position.coords.latitude, position.coords.longitude, function(address) {
+                                    document.getElementById('check_out_location').value = address;
+                                    checkoutForm.submit();
+                                });
+                            }, function(error) {
+                                console.error('Geolocation error:', error);
+                                document.getElementById('geo-error').classList.remove('d-none');
+                                
+                                // Reset button state
+                                checkoutBtn.innerHTML = originalText;
+                                checkoutBtn.disabled = false;
+                                
+                                // Submit without location
+                                if (confirm('Location access failed. Continue without location data?')) {
+                                    checkoutForm.submit();
+                                }
+                            }, {
+                                enableHighAccuracy: true,
+                                timeout: 10000,
+                                maximumAge: 60000
+                            });
+                        } else {
+                            document.getElementById('geo-error').classList.remove('d-none');
+                            checkoutBtn.innerHTML = originalText;
+                            checkoutBtn.disabled = false;
+                        }
+                    });
+                }
+                
+                // Auto-dismiss alerts after 5 seconds
+                setTimeout(function() {
+                    const alerts = document.querySelectorAll('.alert-dismissible');
+                    alerts.forEach(function(alert) {
+                        if (alert.classList.contains('show')) {
+                            alert.classList.remove('show');
+                            alert.classList.add('fade');
+                        }
+                    });
+                }, 5000);
+                
+                // Table enhancements
+                const table = document.querySelector('.table-responsive table');
+                if (table) {
+                    // Add hover effects and click handlers
+                    const rows = table.querySelectorAll('tbody tr');
+                    rows.forEach(function(row) {
+                        row.addEventListener('click', function() {
+                            // Highlight selected row
+                            rows.forEach(r => r.classList.remove('table-primary'));
+                            row.classList.add('table-primary');
+                        });
+                    });
+                }
+            });
+            ]]>
+            </script>
+        </t>
+    </template>
+    
+    <!-- New Analytics Template -->
+    <template id="portal_attendance_analytics" name="Attendance Analytics">
+        <t t-call="portal.portal_layout">
+            <div class="o_portal">
+                <div class="row mb-4">
+                    <div class="col-lg-8">
+                        <h2><i class="fa fa-bar-chart"></i> Attendance Analytics</h2>
+                        <p class="text-muted">Comprehensive insights into your attendance patterns and performance</p>
+                    </div>
+                    <div class="col-lg-4 text-right">
+                        <a href="/my/employee/attendance" class="btn btn-secondary">
+                            <i class="fa fa-arrow-left"></i> Back to Attendance
+                        </a>
+                    </div>
+                </div>
+                
+                <!-- Current Month Summary -->
+                <t t-if="current_month">
+                    <div class="card mb-4 border-primary">
+                        <div class="card-header bg-primary text-white">
+                            <h5 class="mb-0"><i class="fa fa-calendar"></i> <t t-esc="current_month['month_name']"/> Overview</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-lg-3 col-md-6 mb-3">
+                                    <div class="d-flex align-items-center">
+                                        <div class="rounded-circle bg-primary p-3 me-3">
+                                            <i class="fa fa-calendar-check-o text-white"></i>
+                                        </div>
+                                        <div>
+                                            <h4 class="mb-0"><t t-esc="current_month['total_days']"/></h4>
+                                            <small class="text-muted">Days Present</small>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-lg-3 col-md-6 mb-3">
+                                    <div class="d-flex align-items-center">
+                                        <div class="rounded-circle bg-success p-3 me-3">
+                                            <i class="fa fa-clock-o text-white"></i>
+                                        </div>
+                                        <div>
+                                            <h4 class="mb-0"><t t-esc="current_month['total_hours']"/></h4>
+                                            <small class="text-muted">Total Hours</small>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-lg-3 col-md-6 mb-3">
+                                    <div class="d-flex align-items-center">
+                                        <div class="rounded-circle bg-info p-3 me-3">
+                                            <i class="fa fa-percentage text-white"></i>
+                                        </div>
+                                        <div>
+                                            <h4 class="mb-0"><t t-esc="current_month['attendance_percentage']"/>%</h4>
+                                            <small class="text-muted">Attendance Rate</small>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-lg-3 col-md-6 mb-3">
+                                    <div class="d-flex align-items-center">
+                                        <div class="rounded-circle bg-warning p-3 me-3">
+                                            <i class="fa fa-exclamation-triangle text-white"></i>
+                                        </div>
+                                        <div>
+                                            <h4 class="mb-0"><t t-esc="current_month['late_arrivals']"/></h4>
+                                            <small class="text-muted">Late Arrivals</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </t>
+                
+                <!-- Monthly Comparison -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="fa fa-line-chart"></i> Monthly Trends</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead class="table-dark">
+                                    <tr>
+                                        <th>Month</th>
+                                        <th>Days Present</th>
+                                        <th>Total Hours</th>
+                                        <th>Avg Hours/Day</th>
+                                        <th>Attendance %</th>
+                                        <th>Late Arrivals</th>
+                                        <th>Overtime Days</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <t t-foreach="analytics_months" t-as="month_data">
+                                        <tr>
+                                            <td><strong><t t-esc="month_data['month_name']"/></strong></td>
+                                            <td><t t-esc="month_data['total_days']"/></td>
+                                            <td><t t-esc="month_data['total_hours']"/></td>
+                                            <td><t t-esc="month_data['avg_hours']"/></td>
+                                            <td>
+                                                <t t-esc="month_data['attendance_percentage']"/>%
+                                                <t t-if="month_data['attendance_percentage'] >= 95">
+                                                    <span class="badge bg-success ms-1">Excellent</span>
+                                                </t>
+                                                <t t-elif="month_data['attendance_percentage'] >= 85">
+                                                    <span class="badge bg-warning ms-1">Good</span>
+                                                </t>
+                                                <t t-else="">
+                                                    <span class="badge bg-danger ms-1">Needs Improvement</span>
+                                                </t>
+                                            </td>
+                                            <td>
+                                                <t t-esc="month_data['late_arrivals']"/>
+                                                <t t-if="month_data['late_arrivals'] == 0">
+                                                    <span class="badge bg-success ms-1">Perfect</span>
+                                                </t>
+                                            </td>
+                                            <td><t t-esc="month_data['overtime_days']"/></td>
+                                        </tr>
+                                    </t>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Performance Insights -->
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="card h-100">
+                            <div class="card-header bg-info text-white">
+                                <h6 class="mb-0"><i class="fa fa-lightbulb-o"></i> Performance Insights</h6>
+                            </div>
+                            <div class="card-body">
+                                <t t-if="current_month">
+                                    <ul class="list-unstyled">
+                                        <li class="mb-2">
+                                            <i class="fa fa-check text-success"></i>
+                                            You worked <strong><t t-esc="current_month['total_hours']"/> hours</strong> this month
+                                        </li>
+                                        <li class="mb-2">
+                                            <t t-if="current_month['attendance_percentage'] >= 95">
+                                                <i class="fa fa-star text-warning"></i>
+                                                Excellent attendance rate of <strong><t t-esc="current_month['attendance_percentage']"/>%</strong>
+                                            </t>
+                                            <t t-else="">
+                                                <i class="fa fa-exclamation-circle text-warning"></i>
+                                                Attendance rate: <strong><t t-esc="current_month['attendance_percentage']"/>%</strong>
+                                            </t>
+                                        </li>
+                                        <li class="mb-2">
+                                            <t t-if="current_month['late_arrivals'] == 0">
+                                                <i class="fa fa-trophy text-success"></i>
+                                                Perfect punctuality - no late arrivals!
+                                            </t>
+                                            <t t-else="">
+                                                <i class="fa fa-clock-o text-warning"></i>
+                                                <t t-esc="current_month['late_arrivals']"/> late arrivals this month
+                                            </t>
+                                        </li>
+                                        <li class="mb-2">
+                                            <i class="fa fa-hourglass text-info"></i>
+                                            Average <strong><t t-esc="current_month['avg_hours']"/> hours</strong> per day
+                                        </li>
+                                    </ul>
+                                </t>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card h-100">
+                            <div class="card-header bg-success text-white">
+                                <h6 class="mb-0"><i class="fa fa-target"></i> Goals &amp; Recommendations</h6>
+                            </div>
+                            <div class="card-body">
+                                <ul class="list-unstyled">
+                                    <li class="mb-2">
+                                        <i class="fa fa-bullseye text-primary"></i>
+                                        Maintain 95%+ attendance rate
+                                    </li>
+                                    <li class="mb-2">
+                                        <i class="fa fa-clock-o text-primary"></i>
+                                        Arrive by 9:30 AM consistently
+                                    </li>
+                                    <li class="mb-2">
+                                        <i class="fa fa-balance-scale text-primary"></i>
+                                        Maintain work-life balance
+                                    </li>
+                                    <li class="mb-2">
+                                        <i class="fa fa-calendar-plus-o text-primary"></i>
+                                        Plan leave requests in advance
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </t>
+    </template>
+
+    <record id="view_hr_attendance_tree_inherit_ess" model="ir.ui.view">
+        <field name="name">hr.attendance.tree.ess.location</field>
+        <field name="model">hr.attendance</field>
+        <field name="inherit_id" ref="hr_attendance.view_attendance_tree"/>
+        <field name="arch" type="xml">
+            <field name="check_in" position="after">
+                <field name="check_in_location"/>
+            </field>
+            <field name="check_out" position="after">
+                <field name="check_out_location"/>
+            </field>
+        </field>
+    </record>
+
+    <record id="view_hr_attendance_form_inherit_ess" model="ir.ui.view">
+        <field name="name">hr.attendance.form.ess.location</field>
+        <field name="model">hr.attendance</field>
+        <field name="inherit_id" ref="hr_attendance.hr_attendance_view_form"/>
+        <field name="arch" type="xml">
+            <field name="check_in" position="after">
+                <field name="check_in_location"/>
+                <field name="in_latitude" />
+                <field name="in_longitude" />
+            </field>
+            <field name="check_out" position="after">
+                <field name="check_out_location"/>
+                <field name="out_latitude" />
+                <field name="out_longitude" />
+                <field name="is_auto_checkout" />
+            </field>
+        </field>
+    </record>
+</odoo>

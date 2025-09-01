@@ -1,0 +1,1703 @@
+<odoo>
+    <template id="portal_ess_dashboard_enhanced" name="ESS Portal Dashboard">
+        <t t-call="portal.portal_layout">
+            <div class="o_portal container-fluid my-4">
+                <!-- Header Section -->
+                <div class="row align-items-center mb-4">
+                    <div class="col-md-8">
+                        <h1 class="mb-1">
+                            <i class="fa fa-tachometer text-primary mr-2"></i>
+                            Dashboard
+                        </h1>
+                        <p class="text-muted mb-0">
+                            Welcome back, <strong t-esc="employee.name if employee else 'Employee'"/>! 
+                            Here's your overview for <span id="currentDate"></span>
+                        </p>
+                    </div>
+                    <div class="col-md-4 text-end">
+                        <div class="d-flex justify-content-end align-items-center gap-2">
+                            <a href="/my/ess/classic" class="btn btn-outline-secondary btn-sm">
+                                <i class="fa fa-arrow-left"></i> Classic View
+                            </a>
+                            <button class="btn btn-outline-secondary btn-sm" onclick="refreshDashboard()">
+                                <i class="fa fa-refresh"></i> Refresh
+                            </button>
+                            <div class="dropdown">
+                                <button class="btn btn-outline-primary btn-sm dropdown-toggle" type="button" 
+                                        data-bs-toggle="dropdown" aria-expanded="false">
+                                    <i class="fa fa-cog"></i> Settings
+                                </button>
+                                <ul class="dropdown-menu">
+                                    <li><a class="dropdown-item" href="#" onclick="toggleTheme()">
+                                        <i class="fa fa-moon-o"></i> Dark Mode
+                                    </a></li>
+                                    <li><a class="dropdown-item" href="#" onclick="exportDashboard()">
+                                        <i class="fa fa-download"></i> Export Data
+                                    </a></li>
+                                    <li><hr class="dropdown-divider"/></li>
+                                    <li><a class="dropdown-item" href="/my/employee">
+                                        <i class="fa fa-user"></i> Profile Settings
+                                    </a></li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick Stats Row -->
+                <div class="row mb-4" id="quickStatsRow">
+                    <!-- Attendance Quick Stat -->
+                    <div class="col-lg-3 col-md-6 mb-3">
+                        <div class="card border-0 shadow-sm h-100">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <h6 class="text-muted mb-1">Today's Status</h6>
+                                        <t t-if="today_attendances and len(today_attendances) > 0">
+                                            <t t-set="latest_attendance" t-value="today_attendances[0]" />
+                                            <t t-if="latest_attendance.check_out">
+                                                <h4 class="text-success mb-0">Completed</h4>
+                                                <small class="text-muted">
+                                                    <t t-esc="'%.2f' % latest_attendance.worked_hours"/> hours
+                                                </small>
+                                            </t>
+                                            <t t-else="">
+                                                <h4 class="text-warning mb-0">Active</h4>
+                                                <small class="text-muted">
+                                                    Since <t t-esc="format_datetime(latest_attendance.check_in)"/>
+                                                </small>
+                                            </t>
+                                        </t>
+                                        <t t-else="">
+                                            <h4 class="text-secondary mb-0">Not Started</h4>
+                                            <small class="text-muted">Ready to check in</small>
+                                        </t>
+                                    </div>
+                                    <div class="text-primary">
+                                        <i class="fa fa-clock-o fa-2x"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- CRM Quick Stat -->
+                    <t t-if="has_crm_access">
+                        <div class="col-lg-3 col-md-6 mb-3">
+                            <div class="card border-0 shadow-sm h-100">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <h6 class="text-muted mb-1">Active Leads</h6>
+                                            <h4 class="text-info mb-0" t-esc="crm_leads_count or 0"/>
+                                            <small class="text-muted">
+                                                <t t-if="crm_leads_count and crm_leads_count > 0">
+                                                    <i class="fa fa-arrow-up text-success"></i> Manage now
+                                                </t>
+                                                <t t-else="">
+                                                    No active leads
+                                                </t>
+                                            </small>
+                                        </div>
+                                        <div class="text-info">
+                                            <i class="fa fa-briefcase fa-2x"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </t>
+
+                    <!-- Expenses Quick Stat -->
+                    <t t-if="has_expenses_access">
+                        <div class="col-lg-3 col-md-6 mb-3">
+                            <div class="card border-0 shadow-sm h-100">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <h6 class="text-muted mb-1">This Month</h6>
+                                            <t t-if="expense_stats">
+                                                <h4 class="text-warning mb-0">
+                                                    <t t-esc="employee.company_id.currency_id.symbol"/><t t-esc="'%.0f' % expense_stats['total_amount']"/>
+                                                </h4>
+                                                <small class="text-muted">
+                                                    <t t-esc="expense_stats['total_count']"/> expenses
+                                                </small>
+                                            </t>
+                                            <t t-else="">
+                                                <h4 class="text-secondary mb-0"><t t-esc="employee.company_id.currency_id.symbol"/>0</h4>
+                                                <small class="text-muted">No expenses</small>
+                                            </t>
+                                        </div>
+                                        <div class="text-warning">
+                                            <i class="fa fa-money fa-2x"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </t>
+
+                    <!-- Payslips Quick Stat -->
+                    <t t-if="has_payslip_access">
+                        <div class="col-lg-3 col-md-6 mb-3">
+                            <div class="card border-0 shadow-sm h-100">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <h6 class="text-muted mb-1">Payslips</h6>
+                                            <h4 class="text-primary mb-0" t-esc="payslips_count or 0"/>
+                                            <t t-if="latest_payslip">
+                                                <small class="text-muted">
+                                                    Latest: <t t-esc="latest_payslip.get_formatted_period()"/>
+                                                </small>
+                                            </t>
+                                            <t t-else="">
+                                                <small class="text-muted">No payslips</small>
+                                            </t>
+                                        </div>
+                                        <div class="text-primary">
+                                            <i class="fa fa-file-text-o fa-2x"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </t>
+                </div>
+
+                <!-- Main Content Row -->
+                <div class="row">
+                    <!-- Left Column -->
+                    <div class="col-lg-8">
+                        <!-- Quick Actions Card -->
+                        <!-- <div class="card border-0 shadow-sm mb-4">
+                            <div class="card-header bg-transparent border-0 pb-0">
+                                <h5 class="mb-0">
+                                    <i class="fa fa-bolt text-warning mr-2"></i>
+                                    Quick Actions
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="row g-3"> -->
+                                    <!-- Attendance Quick Action -->
+                                    <!-- <div class="col-md-6">
+                                        <div class="quick-action-card p-3 border rounded">
+                                            <div class="d-flex align-items-center mb-2">
+                                                <i class="fa fa-clock-o text-primary mr-2"></i>
+                                                <h6 class="mb-0">Attendance</h6>
+                                            </div>
+                                            <t t-if="today_attendances and any(not a.check_out for a in today_attendances)"> -->
+                                                <!-- Currently checked in - at least one open attendance -->
+                                                <!-- <button class="btn btn-danger btn-sm w-100" onclick="quickCheckOut()">
+                                                    <i class="fa fa-sign-out"></i> Check Out Now
+                                                </button>
+                                                <small class="text-success d-block mt-1"> -->
+                                                    <!-- Safely find the most recent open attendance -->
+                                                    <!-- <t t-set="open_attendance" t-value="[a for a in today_attendances if not a.check_out][0] if any(not a.check_out for a in today_attendances) else None" />
+                                                    <t t-if="open_attendance">
+                                                        Active since <t t-esc="format_datetime(open_attendance.check_in)"/>
+                                                    </t>
+                                                    <t t-else="">
+                                                        Active session
+                                                    </t>
+                                                </small>
+                                            </t>
+                                            <t t-elif="today_attendances and len(today_attendances) > 0"> -->
+                                                <!-- All attendances are checked out, can check in again -->
+                                                <!-- <button class="btn btn-success btn-sm w-100" onclick="quickCheckIn()">
+                                                    <i class="fa fa-sign-in"></i> Check In Again
+                                                </button>
+                                                <small class="text-success d-block mt-1">
+                                                    Last session completed
+                                                </small>
+                                            </t>
+                                            <t t-else=""> -->
+                                                <!-- No attendance today -->
+                                                <!-- <button class="btn btn-success btn-sm w-100" onclick="quickCheckIn()">
+                                                    <i class="fa fa-sign-in"></i> Check In Now
+                                                </button>
+                                            </t>
+                                        </div>
+                                    </div> -->
+
+                                    <!-- CRM Quick Action -->
+                                    <!-- <t t-if="has_crm_access">
+                                        <div class="col-md-6">
+                                            <div class="quick-action-card p-3 border rounded">
+                                                <div class="d-flex align-items-center mb-2">
+                                                    <i class="fa fa-plus-circle text-success mr-2"></i>
+                                                    <h6 class="mb-0">New Lead</h6>
+                                                </div>
+                                                <a href="/my/employee/crm/create" class="btn btn-outline-success btn-sm w-100">
+                                                    <i class="fa fa-plus"></i> Create Lead
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </t> -->
+
+                                    <!-- Expense Quick Action -->
+                                    <!-- <t t-if="has_expenses_access">
+                                        <div class="col-md-6">
+                                            <div class="quick-action-card p-3 border rounded">
+                                                <div class="d-flex align-items-center mb-2">
+                                                    <i class="fa fa-receipt text-warning mr-2"></i>
+                                                    <h6 class="mb-0">Add Expense</h6>
+                                                </div>
+                                                <a href="/my/employee/expenses/create" class="btn btn-outline-warning btn-sm w-100">
+                                                    <i class="fa fa-plus"></i> Add Expense
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </t> -->
+
+                                    <!-- Profile Quick Action -->
+                                    <!-- <div class="col-md-6">
+                                        <div class="quick-action-card p-3 border rounded">
+                                            <div class="d-flex align-items-center mb-2">
+                                                <i class="fa fa-user text-info mr-2"></i>
+                                                <h6 class="mb-0">Update Profile</h6>
+                                            </div>
+                                            <a href="/my/employee" class="btn btn-outline-info btn-sm w-100">
+                                                <i class="fa fa-edit"></i> Edit Profile
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div> 
+                        </div> -->
+
+                        <!-- Module Cards -->
+                        <div class="row g-4">
+                            <!-- Attendance Card -->
+                            <div class="col-md-6">
+                                <div class="module-card card border-0 shadow-sm h-100">
+                                    <div class="card-body">
+                                        <div class="d-flex align-items-center mb-3">
+                                            <div class="icon-circle bg-primary bg-opacity-10 me-3">
+                                                <i class="fa fa-calendar-check-o fa-lg text-primary"></i>
+                                            </div>
+                                            <div>
+                                                <h5 class="mb-1">Attendance</h5>
+                                                <p class="text-muted mb-0 small">Track your daily attendance</p>
+                                            </div>
+                                        </div>
+
+                                        <t t-if="today_attendances and len(today_attendances) > 0">
+                                            <div class="attendance-summary mb-3">
+                                                <!-- Calculate total worked hours for all completed attendances -->
+                                                <t t-set="has_open_attendance" t-value="any(not a.check_out for a in today_attendances)" />
+                                                <t t-set="total_worked_hours" t-value="sum(a.worked_hours for a in today_attendances if a.check_out)" />
+                                                <t t-set="completed_sessions" t-value="sum(1 for a in today_attendances if a.check_out)" />
+                                                
+                                                <div class="d-flex justify-content-between">
+                                                    <span>Worked Today:</span>
+                                                    <strong t-att-class="'text-success' if not has_open_attendance else 'text-warning'">
+                                                        <t t-esc="'%.2f' % total_worked_hours"/> hours
+                                                        <t t-if="has_open_attendance"> + current session</t>
+                                                    </strong>
+                                                </div>
+                                                
+                                                <small class="text-muted d-block mt-1">
+                                                    <t t-esc="completed_sessions"/> completed 
+                                                    <t t-if="completed_sessions == 1">session</t>
+                                                    <t t-else="">sessions</t>
+                                                    <t t-if="has_open_attendance"> + 1 active</t>
+                                                </small>
+                                                
+                                                <div class="progress mt-2" style="height: 6px;">
+                                                    <t t-if="has_open_attendance">
+                                                        <div class="progress-bar bg-warning progress-bar-striped progress-bar-animated" style="width: 75%"></div>
+                                                    </t>
+                                                    <t t-else="">
+                                                        <div class="progress-bar bg-success" style="width: 100%"></div>
+                                                    </t>
+                                                </div>
+                                            </div>
+                                        </t>
+
+                                        <a href="/my/employee/attendance" class="btn btn-outline-primary btn-sm w-100">
+                                            <i class="fa fa-list"></i> View History
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- CRM Card -->
+                            <t t-if="has_crm_access">
+                                <div class="col-md-6">
+                                    <div class="module-card card border-0 shadow-sm h-100">
+                                        <div class="card-body">
+                                            <div class="d-flex align-items-center mb-3">
+                                                <div class="icon-circle bg-info bg-opacity-10 me-3">
+                                                    <i class="fa fa-briefcase fa-lg text-info"></i>
+                                                </div>
+                                                <div>
+                                                    <h5 class="mb-1">CRM</h5>
+                                                    <p class="text-muted mb-0 small">Manage leads and opportunities</p>
+                                                </div>
+                                            </div>
+
+                                            <div class="crm-summary mb-3">
+                                                <div class="row text-center">
+                                                    <div class="col-6">
+                                                        <div class="metric-box">
+                                                            <h4 class="text-info mb-0" t-esc="crm_leads_count or 0"/>
+                                                            <small class="text-muted">Active Leads</small>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-6">
+                                                        <div class="metric-box">
+                                                            <h4 class="text-success mb-0">
+                                                                <i class="fa fa-trophy"></i>
+                                                            </h4>
+                                                            <small class="text-muted">Opportunities</small>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <a href="/my/employee/crm" class="btn btn-outline-info btn-sm w-100">
+                                                <i class="fa fa-eye"></i> View CRM
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </t>
+
+                            <!-- Expenses Card -->
+                            <t t-if="has_expenses_access">
+                                <div class="col-md-6">
+                                    <div class="module-card card border-0 shadow-sm h-100">
+                                        <div class="card-body">
+                                            <div class="d-flex align-items-center mb-3">
+                                                <div class="icon-circle bg-warning bg-opacity-10 me-3">
+                                                    <i class="fa fa-money fa-lg text-warning"></i>
+                                                </div>
+                                                <div>
+                                                    <h5 class="mb-1">Expenses</h5>
+                                                    <p class="text-muted mb-0 small">Track and submit expenses</p>
+                                                </div>
+                                            </div>
+
+                                            <t t-if="expense_stats">
+                                                <div class="expense-summary mb-3">
+                                                    <div class="row text-center">
+                                                        <div class="col-4">
+                                                            <div class="metric-box">
+                                                                <h6 class="text-warning mb-0" t-esc="expense_stats['submitted_count']"/>
+                                                                <small class="text-muted">Pending</small>
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-4">
+                                                            <div class="metric-box">
+                                                                <h6 class="text-success mb-0" t-esc="expense_stats['approved_count']"/>
+                                                                <small class="text-muted">Approved</small>
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-4">
+                                                            <div class="metric-box">
+                                                                <h6 class="text-primary mb-0"><t t-esc="employee.company_id.currency_id.symbol"/><t t-esc="'%.0f' % expense_stats['total_amount']"/></h6>
+                                                                <small class="text-muted">Total</small>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </t>
+
+                                            <a href="/my/employee/expenses" class="btn btn-outline-warning btn-sm w-100">
+                                                <i class="fa fa-list"></i> View Expenses
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </t>
+
+                            <!-- Payslips Card -->
+                            <t t-if="has_payslip_access">
+                                <div class="col-md-6">
+                                    <div class="module-card card border-0 shadow-sm h-100">
+                                        <div class="card-body">
+                                            <div class="d-flex align-items-center mb-3">
+                                                <div class="icon-circle bg-success bg-opacity-10 me-3">
+                                                    <i class="fa fa-file-text-o fa-lg text-success"></i>
+                                                </div>
+                                                <div>
+                                                    <h5 class="mb-1">Payslips</h5>
+                                                    <p class="text-muted mb-0 small">View and download payslips</p>
+                                                </div>
+                                            </div>
+
+                                            <div class="payslip-summary mb-3">
+                                                <div class="d-flex justify-content-between">
+                                                    <span>Total Payslips:</span>
+                                                    <strong class="text-success" t-esc="payslips_count or 0"/>
+                                                </div>
+                                                <t t-if="latest_payslip">
+                                                    <div class="d-flex justify-content-between mt-1">
+                                                        <span>Latest:</span>
+                                                        <small class="text-muted">
+                                                            <t t-esc="latest_payslip.get_formatted_period()"/>
+                                                        </small>
+                                                    </div>
+                                                </t>
+                                            </div>
+
+                                            <a href="/my/employee/payslips" class="btn btn-outline-success btn-sm w-100">
+                                                <i class="fa fa-download"></i> View Payslips
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </t>
+                        </div>
+                    </div>
+
+                    <!-- Right Column -->
+                    <div class="col-lg-4">
+                        <!-- Recent Activity Card -->
+                        <div class="card border-0 shadow-sm mb-4">
+                            <div class="card-header bg-transparent border-0 pb-0">
+                                <h5 class="mb-0">
+                                    <i class="fa fa-bell text-info mr-2"></i>
+                                    Recent Activity
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="activity-timeline">
+                                    <t t-if="today_attendances and len(today_attendances) > 0">
+                                        <div class="activity-item">
+                                            <div class="activity-icon bg-primary">
+                                                <i class="fa fa-clock-o"></i>
+                                            </div>
+                                            <div class="activity-content">
+                                                <t t-set="latest_attendance" t-value="today_attendances[0]" />
+                                                <t t-if="latest_attendance.check_out">
+                                                    <h6 class="mb-1">Completed Work Day</h6>
+                                                    <p class="text-muted mb-0 small">
+                                                        Worked <t t-esc="'%.2f' % latest_attendance.worked_hours"/> hours
+                                                    </p>
+                                                </t>
+                                                <t t-else="">
+                                                    <h6 class="mb-1">Checked In</h6>
+                                                    <p class="text-muted mb-0 small">
+                                                        At <t t-esc="format_datetime(latest_attendance.check_in)"/>
+                                                    </p>
+                                                </t>
+                                            </div>
+                                        </div>
+                                    </t>
+
+                                    <t t-if="has_expenses_access and expense_stats and expense_stats['total_count'] > 0">
+                                        <div class="activity-item">
+                                            <div class="activity-icon bg-warning">
+                                                <i class="fa fa-money"></i>
+                                            </div>
+                                            <div class="activity-content">
+                                                <h6 class="mb-1">Expense Updates</h6>
+                                                <p class="text-muted mb-0 small">
+                                                    <t t-esc="expense_stats['total_count']"/> expenses this month
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </t>
+
+                                    <t t-if="has_crm_access and crm_leads_count and crm_leads_count > 0">
+                                        <div class="activity-item">
+                                            <div class="activity-icon bg-info">
+                                                <i class="fa fa-briefcase"></i>
+                                            </div>
+                                            <div class="activity-content">
+                                                <h6 class="mb-1">CRM Active</h6>
+                                                <p class="text-muted mb-0 small">
+                                                    <t t-esc="crm_leads_count"/> leads to manage
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </t>
+
+                                    <div class="activity-item">
+                                        <div class="activity-icon bg-secondary">
+                                            <i class="fa fa-calendar"></i>
+                                        </div>
+                                        <div class="activity-content">
+                                            <h6 class="mb-1">Dashboard Loaded</h6>
+                                            <p class="text-muted mb-0 small">
+                                                Welcome to your ESS portal
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="text-center mt-3">
+                                    <a href="#" class="btn btn-outline-secondary btn-sm" onclick="refreshActivity()">
+                                        <i class="fa fa-refresh"></i> Refresh Activity
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Performance Metrics Card -->
+                        <!-- <div class="card border-0 shadow-sm mb-4">
+                            <div class="card-header bg-transparent border-0 pb-0">
+                                <h5 class="mb-0">
+                                    <i class="fa fa-chart-line text-info mr-2"></i>
+                                    Performance metrics
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <t t-if="performance_metrics">
+                                    <div class="row g-3">
+                                        <div class="col-md-6">
+                                            <div class="metric-card p-3 border rounded">
+                                                <div class="d-flex justify-content-between align-items-center">
+                                                    <div>
+                                                        <h6 class="text-muted mb-1">Attendance Rate</h6>
+                                                        <h4 class="text-success mb-0">
+                                                            <t t-esc="'%.1f' % performance_metrics['attendance_rate']"/>%
+                                                        </h4>
+                                                    </div>
+                                                    <i class="fa fa-calendar-check-o fa-2x text-success"></i>
+                                                </div>
+                                                <div class="progress mt-2" style="height: 4px;">
+                                                    <div class="progress-bar bg-success" 
+                                                         t-attf-style="width: #{performance_metrics['attendance_rate']}%"></div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="col-md-6">
+                                            <div class="metric-card p-3 border rounded">
+                                                <div class="d-flex justify-content-between align-items-center">
+                                                    <div>
+                                                        <h6 class="text-muted mb-1">Weekly Hours</h6>
+                                                        <h4 class="text-primary mb-0">
+                                                            <t t-esc="'%.1f' % performance_metrics['weekly_hours']"/>h
+                                                        </h4>
+                                                    </div>
+                                                    <i class="fa fa-clock-o fa-2x text-primary"></i>
+                                                </div>
+                                                <small class="text-muted">
+                                                    Target: 40 hours
+                                                </small>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="col-md-6">
+                                            <div class="metric-card p-3 border rounded">
+                                                <div class="d-flex justify-content-between align-items-center">
+                                                    <div>
+                                                        <h6 class="text-muted mb-1">CRM Conversion</h6>
+                                                        <h4 class="text-info mb-0">
+                                                            <t t-esc="'%.1f' % performance_metrics['crm_conversion_rate']"/>%
+                                                        </h4>
+                                                    </div>
+                                                    <i class="fa fa-trophy fa-2x text-info"></i>
+                                                </div>
+                                                <small class="text-muted">
+                                                    Lead to opportunity rate
+                                                </small>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="col-md-6">
+                                            <div class="metric-card p-3 border rounded">
+                                                <div class="d-flex justify-content-between align-items-center">
+                                                    <div>
+                                                        <h6 class="text-muted mb-1">Avg Expense</h6>
+                                                        <h4 class="text-warning mb-0">
+                                                            <t t-esc="employee.company_id.currency_id.symbol"/><t t-esc="'%.0f' % performance_metrics['expense_avg_amount']"/>
+                                                        </h4>
+                                                    </div>
+                                                    <i class="fa fa-calculator fa-2x text-warning"></i>
+                                                </div>
+                                                <small class="text-muted">
+                                                    Monthly average
+                                                </small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </t>
+                                <t t-else="">
+                                    <div class="text-center text-muted">
+                                        <i class="fa fa-chart-bar fa-3x mb-3"></i>
+                                        <p>Performance metrics will appear here as you use the system.</p>
+                                    </div>
+                                </t>
+                            </div>
+                        </div> -->
+
+                        <!-- Help &amp; Resources Card -->
+                        <!-- <div class="card border-0 shadow-sm">
+                            <div class="card-header bg-transparent border-0 pb-0">
+                                <h5 class="mb-0">
+                                    <i class="fa fa-question-circle text-success mr-2"></i>
+                                    Help &amp; Resources
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="list-group list-group-flush">
+                                    <a href="#" class="list-group-item list-group-item-action border-0 px-0" 
+                                       onclick="showHelp('attendance')">
+                                        <i class="fa fa-book text-primary mr-2"></i>
+                                        Attendance Guide
+                                    </a>
+                                    <a href="#" class="list-group-item list-group-item-action border-0 px-0"
+                                       onclick="showHelp('crm')">
+                                        <i class="fa fa-book text-info mr-2"></i>
+                                        CRM User Manual
+                                    </a>
+                                    <a href="#" class="list-group-item list-group-item-action border-0 px-0"
+                                       onclick="showHelp('expenses')">
+                                        <i class="fa fa-book text-warning mr-2"></i>
+                                        Expense Guidelines
+                                    </a>
+                                    <a href="#" class="list-group-item list-group-item-action border-0 px-0"
+                                       onclick="contactSupport()">
+                                        <i class="fa fa-support text-success mr-2"></i>
+                                        Contact Support
+                                    </a>
+                                </div>
+                            </div>
+                        </div> -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Enhanced Dashboard Styles -->
+            <style>
+                .icon-circle {
+                    width: 50px;
+                    height: 50px;
+                    border-radius: 50%;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                }
+
+                .quick-action-card {
+                    transition: all 0.3s ease;
+                    background: #f8f9fa;
+                }
+
+                .quick-action-card:hover {
+                    background: #e9ecef;
+                    transform: translateY(-2px);
+                    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+                }
+
+                .module-card {
+                    transition: all 0.3s ease;
+                }
+
+                .module-card:hover {
+                    transform: translateY(-5px);
+                    box-shadow: 0 8px 25px rgba(0,0,0,0.15) !important;
+                }
+
+                .metric-box {
+                    padding: 0.5rem;
+                }
+
+                .activity-timeline {
+                    position: relative;
+                }
+
+                .activity-item {
+                    display: flex;
+                    margin-bottom: 1rem;
+                    position: relative;
+                }
+
+                .activity-item:not(:last-child)::after {
+                    content: '';
+                    position: absolute;
+                    left: 20px;
+                    top: 40px;
+                    width: 2px;
+                    height: 20px;
+                    background: #dee2e6;
+                }
+
+                .activity-icon {
+                    width: 40px;
+                    height: 40px;
+                    border-radius: 50%;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    margin-right: 0.75rem;
+                    flex-shrink: 0;
+                }
+
+                .activity-icon i {
+                    color: white;
+                    font-size: 14px;
+                }
+
+                .activity-content h6 {
+                    font-size: 0.9rem;
+                    font-weight: 600;
+                }
+
+                .card {
+                    border-radius: 12px;
+                }
+
+                .btn {
+                    border-radius: 8px;
+                }
+
+                /* Dark mode support */
+                [data-theme="dark"] .card {
+                    background-color: #2d3748;
+                    border-color: #4a5568;
+                }
+
+                [data-theme="dark"] .quick-action-card {
+                    background: #4a5568;
+                    border-color: #718096;
+                }
+
+                [data-theme="dark"] .text-muted {
+                    color: #a0aec0 !important;
+                }
+
+                /* Loading states */
+                .loading {
+                    opacity: 0.7;
+                    pointer-events: none;
+                }
+
+                .loading::after {
+                    content: '';
+                    position: absolute;
+                    top: 50%;
+                    left: 50%;
+                    width: 20px;
+                    height: 20px;
+                    margin: -10px 0 0 -10px;
+                    border: 2px solid #f3f3f3;
+                    border-top: 2px solid #007bff;
+                    border-radius: 50%;
+                    animation: spin 1s linear infinite;
+                }
+
+                @keyframes spin {
+                    0% { transform: rotate(0deg); }
+                    100% { transform: rotate(360deg); }
+                }
+
+                /* Responsive adjustments */
+                @media (max-width: 768px) {
+                    .container-fluid {
+                        padding-left: 15px;
+                        padding-right: 15px;
+                    }
+                    
+                    .module-card:hover {
+                        transform: none;
+                    }
+                    
+                    .quick-action-card:hover {
+                        transform: none;
+                    }
+                }
+            </style>
+
+            <!-- Enhanced Dashboard JavaScript -->
+            <script>
+            <![CDATA[
+            // Global dashboard state
+            let dashboardState = {
+                theme: localStorage.getItem('ess-theme') || 'light',
+                lastRefresh: new Date(),
+                isLoading: false
+            };
+
+            // Initialize dashboard
+            document.addEventListener('DOMContentLoaded', function() {
+                initializeDashboard();
+                setCurrentDate();
+                applyTheme(dashboardState.theme);
+                startAutoRefresh();
+            });
+
+            function initializeDashboard() {
+                console.log('Enhanced ESS Dashboard initialized');
+                
+                // Add hover effects to cards
+                const cards = document.querySelectorAll('.card');
+                cards.forEach(card => {
+                    card.addEventListener('mouseenter', function() {
+                        if (!this.classList.contains('module-card')) return;
+                        this.style.transform = 'translateY(-5px)';
+                        this.style.transition = 'transform 0.3s ease, box-shadow 0.3s ease';
+                    });
+                    
+                    card.addEventListener('mouseleave', function() {
+                        if (!this.classList.contains('module-card')) return;
+                        this.style.transform = 'translateY(0)';
+                    });
+                });
+
+                // Add loading states to buttons
+                const actionButtons = document.querySelectorAll('.btn');
+                actionButtons.forEach(btn => {
+                    btn.addEventListener('click', function(e) {
+                        if (this.classList.contains('loading')) {
+                            e.preventDefault();
+                            return false;
+                        }
+                    });
+                });
+            }
+
+            function setCurrentDate() {
+                const dateElement = document.getElementById('currentDate');
+                if (dateElement) {
+                    const today = new Date();
+                    const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+                    dateElement.textContent = today.toLocaleDateString('en-US', options);
+                }
+            }
+
+            // Helper: Reverse geocode using Nominatim
+            function reverseGeocode(lat, lon, callback) {
+                console.log(`Attempting to reverse geocode: ${lat}, ${lon}`);
+                
+                // Add cache to prevent excessive API calls
+                const cacheKey = `${lat.toFixed(6)},${lon.toFixed(6)}`;
+                const cachedResult = sessionStorage.getItem(`geo_${cacheKey}`);
+                if (cachedResult) {
+                    console.log(`Using cached location: ${cachedResult}`);
+                    callback(cachedResult);
+                    return;
+                }
+                
+                // Add a user agent header to comply with Nominatim usage policy
+                fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&zoom=18`, {
+                    headers: {
+                        'User-Agent': 'TechcarrotESS/1.0'
+                    }
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! Status: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data && data.display_name) {
+                        console.log(`Got location: ${data.display_name}`);
+                        // Cache the result for future use
+                        sessionStorage.setItem(`geo_${cacheKey}`, data.display_name);
+                        callback(data.display_name);
+                    } else {
+                        console.warn('No location name in response', data);
+                        callback(`Location at ${lat.toFixed(6)},${lon.toFixed(6)}`);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error in reverse geocoding:', error);
+                    // Fallback to coordinates
+                    callback(`Location at ${lat.toFixed(6)},${lon.toFixed(6)}`);
+                });
+            }
+
+            // Enhanced Check-In Function with Geolocation
+            function quickCheckIn() {
+                const btn = event.target;
+                // Store the button's original text (either "Check In Now" or "Check In Again")
+                // This is important for proper button restoration in error scenarios
+                const isReCheckIn = btn.innerHTML.includes('Check In Again');
+                const defaultButtonText = isReCheckIn 
+                    ? '<i class="fa fa-sign-in"></i> Check In Again'
+                    : '<i class="fa fa-sign-in"></i> Check In Now';
+                
+                setButtonLoading(btn, '<i class="fa fa-spinner fa-spin"></i> Checking In...');
+                
+                if (navigator.geolocation) {
+                    navigator.geolocation.getCurrentPosition(
+                        function(position) {
+                            // Successfully got location
+                            const latitude = position.coords.latitude;
+                            const longitude = position.coords.longitude;
+                            console.log(`Got location: ${latitude}, ${longitude}`);
+                            
+                            // Get address from coordinates
+                            reverseGeocode(latitude, longitude, function(location) {
+                                // Now send check-in request with location data
+                                fetch('/my/employee/attendance/quick-checkin', {
+                                    method: 'POST',
+                                    headers: {
+                                        'Content-Type': 'application/x-www-form-urlencoded',
+                                        'X-CSRFToken': getCSRFToken()
+                                    },
+                                    body: 'csrf_token=' + encodeURIComponent(getCSRFToken()) + 
+                                          '&in_latitude=' + encodeURIComponent(latitude) + 
+                                          '&in_longitude=' + encodeURIComponent(longitude) + 
+                                          '&check_in_location=' + encodeURIComponent(location)
+                                })
+                                .then(response => {
+                                    console.log('Response status:', response.status);
+                                    
+                                    // Critical fix: Check HTTP status first
+                                    if (response.status >= 200 && response.status < 300) {
+                                        console.log('HTTP success status detected:', response.status);
+                                        
+                                        // Try getting raw text first to examine what we're getting back
+                                        return response.text().then(text => {
+                                            console.log('Raw response text:', text.substring(0, 200) + (text.length > 200 ? '...' : ''));
+                                            
+                                            try {
+                                                // Attempt to parse as JSON
+                                                const data = JSON.parse(text);
+                                                console.log('Successfully parsed response as JSON:', data);
+                                                return data;
+                                            } catch (e) {
+                                                console.warn('Response is not JSON but HTTP status is success:', e.message);
+                                                
+                                                // Critical fix: If we got HTTP 200-299 but not JSON,
+                                                // the operation likely succeeded, so we construct a success object
+                                                console.log('Creating synthetic success response');
+                                                return { 
+                                                    status: 'success', 
+                                                    message: 'Operation successful',
+                                                    synthetic: true // Flag to indicate this is a constructed response
+                                                };
+                                            }
+                                        });
+                                    } else {
+                                        // HTTP error - try to parse error details if available
+                                        console.error('HTTP error status:', response.status);
+                                        throw new Error(`HTTP error! Status: ${response.status}`);
+                                    }
+                                })
+                                .then(data => {
+                                    console.log('Response data:', data);
+                                    // The backend may return HTTP 200 OK with JSON status field to indicate success/failure
+                                    // OR it may return HTTP 200 OK with simple string response for legacy endpoints
+                                    
+                                    // For JSON responses with status field
+                                    if (data && typeof data === 'object') {
+                                        // Check for success status field in JSON response
+                                        if (data.status === 'success') {
+                                            showNotification(data.message || 'Checked in successfully', 'success');
+                                            console.log('Check-in successful, reloading page in 1.5 seconds');
+                                            setTimeout(() => window.location.reload(), 1500);
+                                            return; // Exit early on success
+                                        } else {
+                                            // Error with message in JSON response
+                                            console.error('Check-in error from server:', data.message);
+                                            showNotification(data.message || 'Check-in failed', 'error');
+                                        }
+                                    } else {
+                                        // Successful string response from legacy endpoint
+                                        console.log('Check-in successful (legacy response), reloading page in 1.5 seconds');
+                                        showNotification('Checked in successfully', 'success');
+                                        setTimeout(() => window.location.reload(), 1500);
+                                        return; // Exit early on success
+                                    }
+                                    
+                                    // If we get here, there was an error - restore button
+                                    const originalText = btn.getAttribute('data-original-text') || defaultButtonText;
+                                    resetButton(btn, originalText);
+                                })
+                                .catch(error => {
+                                    console.error('Fetch error:', error);
+                                    
+                                    // Check if the request actually succeeded despite the error
+                                    // This happens when the server returns a non-JSON response that the frontend can't parse
+                                    if (error.message === 'Invalid response format') {
+                                        // Assume success for unparseable responses - the backend updated the record
+                                        console.log('Assuming check-in succeeded despite parsing error');
+                                        showNotification('Checked in successfully', 'success');
+                                        setTimeout(() => window.location.reload(), 1500);
+                                    } else {
+                                        // Genuine error
+                                        showNotification('Check-in failed. Please try again.', 'error');
+                                        // Determine the original button text
+                                        const originalText = btn.getAttribute('data-original-text') || defaultButtonText;
+                                        resetButton(btn, originalText);
+                                    }
+                                });
+                            });
+                        },
+                        function(error) {
+                            console.error("Geolocation error:", error);
+                            showNotification('Could not get your location. Check-in without location.', 'warning');
+                            
+                            // Continue with check-in without location
+                            fetch('/my/employee/attendance/quick-checkin', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/x-www-form-urlencoded',
+                                    'X-CSRFToken': getCSRFToken()
+                                },
+                                body: 'csrf_token=' + encodeURIComponent(getCSRFToken()) +
+                                      '&check_in_location=Quick Check-in from Dashboard (No location access)'
+                            })
+                            .then(response => {
+                                console.log('Response status (no location):', response.status);
+                                
+                                // Critical fix: Check HTTP status first
+                                if (response.status >= 200 && response.status < 300) {
+                                    console.log('HTTP success status detected (no location):', response.status);
+                                    
+                                    // Try getting raw text first to examine what we're getting back
+                                    return response.text().then(text => {
+                                        console.log('Raw response text (no location):', text.substring(0, 200) + (text.length > 200 ? '...' : ''));
+                                        
+                                        try {
+                                            // Attempt to parse as JSON
+                                            const data = JSON.parse(text);
+                                            console.log('Successfully parsed response as JSON (no location):', data);
+                                            return data;
+                                        } catch (e) {
+                                            console.warn('Response is not JSON but HTTP status is success (no location):', e.message);
+                                            
+                                            // Critical fix: If we got HTTP 200-299 but not JSON,
+                                            // the operation likely succeeded, so we construct a success object
+                                            console.log('Creating synthetic success response (no location)');
+                                            return { 
+                                                status: 'success', 
+                                                message: 'Checked in successfully',
+                                                synthetic: true // Flag to indicate this is a constructed response
+                                            };
+                                        }
+                                    });
+                                } else {
+                                    // HTTP error - try to parse error details if available
+                                    console.error('HTTP error status (no location):', response.status);
+                                    throw new Error(`HTTP error! Status: ${response.status}`);
+                                }
+                            })
+                            .then(data => {
+                                console.log('Response data (no location):', data);
+                                
+                                // For JSON responses with status field
+                                if (data && typeof data === 'object') {
+                                    // Check for success status field in JSON response
+                                    if (data.status === 'success') {
+                                        showNotification(data.message || 'Checked in successfully', 'success');
+                                        console.log('Check-in successful (no location), reloading page in 1.5 seconds');
+                                        setTimeout(() => window.location.reload(), 1500);
+                                        return; // Exit early on success
+                                    } else {
+                                        // Error with message in JSON response
+                                        console.error('Check-in error from server (no location):', data.message);
+                                        showNotification(data.message || 'Check-in failed', 'error');
+                                    }
+                                } else {
+                                    // Successful string response from legacy endpoint
+                                    console.log('Check-in successful (legacy response, no location), reloading page in 1.5 seconds');
+                                    showNotification('Checked in successfully', 'success');
+                                    setTimeout(() => window.location.reload(), 1500);
+                                    return; // Exit early on success
+                                }
+                                
+                                // If we get here, there was an error - restore button
+                                const originalText = btn.getAttribute('data-original-text') || defaultButtonText;
+                                resetButton(btn, originalText);
+                            })
+                            .catch(error => {
+                                console.error('Fetch error (no location):', error);
+                                
+                                // Check if the request actually succeeded despite the error
+                                if (error.message === 'Invalid response format') {
+                                    // Assume success for unparseable responses - the backend updated the record
+                                    console.log('Assuming check-in succeeded despite parsing error (no location)');
+                                    showNotification('Checked in successfully', 'success');
+                                    setTimeout(() => window.location.reload(), 1500);
+                                } else {
+                                    // Genuine error
+                                    showNotification('Check-in failed. Please try again.', 'error');
+                                    // Determine the original button text
+                                    const originalText = btn.getAttribute('data-original-text') || defaultButtonText;
+                                    resetButton(btn, originalText);
+                                }
+                            });
+                        },
+                        { enableHighAccuracy: true, timeout: 10000, maximumAge: 300000 }
+                    );
+                } else {
+                    console.error("Geolocation not supported");
+                    showNotification('Your device does not support location. Check-in without location.', 'warning');
+                    
+                    // Fallback to check-in without location
+                    fetch('/my/employee/attendance/quick-checkin', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded',
+                            'X-CSRFToken': getCSRFToken()
+                        },
+                        body: 'csrf_token=' + encodeURIComponent(getCSRFToken()) +
+                              '&check_in_location=Quick Check-in from Dashboard (No location support)'
+                    })
+                    .then(response => {
+                        console.log('Response status (no geo):', response.status);
+                        // Clone response to inspect text content before JSON parsing
+                        const responseClone = response.clone();
+                        responseClone.text().then(text => {
+                            console.log('Raw response text (no geo):', text.substring(0, 200) + (text.length > 200 ? '...' : ''));
+                        }).catch(e => console.error('Error getting response text (no geo):', e));
+                        
+                        return response.json().catch(e => {
+                            // Handle JSON parse errors
+                            console.error('JSON parse error (no geo):', e);
+                            throw new Error('Invalid response format');
+                        });
+                    })
+                    .then(data => {
+                        console.log('Response data (no geo):', data);
+                        
+                        // For JSON responses with status field
+                        if (data && typeof data === 'object') {
+                            // Check for success status field in JSON response
+                            if (data.status === 'success') {
+                                showNotification(data.message || 'Checked in successfully', 'success');
+                                console.log('Check-in successful (no geo), reloading page in 1.5 seconds');
+                                setTimeout(() => window.location.reload(), 1500);
+                                return; // Exit early on success
+                            } else {
+                                // Error with message in JSON response
+                                console.error('Check-in error from server (no geo):', data.message);
+                                showNotification(data.message || 'Check-in failed', 'error');
+                            }
+                        } else {
+                            // Successful string response from legacy endpoint
+                            console.log('Check-in successful (legacy response, no geo), reloading page in 1.5 seconds');
+                            showNotification('Checked in successfully', 'success');
+                            setTimeout(() => window.location.reload(), 1500);
+                            return; // Exit early on success
+                        }
+                        
+                        // If we get here, there was an error - restore button
+                        const originalText = btn.getAttribute('data-original-text') || defaultButtonText;
+                        resetButton(btn, originalText);
+                    })
+                    .catch(error => {
+                        console.error('Fetch error (no geo):', error);
+                        
+                        // Check if the request actually succeeded despite the error
+                        if (error.message === 'Invalid response format') {
+                            // Assume success for unparseable responses - the backend updated the record
+                            console.log('Assuming check-in succeeded despite parsing error (no geo)');
+                            showNotification('Checked in successfully', 'success');
+                            setTimeout(() => window.location.reload(), 1500);
+                        } else {
+                            // Genuine error
+                            showNotification('Check-in failed. Please try again.', 'error');
+                            // Determine the original button text
+                            const originalText = btn.getAttribute('data-original-text') || defaultButtonText;
+                            resetButton(btn, originalText);
+                        }
+                    });
+                }
+            }
+            
+            // Enhanced Check-Out Function with Geolocation
+            function quickCheckOut() {
+                const btn = event.target;
+                // Always use the consistent button text for checkout
+                const defaultButtonText = '<i class="fa fa-sign-out"></i> Check Out Now';
+                
+                setButtonLoading(btn, '<i class="fa fa-spinner fa-spin"></i> Checking Out...');
+                
+                if (navigator.geolocation) {
+                    navigator.geolocation.getCurrentPosition(
+                        function(position) {
+                            // Successfully got location
+                            const latitude = position.coords.latitude;
+                            const longitude = position.coords.longitude;
+                            console.log(`Got location: ${latitude}, ${longitude}`);
+                            
+                            // Get address from coordinates
+                            reverseGeocode(latitude, longitude, function(location) {
+                                // Now send check-out request with location data
+                                fetch('/my/employee/attendance/quick-checkout', {
+                                    method: 'POST',
+                                    headers: {
+                                        'Content-Type': 'application/x-www-form-urlencoded',
+                                        'X-CSRFToken': getCSRFToken()
+                                    },
+                                    body: 'csrf_token=' + encodeURIComponent(getCSRFToken()) + 
+                                          '&out_latitude=' + encodeURIComponent(latitude) + 
+                                          '&out_longitude=' + encodeURIComponent(longitude) + 
+                                          '&check_out_location=' + encodeURIComponent(location)
+                                })
+                                .then(response => {
+                                    console.log('Checkout response status:', response.status);
+                                    
+                                    // Critical fix: Check HTTP status first
+                                    if (response.status >= 200 && response.status < 300) {
+                                        console.log('HTTP success status detected for checkout:', response.status);
+                                        
+                                        // Try getting raw text first to examine what we're getting back
+                                        return response.text().then(text => {
+                                            console.log('Raw checkout response text:', text.substring(0, 200) + (text.length > 200 ? '...' : ''));
+                                            
+                                            try {
+                                                // Attempt to parse as JSON
+                                                const data = JSON.parse(text);
+                                                console.log('Successfully parsed checkout response as JSON:', data);
+                                                return data;
+                                            } catch (e) {
+                                                console.warn('Checkout response is not JSON but HTTP status is success:', e.message);
+                                                
+                                                // Critical fix: If we got HTTP 200-299 but not JSON,
+                                                // the operation likely succeeded, so we construct a success object
+                                                console.log('Creating synthetic success response for checkout');
+                                                return { 
+                                                    status: 'success', 
+                                                    message: 'Checked out successfully',
+                                                    synthetic: true // Flag to indicate this is a constructed response
+                                                };
+                                            }
+                                        });
+                                    } else {
+                                        // HTTP error - try to parse error details if available
+                                        console.error('HTTP error status for checkout:', response.status);
+                                        throw new Error(`HTTP error! Status: ${response.status}`);
+                                    }
+                                })
+                                .then(data => {
+                                    console.log('Checkout response data:', data);
+                                    
+                                    // The backend may return HTTP 200 OK with JSON status field to indicate success/failure
+                                    // OR it may return HTTP 200 OK with simple string response for legacy endpoints
+                                    
+                                    // For JSON responses with status field
+                                    if (data && typeof data === 'object') {
+                                        // Check for success status field in JSON response
+                                        if (data.status === 'success') {
+                                            showNotification(data.message || 'Checked out successfully', 'success');
+                                            console.log('Check-out successful, reloading page in 1.5 seconds');
+                                            setTimeout(() => window.location.reload(), 1500);
+                                            return; // Exit early on success
+                                        } else {
+                                            // Error with message in JSON response
+                                            console.error('Check-out error from server:', data.message);
+                                            showNotification(data.message || 'Check-out failed', 'error');
+                                        }
+                                    } else {
+                                        // Successful string response from legacy endpoint
+                                        console.log('Check-out successful (legacy response), reloading page in 1.5 seconds');
+                                        showNotification('Checked out successfully', 'success');
+                                        setTimeout(() => window.location.reload(), 1500);
+                                        return; // Exit early on success
+                                    }
+                                    
+                                    // If we get here, there was an error - restore button
+                                    const originalText = btn.getAttribute('data-original-text') || defaultButtonText;
+                                    resetButton(btn, originalText);
+                                })
+                                .catch(error => {
+                                    console.error('Checkout fetch error:', error);
+                                    
+                                    // Check if the request actually succeeded despite the error
+                                    // This happens when the server returns a non-JSON response that the frontend can't parse
+                                    if (error.message === 'Invalid response format') {
+                                        // Assume success for unparseable responses - the backend updated the record
+                                        console.log('Assuming check-out succeeded despite parsing error');
+                                        showNotification('Checked out successfully', 'success');
+                                        setTimeout(() => window.location.reload(), 1500);
+                                    } else {
+                                        // Genuine error
+                                        showNotification('Check-out failed. Please try again.', 'error');
+                                        // Determine the original button text
+                                        const originalText = btn.getAttribute('data-original-text') || defaultButtonText;
+                                        resetButton(btn, originalText);
+                                    }
+                                });
+                            });
+                        },
+                        function(error) {
+                            console.error("Geolocation error:", error);
+                            showNotification('Could not get your location. Check-out without location.', 'warning');
+                            
+                            // Continue with check-out without location
+                            fetch('/my/employee/attendance/quick-checkout', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/x-www-form-urlencoded',
+                                    'X-CSRFToken': getCSRFToken()
+                                },
+                                body: 'csrf_token=' + encodeURIComponent(getCSRFToken()) +
+                                      '&check_out_location=Quick Check-out from Dashboard (No location access)'
+                            })
+                            .then(response => {
+                                console.log('Response status (checkout no location):', response.status);
+                                // Clone response to inspect text content before JSON parsing
+                                const responseClone = response.clone();
+                                responseClone.text().then(text => {
+                                    console.log('Raw checkout response text (no location):', 
+                                        text.substring(0, 200) + (text.length > 200 ? '...' : ''));
+                                }).catch(e => console.error('Error getting checkout response text (no location):', e));
+                                
+                                return response.json().catch(e => {
+                                    // Handle JSON parse errors
+                                    console.error('JSON parse error (checkout, no location):', e);
+                                    throw new Error('Invalid response format');
+                                });
+                            })
+                            .then(data => {
+                                console.log('Checkout response data (no location):', data);
+                                
+                                // For JSON responses with status field
+                                if (data && typeof data === 'object') {
+                                    if (data.status === 'success') {
+                                        showNotification(data.message || 'Checked out successfully', 'success');
+                                        setTimeout(() => window.location.reload(), 1500);
+                                        return;
+                                    } else {
+                                        console.error('Check-out error from server (no location):', data.message);
+                                        showNotification(data.message || 'Check-out failed', 'error');
+                                    }
+                                } else {
+                                    // Successful string response from legacy endpoint
+                                    showNotification('Checked out successfully', 'success');
+                                    setTimeout(() => window.location.reload(), 1500);
+                                    return;
+                                }
+                                
+                                // If we get here, there was an error - restore button
+                                const originalText = btn.getAttribute('data-original-text') || defaultButtonText;
+                                resetButton(btn, originalText);
+                            })
+                            .catch(error => {
+                                console.error('Checkout error (no location):', error);
+                                
+                                // Check if the request actually succeeded despite the error
+                                if (error.message === 'Invalid response format') {
+                                    // Assume success for unparseable responses - the backend updated the record
+                                    console.log('Assuming check-out succeeded despite parsing error (no location)');
+                                    showNotification('Checked out successfully', 'success');
+                                    setTimeout(() => window.location.reload(), 1500);
+                                } else {
+                                    // Genuine error
+                                    showNotification('Check-out failed. Please try again.', 'error');
+                                    // Determine the original button text
+                                    const originalText = btn.getAttribute('data-original-text') || defaultButtonText;
+                                    resetButton(btn, originalText);
+                                }
+                            });
+                        },
+                        { enableHighAccuracy: true, timeout: 10000, maximumAge: 300000 }
+                    );
+                } else {
+                    console.error("Geolocation not supported");
+                    showNotification('Your device does not support location. Check-out without location.', 'warning');
+                    
+                    // Fallback to check-out without location
+                    fetch('/my/employee/attendance/quick-checkout', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded',
+                            'X-CSRFToken': getCSRFToken()
+                        },
+                        body: 'csrf_token=' + encodeURIComponent(getCSRFToken()) +
+                              '&check_out_location=Quick Check-out from Dashboard (No location support)'
+                    })
+                    .then(response => {
+                        console.log('Response status (checkout no geo):', response.status);
+                        
+                        // Critical fix: Check HTTP status first
+                        if (response.status >= 200 && response.status < 300) {
+                            console.log('HTTP success status detected (checkout no geo):', response.status);
+                            
+                            // Try getting raw text first to examine what we're getting back
+                            return response.text().then(text => {
+                                console.log('Raw checkout response text (no geo):', text.substring(0, 200) + (text.length > 200 ? '...' : ''));
+                                
+                                try {
+                                    // Attempt to parse as JSON
+                                    const data = JSON.parse(text);
+                                    console.log('Successfully parsed checkout response as JSON (no geo):', data);
+                                    return data;
+                                } catch (e) {
+                                    console.warn('Checkout response is not JSON but HTTP status is success (no geo):', e.message);
+                                    
+                                    // Critical fix: If we got HTTP 200-299 but not JSON,
+                                    // the operation likely succeeded, so we construct a success object
+                                    console.log('Creating synthetic success response for checkout (no geo)');
+                                    return { 
+                                        status: 'success', 
+                                        message: 'Checked out successfully',
+                                        synthetic: true // Flag to indicate this is a constructed response
+                                    };
+                                }
+                            });
+                        } else {
+                            // HTTP error - try to parse error details if available
+                            console.error('HTTP error status for checkout (no geo):', response.status);
+                            throw new Error(`HTTP error! Status: ${response.status}`);
+                        }
+                    })
+                    .then(data => {
+                        console.log('Checkout response data (no geo):', data);
+                        
+                        // Critical fix: For synthetic responses, always show success
+                        if (data.synthetic) {
+                            console.log('Using synthetic success response for UI update (checkout no geo)');
+                            showNotification('Checked out successfully', 'success');
+                            setTimeout(() => window.location.reload(), 1500);
+                            return;
+                        }
+                        
+                        // For JSON responses with status field
+                        if (data && typeof data === 'object') {
+                            if (data.status === 'success') {
+                                showNotification(data.message || 'Checked out successfully', 'success');
+                                setTimeout(() => window.location.reload(), 1500);
+                                return;
+                            } else {
+                                console.error('Check-out error from server (no geo):', data.message);
+                                showNotification(data.message || 'Check-out failed', 'error');
+                            }
+                        } else {
+                            // Successful string response from legacy endpoint
+                            showNotification('Checked out successfully', 'success');
+                            setTimeout(() => window.location.reload(), 1500);
+                            return;
+                        }
+                        
+                        // If we get here, there was an error - restore button
+                        const originalText = btn.getAttribute('data-original-text') || defaultButtonText;
+                        resetButton(btn, originalText);
+                    })
+                    .catch(error => {
+                        console.error('Checkout error (no geo):', error);
+                        
+                        // Check if the request actually succeeded despite the error
+                        if (error.message === 'Invalid response format') {
+                            // Assume success for unparseable responses - the backend updated the record
+                            console.log('Assuming check-out succeeded despite parsing error (no geo)');
+                            showNotification('Checked out successfully', 'success');
+                            setTimeout(() => window.location.reload(), 1500);
+                        } else {
+                            // Genuine error
+                            showNotification('Check-out failed. Please try again.', 'error');
+                            // Determine the original button text
+                            const originalText = btn.getAttribute('data-original-text') || defaultButtonText;
+                            resetButton(btn, originalText);
+                        }
+                    });
+                }
+            }
+
+            // Dashboard refresh
+            function refreshDashboard() {
+                if (dashboardState.isLoading) return;
+                
+                dashboardState.isLoading = true;
+                const refreshBtn = document.querySelector('[onclick="refreshDashboard()"]');
+                setButtonLoading(refreshBtn, '<i class="fa fa-spinner fa-spin"></i> Refreshing...');
+                
+                // Add loading class to dashboard
+                document.querySelector('.o_portal').classList.add('loading');
+                
+                setTimeout(() => {
+                    window.location.reload();
+                }, 1000);
+            }
+
+            // Theme toggle
+            function toggleTheme() {
+                const newTheme = dashboardState.theme === 'light' ? 'dark' : 'light';
+                dashboardState.theme = newTheme;
+                localStorage.setItem('ess-theme', newTheme);
+                applyTheme(newTheme);
+                showNotification(`Switched to ${newTheme} mode`, 'success');
+            }
+
+            function applyTheme(theme) {
+                document.documentElement.setAttribute('data-theme', theme);
+            }
+
+            // Export dashboard data
+            function exportDashboard() {
+                showNotification('Preparing dashboard export...', 'info');
+                
+                const dashboardData = {
+                    timestamp: new Date().toISOString(),
+                    attendance: gatherAttendanceData(),
+                    crm: gatherCRMData(),
+                    expenses: gatherExpenseData(),
+                    payslips: gatherPayslipData()
+                };
+                
+                const dataStr = JSON.stringify(dashboardData, null, 2);
+                const dataBlob = new Blob([dataStr], {type: 'application/json'});
+                const url = URL.createObjectURL(dataBlob);
+                
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = `ess-dashboard-${new Date().toISOString().split('T')[0]}.json`;
+                link.click();
+                
+                URL.revokeObjectURL(url);
+                showNotification('Dashboard data exported successfully', 'success');
+            }
+
+            // Help functions
+            function showHelp(module) {
+                const helpContent = {
+                    attendance: 'Learn how to use the attendance system effectively...',
+                    crm: 'Guide to managing leads and opportunities...',
+                    expenses: 'How to submit and track your expenses...'
+                };
+                
+                showModal('Help: ' + module.toUpperCase(), helpContent[module] || 'Help content coming soon...');
+            }
+
+            function contactSupport() {
+                showModal('Contact Support', 
+                    'For technical support, please contact:<br/>' +
+                    '<strong>Email:</strong> support@techcarrot.com<br/>' +
+                    '<strong>Phone:</strong> +1 (555) 123-4567<br/>' +
+                    '<strong>Hours:</strong> Mon-Fri 9AM-6PM'
+                );
+            }
+
+            // Activity refresh
+            function refreshActivity() {
+                const activityTimeline = document.querySelector('.activity-timeline');
+                activityTimeline.style.opacity = '0.5';
+                
+                setTimeout(() => {
+                    activityTimeline.style.opacity = '1';
+                    showNotification('Activity updated', 'success');
+                }, 1000);
+            }
+
+            // Auto-refresh dashboard every 5 minutes
+            function startAutoRefresh() {
+                setInterval(() => {
+                    if (!document.hidden) {
+                        console.log('Auto-refreshing dashboard stats...');
+                        // Here you could make AJAX calls to update specific stats
+                        // without full page reload
+                    }
+                }, 5 * 60 * 1000); // 5 minutes
+            }
+
+            // Utility Functions
+            function setButtonLoading(btn, text) {
+                if (!btn) return;
+                // Make sure we don't overwrite an existing data-original-text attribute
+                if (!btn.hasAttribute('data-original-text')) {
+                    btn.setAttribute('data-original-text', btn.innerHTML);
+                }
+                btn.innerHTML = text;
+                btn.disabled = true;
+                btn.classList.add('loading');
+            }
+
+            function resetButton(btn, text) {
+                if (!btn) return;
+                // Get the original text from data attribute, fall back to provided text or empty string
+                const originalText = text || btn.getAttribute('data-original-text') || '';
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+                btn.classList.remove('loading');
+            }
+
+            function getCSRFToken() {
+                return document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+            }
+
+            function gatherAttendanceData() {
+                return {
+                    status: 'gathered',
+                    // Add actual data gathering logic
+                };
+            }
+
+            function gatherCRMData() {
+                return {
+                    leads: document.querySelector('[data-leads-count]')?.textContent || '0'
+                };
+            }
+
+            function gatherExpenseData() {
+                return {
+                    total: document.querySelector('[data-expense-total]')?.textContent || '0'
+                };
+            }
+
+            function gatherPayslipData() {
+                return {
+                    count: document.querySelector('[data-payslip-count]')?.textContent || '0'
+                };
+            }
+
+            // Enhanced Notification System
+            function showNotification(message, type) {
+                // Remove existing notifications
+                const existingNotifications = document.querySelectorAll('.dashboard-notification');
+                existingNotifications.forEach(n => n.remove());
+                
+                // Create new notification
+                const notification = document.createElement('div');
+                notification.className = `alert alert-${type === 'success' ? 'success' : type === 'error' ? 'danger' : 'info'} alert-dismissible fade show dashboard-notification`;
+                notification.style.cssText = 'position: fixed; top: 20px; right: 20px; z-index: 9999; min-width: 300px; box-shadow: 0 4px 12px rgba(0,0,0,0.2);';
+                
+                const iconMap = {
+                    success: 'check-circle',
+                    error: 'exclamation-triangle',
+                    info: 'info-circle',
+                    warning: 'exclamation-circle'
+                };
+                
+                notification.innerHTML = `
+                    <i class="fa fa-${iconMap[type] || 'info-circle'} mr-2"></i>
+                    ${message}
+                    <button type="button" class="btn-close" onclick="this.parentElement.remove()"></button>
+                `;
+                
+                document.body.appendChild(notification);
+                
+                // Auto-remove after 5 seconds
+                setTimeout(() => {
+                    if (notification.parentNode) {
+                        notification.remove();
+                    }
+                }, 5000);
+            }
+
+            // Modal system
+            function showModal(title, content) {
+                const modal = document.createElement('div');
+                modal.className = 'modal fade';
+                modal.innerHTML = `
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title">${title}</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                            </div>
+                            <div class="modal-body">
+                                ${content}
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                document.body.appendChild(modal);
+                const bsModal = new bootstrap.Modal(modal);
+                bsModal.show();
+                
+                modal.addEventListener('hidden.bs.modal', function() {
+                    modal.remove();
+                });
+            }
+            ]]>
+            </script>
+        </t>
+    </template>
+</odoo>

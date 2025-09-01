@@ -1,0 +1,200 @@
+<odoo>
+    <template id="portal_expense" name="My Expenses">
+        <t t-call="portal.portal_layout">
+            <div class="o_portal">
+                <div class="row">
+                    <div class="col-12">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h2><i class="fa fa-money text-warning"></i> My Expenses</h2>
+                            <a href="/my/employee/expenses/submit" class="btn btn-primary">
+                                <i class="fa fa-plus"></i> Submit New Expense
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Expense Summary Cards -->
+                <div class="row mb-4">
+                    <div class="col-md-3">
+                        <div class="card bg-light">
+                            <div class="card-body text-center">
+                                <h5 class="card-title text-muted">Total Expenses</h5>
+                                <h3 class="text-primary"><t t-esc="len(expenses)"/></h3>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card bg-light">
+                            <div class="card-body text-center">
+                                <h5 class="card-title text-muted">Total Amount</h5>
+                                <h3 class="text-success">
+                                    <t t-esc="employee.company_id.currency_id.symbol"/><t t-esc="'%.2f' % sum(expenses.mapped('total_amount'))"/>
+                                </h3>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card bg-light">
+                            <div class="card-body text-center">
+                                <h5 class="card-title text-muted">Pending</h5>
+                                <h3 class="text-warning">
+                                    <t t-esc="len(expenses.filtered(lambda x: x.sheet_id and x.sheet_id.state == 'submit'))"/>
+                                </h3>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card bg-light">
+                            <div class="card-body text-center">
+                                <h5 class="card-title text-muted">Approved</h5>
+                                <h3 class="text-success">
+                                    <t t-esc="len(expenses.filtered(lambda x: x.sheet_id and x.sheet_id.state == 'approve'))"/>
+                                </h3>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Enhanced Filters -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="fa fa-filter"></i> Filter Expenses</h5>
+                    </div>
+                    <div class="card-body">
+                        <form method="get" action="/my/employee/expenses" class="row g-3">
+                            <div class="col-md-3">
+                                <label for="filter_status" class="form-label">Status</label>
+                                <select name="status" id="filter_status" class="form-control">
+                                    <option value="" t-att-selected="selected_status == ''">All Statuses</option>
+                                    <option value="draft" t-att-selected="selected_status == 'draft'">Draft</option>
+                                    <option value="submit" t-att-selected="selected_status == 'submit'">Submitted</option>
+                                    <option value="approve" t-att-selected="selected_status == 'approve'">Approved</option>
+                                    <option value="refuse" t-att-selected="selected_status == 'refuse'">Refused</option>
+                                    <option value="cancel" t-att-selected="selected_status == 'cancel'">Withdrawn</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label for="filter_category" class="form-label">Category</label>
+                                <select name="category" id="filter_category" class="form-control">
+                                    <option value="" t-att-selected="selected_category == ''">All Categories</option>
+                                    <t t-foreach="categories" t-as="cat">
+                                        <option t-att-value="cat.id" t-att-selected="cat.id == selected_category">
+                                            <t t-esc="cat.display_name"/>
+                                        </option>
+                                    </t>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label for="filter_date" class="form-label">Date</label>
+                                <input type="date" name="date" id="filter_date" class="form-control" t-att-value="selected_date"/>
+                            </div>
+                            <div class="col-md-3 d-flex align-items-end">
+                                <button type="submit" class="btn btn-primary me-2">
+                                    <i class="fa fa-search"></i> Filter
+                                </button>
+                                <a href="/my/employee/expenses" class="btn btn-secondary">
+                                    <i class="fa fa-refresh"></i> Clear
+                                </a>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                
+                <!-- Expenses Table -->
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">Expense Records</h5>
+                    </div>
+                    <div class="card-body">
+                        <t t-if="expenses">
+                            <div class="table-responsive">
+                                <table class="table table-striped table-hover">
+                                    <thead class="table-dark">
+                                        <tr>
+                                            <th>Date</th>
+                                            <th>Description</th>
+                                            <th>Amount</th>
+                                            <th>Status</th>
+                                            <th>Category</th>
+                                            <th>Notes</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <t t-foreach="expenses" t-as="exp">
+                                            <tr>
+                                                <td>
+                                                    <strong><t t-esc="exp.date"/></strong>
+                                                </td>
+                                                <td>
+                                                    <t t-esc="exp.name"/>
+                                                </td>
+                                                <td>
+                                                    <strong class="text-success">
+                                                        <t t-esc="exp.currency_id.symbol"/><t t-esc="'%.2f' % exp.total_amount"/>
+                                                    </strong>
+                                                </td>
+                                                <td>
+                                                    <t t-set="status" t-value="exp.sheet_id.state if exp.sheet_id else 'draft'"/>
+                                                    <span t-att-class="'badge badge-' + ('success' if status == 'approve' else 'warning' if status == 'submit' else 'danger' if status in ['refuse', 'cancel'] else 'secondary')">
+                                                        <i t-att-class="'fa fa-' + ('check' if status == 'approve' else 'clock-o' if status == 'submit' else 'times' if status in ['refuse', 'cancel'] else 'file-o')"></i>
+                                                        <t t-esc="status.replace('_', ' ').title()"/>
+                                                    </span>
+                                                </td>
+                                                <td>
+                                                    <span class="badge badge-info">
+                                                        <t t-esc="exp.product_id.display_name if exp.product_id else 'N/A'"/>
+                                                    </span>
+                                                </td>
+                                                <td>
+                                                    <t t-if="exp.description">
+                                                        <small t-esc="exp.description[:50] + ('...' if len(exp.description) > 50 else '')"/>
+                                                    </t>
+                                                    <t t-else="">
+                                                        <em class="text-muted">No notes</em>
+                                                    </t>
+                                                </td>
+                                                <td>
+                                                    <div class="btn-group" role="group">
+                                                        <!-- Receipt link if attachment exists -->
+                                                        <t t-if="exp.message_main_attachment_id">
+                                                            <a t-att-href="'/web/content/%d?download=true' % exp.message_main_attachment_id.id" 
+                                                               class="btn btn-sm btn-info" target="_blank" title="View Receipt">
+                                                                <i class="fa fa-file-o"></i>
+                                                            </a>
+                                                        </t>
+                                                        <!-- Withdraw button -->
+                                                        <t t-if="exp.sheet_id and exp.sheet_id.state == 'submit'">
+                                                            <form t-att-action="'/my/employee/expenses/withdraw/%d' % exp.id" method="post" style="display:inline;">
+                                                                <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
+                                                                <button type="submit" class="btn btn-sm btn-warning" 
+                                                                        onclick="return confirm('Are you sure you want to withdraw this expense?')"
+                                                                        title="Withdraw Expense">
+                                                                    <i class="fa fa-undo"></i>
+                                                                </button>
+                                                            </form>
+                                                        </t>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        </t>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </t>
+                        <t t-else="">
+                            <div class="text-center py-5">
+                                <i class="fa fa-money fa-3x text-muted mb-3"></i>
+                                <h4 class="text-muted">No expenses found</h4>
+                                <p class="text-muted">You haven't submitted any expenses yet.</p>
+                                <a href="/my/employee/expenses/submit" class="btn btn-primary">
+                                    <i class="fa fa-plus"></i> Submit Your First Expense
+                                </a>
+                            </div>
+                        </t>
+                    </div>
+                </div>
+            </div>
+        </t>
+    </template>
+</odoo>

@@ -1,0 +1,172 @@
+<odoo>
+    <template id="portal_expense_submit" name="Submit Expense">
+        <t t-call="portal.portal_layout">
+            <div class="o_portal">
+                <h2>Submit Expense</h2>
+                <form action="/my/employee/expenses/submit" method="post" enctype="multipart/form-data" 
+                      class="form-horizontal needs-validation" novalidate="novalidate">
+                    <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
+                    
+                    <div class="form-group row">
+                        <label class="col-sm-2 col-form-label">Date <span class="text-danger">*</span></label>
+                        <div class="col-sm-4">
+                            <input type="date" name="date" class="form-control" required="required"
+                                   t-att-max="datetime.datetime.now().strftime('%Y-%m-%d')"/>
+                            <div class="invalid-feedback">Please provide a valid date (not in future).</div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group row">
+                        <label class="col-sm-2 col-form-label">Description <span class="text-danger">*</span></label>
+                        <div class="col-sm-6">
+                            <input type="text" name="name" class="form-control" required="required" 
+                                   placeholder="e.g., Business lunch with client" maxlength="100"/>
+                            <div class="invalid-feedback">Please provide a description (max 100 characters).</div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group row">
+                        <label class="col-sm-2 col-form-label">Amount <span class="text-danger">*</span></label>
+                        <div class="col-sm-4">
+                            <div class="input-group">
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text"><t t-esc="employee.company_id.currency_id.symbol"/></span>
+                                </div>
+                                <input type="number" name="total_amount" class="form-control" step="0.01" 
+                                       min="0.01" max="50000" required="required" placeholder="0.00"/>
+                                <div class="invalid-feedback">Amount must be between <t t-esc="employee.company_id.currency_id.symbol"/>0.01 and <t t-esc="employee.company_id.currency_id.symbol"/>50,000.</div>
+                            </div>
+                            <small class="form-text text-muted">Maximum limit: <t t-esc="employee.company_id.currency_id.symbol"/>50,000 per expense</small>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group row">
+                        <label class="col-sm-2 col-form-label">Category <span class="text-danger">*</span></label>
+                        <div class="col-sm-6">
+                            <select name="category_id" class="form-control" required="required">
+                                <option value="">Select Category</option>
+                                <t t-foreach="categories" t-as="cat">
+                                    <option t-att-value="cat.id"><t t-esc="cat.display_name"/></option>
+                                </t>
+                            </select>
+                            <div class="invalid-feedback">Please select an expense category.</div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group row">
+                        <label class="col-sm-2 col-form-label">Receipt</label>
+                        <div class="col-sm-6">
+                            <input type="file" name="attachment" class="form-control" 
+                                   accept="image/jpeg,image/jpg,image/png,application/pdf"
+                                   onchange="previewReceipt(this)"/>
+                            <small class="form-text text-muted">
+                                Upload receipt (JPG, PNG, PDF). Max size: 10MB. <strong>Recommended for all expenses.</strong>
+                            </small>
+                            <div id="receipt-preview" class="mt-2" style="display:none;">
+                                <img id="receipt-image" src="" alt="Receipt Preview" class="img-thumbnail" style="max-width: 200px; max-height: 200px;"/>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group row">
+                        <label class="col-sm-2 col-form-label">Notes</label>
+                        <div class="col-sm-6">
+                            <textarea name="notes" class="form-control" rows="3" maxlength="500"
+                                      placeholder="Enter additional details (optional, max 500 characters)"></textarea>
+                            <small class="form-text text-muted">Optional additional information about this expense</small>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group row">
+                        <div class="col-sm-6 offset-sm-2">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fa fa-check"></i> Submit Expense
+                            </button>
+                            <a href="/my/employee/expenses" class="btn btn-secondary ml-2">
+                                <i class="fa fa-times"></i> Cancel
+                            </a>
+                        </div>
+                    </div>
+                </form>
+                
+                <!-- Enhanced Error/Success Messages -->
+                <t t-if="errors">
+                    <div class="alert alert-danger mt-3">
+                        <h5><i class="fa fa-exclamation-triangle"></i> Please fix the following errors:</h5>
+                        <ul class="mb-0">
+                            <t t-foreach="errors" t-as="error">
+                                <li><t t-esc="error"/></li>
+                            </t>
+                        </ul>
+                    </div>
+                </t>
+                
+                <t t-if="success">
+                    <div class="alert alert-success mt-3">
+                        <h5><i class="fa fa-check-circle"></i> Success!</h5>
+                        <p class="mb-0"><t t-esc="success"/></p>
+                        <p class="mb-0 mt-2">
+                            <a href="/my/employee/expenses" class="btn btn-success btn-sm">View My Expenses</a>
+                        </p>
+                    </div>
+                </t>
+            </div>
+            
+            <!-- JavaScript for form enhancement -->
+            <script>
+                <![CDATA[
+                // Receipt preview functionality
+                function previewReceipt(input) {
+                    const preview = document.getElementById('receipt-preview');
+                    const previewImg = document.getElementById('receipt-image');
+                    
+                    if (input.files && input.files[0]) {
+                        const file = input.files[0];
+                        
+                        // Validate file size (10MB)
+                        if (file.size > 10 * 1024 * 1024) {
+                            alert('File size cannot exceed 10MB');
+                            input.value = '';
+                            preview.style.display = 'none';
+                            return;
+                        }
+                        
+                        // Show preview for images
+                        if (file.type.startsWith('image/')) {
+                            const reader = new FileReader();
+                            reader.onload = function(e) {
+                                previewImg.src = e.target.result;
+                                preview.style.display = 'block';
+                            };
+                            reader.readAsDataURL(file);
+                        } else {
+                            // Show file name for PDFs
+                            preview.innerHTML = '<div class="alert alert-info"><i class="fa fa-file-pdf-o"></i> ' + file.name + '</div>';
+                            preview.style.display = 'block';
+                        }
+                    } else {
+                        preview.style.display = 'none';
+                    }
+                }
+                
+                // Form validation enhancement
+                (function() {
+                    'use strict';
+                    window.addEventListener('load', function() {
+                        var forms = document.getElementsByClassName('needs-validation');
+                        var validation = Array.prototype.filter.call(forms, function(form) {
+                            form.addEventListener('submit', function(event) {
+                                if (form.checkValidity() === false) {
+                                    event.preventDefault();
+                                    event.stopPropagation();
+                                }
+                                form.classList.add('was-validated');
+                            }, false);
+                        });
+                    }, false);
+                })();
+                ]]>
+            </script>
+        </t>
+    </template>
+</odoo>

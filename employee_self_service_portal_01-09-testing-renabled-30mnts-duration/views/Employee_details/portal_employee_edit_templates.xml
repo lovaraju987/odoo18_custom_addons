@@ -1,0 +1,109 @@
+<odoo>
+    <template id="portal_employee_edit" name="Edit My Profile">
+        <t t-call="portal.portal_layout">
+            <div class="o_portal container my-4">
+                <h2>Edit My Profile</h2>
+                <form action="/my/employee/edit" method="post" class="card p-3">
+                    <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
+                    
+                    <!-- Employee Details (Read-only) -->
+                    <fieldset class="mb-3">
+                        <legend>Employee Details</legend>
+                        <div class="row">
+                            <div class="col-md-6 mb-2">
+                                <label>Name</label>
+                                <input type="text" class="form-control" t-att-value="employee.name" readonly="readonly"/>
+                            </div>
+                            <div class="col-md-6 mb-2">
+                                <label>Job Title</label>
+                                <input type="text" class="form-control" t-att-value="employee.job_title" readonly="readonly"/>
+                            </div>
+                        </div>
+                    </fieldset>
+                    
+                    <!-- Personal Details -->
+                    <fieldset class="mb-3">
+                        <legend>Personal Details</legend>
+                        <div class="row">
+                            <div class="col-md-6 mb-2">
+                                <label>Email</label>
+                                <input type="email" name="work_email" class="form-control" t-att-value="employee.work_email"/>
+                            </div>
+                            <div class="col-md-6 mb-2">
+                                <label>Phone</label>
+                                <input type="text" name="work_phone" class="form-control" t-att-value="employee.work_phone"/>
+                            </div>
+                            <div class="col-md-6 mb-2">
+                                <label>Birthday</label>
+                                <input type="date" name="birthday" class="form-control" t-att-value="employee.birthday"/>
+                            </div>
+                            <div class="col-md-6 mb-2">
+                                <label>Gender</label>
+                                <select name="gender" class="form-control">
+                                    <option value="" t-if="not employee.gender">Select</option>
+                                    <option value="male" t-att-selected="employee.gender == 'male'">Male</option>
+                                    <option value="female" t-att-selected="employee.gender == 'female'">Female</option>
+                                    <option value="other" t-att-selected="employee.gender == 'other'">Other</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-2">
+                                <label>Marital Status</label>
+                                <select name="marital" class="form-control">
+                                    <option value="" t-if="not employee.marital">Select</option>
+                                    <option value="single" t-att-selected="employee.marital == 'single'">Single</option>
+                                    <option value="married" t-att-selected="employee.marital == 'married'">Married</option>
+                                    <option value="widower" t-att-selected="employee.marital == 'widower'">Widower</option>
+                                    <option value="divorced" t-att-selected="employee.marital == 'divorced'">Divorced</option>
+                                </select>
+                            </div>
+                        </div>
+                    </fieldset>
+                    
+                    <!-- Experience & Skills -->
+                    <fieldset class="mb-3">
+                        <legend>Experience &amp; Skills</legend>
+                        <div class="mb-2">
+                            <label>Experience</label>
+                            <textarea name="x_experience" class="form-control" rows="2" t-esc="employee.x_experience"/>
+                        </div>
+                        <div class="mb-2">
+                            <label>Skills</label>
+                            <input type="text" name="x_skills" class="form-control" t-att-value="employee.x_skills"/>
+                        </div>
+                    </fieldset>
+                    
+                    <!-- Certifications -->
+                    <fieldset class="mb-3">
+                        <legend>Certifications</legend>
+                        <div class="mb-2">
+                            <label>Certifications</label>
+                            <textarea name="x_certifications" class="form-control" rows="2" t-esc="employee.x_certifications"/>
+                        </div>
+                    </fieldset>
+                    
+                    <!-- Bank Details -->
+                    <fieldset class="mb-3">
+                        <legend>Bank Details</legend>
+                        <div class="row">
+                            <div class="col-md-4 mb-2">
+                                <label>Bank Name</label>
+                                <input type="text" name="x_bank_name" class="form-control" t-att-value="employee.x_bank_name"/>
+                            </div>
+                            <div class="col-md-4 mb-2">
+                                <label>Account Number</label>
+                                <input type="text" name="x_bank_account" class="form-control" t-att-value="employee.x_bank_account"/>
+                            </div>
+                            <div class="col-md-4 mb-2">
+                                <label>IFSC</label>
+                                <input type="text" name="x_ifsc" class="form-control" t-att-value="employee.x_ifsc"/>
+                            </div>
+                        </div>
+                    </fieldset>
+                    
+                    <button type="submit" class="btn btn-primary mt-3">Save</button>
+                    <a href="/my/employee" class="btn btn-secondary mt-3">Cancel</a>
+                </form>
+            </div>
+        </t>
+    </template>
+</odoo>

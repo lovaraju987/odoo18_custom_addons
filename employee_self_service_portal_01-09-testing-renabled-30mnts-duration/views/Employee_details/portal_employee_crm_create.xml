@@ -1,0 +1,262 @@
+<odoo>
+  <template id="portal_employee_crm_create" name="Create CRM Lead">
+    <t t-call="portal.portal_layout">
+      <div class="o_portal container my-4">
+        <h2>Create New Lead / Opportunity</h2>
+        <form action="/my/employee/crm/create" method="post" class="card p-3">
+          <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
+          <div class="mb-2">
+            <label>Name</label>
+            <input type="text" name="name" class="form-control" required="required"/>
+          </div>
+          <div class="mb-2">
+            <label>Customer</label>
+            <select name="partner_id" class="form-control js-partner-select">
+              <option value="">Select or type to create new</option>
+              <t t-foreach="partners" t-as="partner">
+                <option t-att-value="partner.id">
+                  <t t-esc="partner.name"/>
+                </option>
+              </t>
+            </select>
+            <small class="form-text text-muted">Search for existing customer or type new name to create one.</small>
+            <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+            <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+            <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+            <script type="text/javascript">
+              document.addEventListener('DOMContentLoaded', function() {
+                var partnerSelect = document.querySelector('select.js-partner-select');
+                if (partnerSelect) {
+                  $(partnerSelect).select2({
+                    width: '100%',
+                    placeholder: 'Search for a customer or type to create new',
+                    allowClear: true,
+                    tags: true,
+                    createTag: function (params) {
+                      var term = $.trim(params.term);
+                      if (term === '') {
+                        return null;
+                      }
+                      return {
+                        id: term,
+                        text: term + ' (New Customer)',
+                        newTag: true
+                      };
+                    }
+                  });
+                }
+              });
+            </script>
+          </div>
+          <div class="mb-2">
+            <label>Email</label>
+            <input type="email" name="email_from" class="form-control"/>
+          </div>
+          <div class="mb-2">
+            <label>Phone</label>
+            <input type="text" name="phone" class="form-control"/>
+          </div>
+          <div class="mb-2">
+            <label>Expected Revenue</label>
+            <input type="number" name="expected_revenue" class="form-control" step="0.01"/>
+          </div>
+          <div class="mb-2">
+            <label>Stage</label>
+            <select name="stage_id" class="form-control">
+              <t t-foreach="stages" t-as="stage">
+                <option t-att-value="stage.id"><t t-esc="stage.name"/></option>
+              </t>
+            </select>
+          </div>
+          <div class="mb-2">
+            <label>Description</label>
+            <textarea name="description" class="form-control"></textarea>
+          </div>
+          <div class="mb-2">
+            <label>Probability (%)</label>
+            <input type="number" name="probability" class="form-control" min="0" max="100" step="0.01"/>
+          </div>
+          <div class="mb-2">
+            <label>Expected Closing</label>
+            <input type="date" name="date_deadline" class="form-control"/>
+          </div>
+          <div class="mb-2">
+            <label>Tags</label>
+            <select name="tag_ids[]" class="form-control" multiple="multiple">
+              <t t-foreach="all_tags" t-as="tag">
+                <option t-att-value="tag.id"><t t-esc="tag.name"/></option>
+              </t>
+            </select>
+            <small class="form-text text-muted">Search, select, or add new tags. Hold Ctrl (Windows) or Cmd (Mac) to select multiple.</small>
+            <!-- Select2 for searchable and creatable tags -->
+            <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+            <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+            <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+            <script type="text/javascript">
+              document.addEventListener('DOMContentLoaded', function() {
+                var tagSelect = document.querySelector('select[name="tag_ids[]"]');
+                if (tagSelect) {
+                  $(tagSelect).select2({
+                    width: '100%',
+                    placeholder: 'Search or add tags',
+                    tags: true,
+                    allowClear: true
+                  });
+                }
+              });
+            </script>
+          </div>
+          
+          <!-- TechCarrot CRM MLR Custom Fields -->
+          <div class="mb-2">
+            <label>Point of Contact</label>
+            <select name="point_of_contact_id" class="form-control js-contact-select">
+              <option value="">Select or type to create new</option>
+              <t t-foreach="contacts" t-as="contact">
+                <option t-att-value="contact.id">
+                  <t t-esc="contact.name"/>
+                </option>
+              </t>
+            </select>
+            <small class="form-text text-muted">Search for existing contact or type new name to create one.</small>
+          </div>
+          
+          <div class="mb-2">
+            <label>Practice</label>
+            <select name="practice_id" class="form-control">
+              <option value="">Select</option>
+              <t t-foreach="practices" t-as="practice">
+                <option t-att-value="practice.id">
+                  <t t-esc="practice.name"/>
+                </option>
+              </t>
+            </select>
+            <small class="form-text text-muted">Practice area for this opportunity.</small>
+          </div>
+          
+          <div class="mb-2">
+            <label>Deal Manager</label>
+            <select name="deal_manager_id" class="form-control js-employee-select">
+              <option value="">Select</option>
+              <t t-foreach="employees" t-as="employee">
+                <option t-att-value="employee.id">
+                  <t t-esc="employee.name"/>
+                </option>
+              </t>
+            </select>
+            <small class="form-text text-muted">Employee responsible for managing this deal.</small>
+          </div>
+          
+          <div class="mb-2">
+            <label>Industry</label>
+            <select name="industry_id" class="form-control">
+              <option value="">Select</option>
+              <t t-foreach="industries" t-as="industry">
+                <option t-att-value="industry.id">
+                  <t t-esc="industry.name"/>
+                </option>
+              </t>
+            </select>
+            <small class="form-text text-muted">Industry sector of the customer.</small>
+          </div>
+          
+          <div class="mb-2">
+            <label>Type</label>
+            <select name="type_id" class="form-control">
+              <option value="">Select</option>
+              <t t-foreach="lead_types" t-as="lead_type">
+                <option t-att-value="lead_type.id">
+                  <t t-esc="lead_type.name"/>
+                </option>
+              </t>
+            </select>
+            <small class="form-text text-muted">Business type for this opportunity.</small>
+          </div>
+          
+          <div class="mb-2">
+            <label>Client Proposal Submission Date</label>
+            <input type="date" name="client_proposal_submission_date" class="form-control"/>
+            <small class="form-text text-muted">Date when the proposal was submitted to the client.</small>
+          </div>
+          
+          <div class="mb-2">
+            <label>Proposal Submitted Date</label>
+            <input type="date" name="proposal_submitted_date" class="form-control"/>
+            <small class="form-text text-muted">Date when the proposal was submitted (internal record).</small>
+          </div>
+          
+          <div class="mb-2">
+            <div class="form-check">
+              <input type="checkbox" name="engaged_presales" class="form-check-input" id="engaged_presales"/>
+              <label class="form-check-label" for="engaged_presales">
+                Engaged Presales
+              </label>
+            </div>
+            <small class="form-text text-muted">Check if presales team is engaged for this opportunity.</small>
+          </div>
+          
+          <div class="mb-2">
+            <label>Salesperson</label>
+            <select name="user_id" class="form-control js-salesperson-select">
+              <option value="">Select</option>
+              <t t-foreach="salespersons" t-as="salesperson">
+                <option t-att-value="salesperson.id" t-att-selected="salesperson.id == current_user_id and 'selected' or None">
+                  <t t-esc="salesperson.name"/>
+                </option>
+              </t>
+            </select>
+            <small class="form-text text-muted">Search and select a salesperson.</small>
+            <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+            <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+            <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+            <script type="text/javascript">
+              $(document).ready(function() {
+                var salespersonSelect = $('select.js-salesperson-select');
+                if (salespersonSelect.length) {
+                  salespersonSelect.select2({
+                    width: '100%',
+                    placeholder: 'Search for a salesperson',
+                    allowClear: true
+                  });
+                }
+                
+                // Initialize Select2 for contact and employee selects
+                var contactSelect = $('select.js-contact-select');
+                if (contactSelect.length) {
+                  contactSelect.select2({
+                    width: '100%',
+                    placeholder: 'Search for a contact or type to create new',
+                    allowClear: true,
+                    tags: true,
+                    createTag: function (params) {
+                      var term = $.trim(params.term);
+                      if (term === '') {
+                        return null;
+                      }
+                      return {
+                        id: term,
+                        text: term + ' (New Contact)',
+                        newTag: true
+                      };
+                    }
+                  });
+                }
+                
+                var employeeSelect = $('select.js-employee-select');
+                if (employeeSelect.length) {
+                  employeeSelect.select2({
+                    width: '100%',
+                    placeholder: 'Search for an employee',
+                    allowClear: true
+                  });
+                }
+              });
+            </script>
+          </div>
+          <button type="submit" class="btn btn-primary mt-3">Create</button>
+          <a href="/my/employee/crm" class="btn btn-secondary mt-3">Cancel</a>
+        </form>
+      </div>
+    </t>
+  </template>
+</odoo>

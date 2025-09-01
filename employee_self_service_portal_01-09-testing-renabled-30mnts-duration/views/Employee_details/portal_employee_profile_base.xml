@@ -1,0 +1,184 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+  <template id="portal_employee_profile_base">
+    <t t-call="portal.portal_layout">
+      <div class="o_portal container my-4">
+        <!-- Enhanced Header Section -->
+        <div class="card mb-4 shadow-sm">
+          <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+            <div>
+              <h4 class="mb-1">Employee Profile</h4>
+              <small class="opacity-75">Manage your personal information and settings</small>
+            </div>
+            <div class="d-flex gap-2">
+              <span class="badge bg-light text-dark">
+                <i class="fa fa-chart-pie me-1"></i>
+                Profile Management
+              </span>
+            </div>
+          </div>
+          <div class="card-body p-4">
+            <div class="row align-items-center">
+              <div class="col-md-8">
+                <div class="row g-3">
+                  <div class="col-md-6">
+                    <div class="d-flex align-items-center">
+                      <div class="icon-box bg-primary bg-opacity-10 text-primary rounded-circle p-2 me-3">
+                        <i class="fa fa-user"></i>
+                      </div>
+                      <div>
+                        <small class="text-muted d-block">Full Name</small>
+                        <strong><t t-esc="employee.name"/></strong>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="col-md-6">
+                    <div class="d-flex align-items-center">
+                      <div class="icon-box bg-success bg-opacity-10 text-success rounded-circle p-2 me-3">
+                        <i class="fa fa-id-badge"></i>
+                      </div>
+                      <div>
+                        <small class="text-muted d-block">Employee ID</small>
+                        <strong><t t-esc="employee.barcode or 'Not Set'"/></strong>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="col-md-6">
+                    <div class="d-flex align-items-center">
+                      <div class="icon-box bg-info bg-opacity-10 text-info rounded-circle p-2 me-3">
+                        <i class="fa fa-building"></i>
+                      </div>
+                      <div>
+                        <small class="text-muted d-block">Department</small>
+                        <strong><t t-esc="employee.department_id.name or 'Not Assigned'"/></strong>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="col-md-6">
+                    <div class="d-flex align-items-center">
+                      <div class="icon-box bg-warning bg-opacity-10 text-warning rounded-circle p-2 me-3">
+                        <i class="fa fa-briefcase"></i>
+                      </div>
+                      <div>
+                        <small class="text-muted d-block">Position</small>
+                        <strong><t t-esc="employee.job_id.name or employee.job_title or 'Not Set'"/></strong>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-4 text-center">
+                <div class="position-relative mb-3">
+                  <img t-if="employee.image_1920" 
+                       t-attf-src="/web/image/hr.employee/{{employee.id}}/image_1920/150x150"
+                       class="rounded-circle shadow" 
+                       style="width:120px;height:120px;object-fit:cover;" 
+                       alt="Employee Photo"/>
+                  <img t-else=""
+                       src="/web/static/src/img/avatar.png" 
+                       class="rounded-circle shadow opacity-50" 
+                       style="width:120px;height:120px;object-fit:cover;" 
+                       alt="Default Avatar"/>
+                </div>
+                <div class="text-center">
+                  <h6 class="mb-1"><t t-esc="employee.name"/></h6>
+                  <small class="text-muted">
+                    <i class="fa fa-circle text-success me-1" style="font-size:8px;"></i>
+                    Active Employee
+                  </small>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Enhanced Navigation Tabs -->
+        <div class="mb-4">
+          <ul class="nav nav-pills nav-fill bg-light p-2 rounded shadow-sm">
+            <li class="nav-item">
+              <a t-attf-class="nav-link rounded {{'active fw-bold' if section == 'personal' else 'text-muted'}}" 
+                 href="/my/employee/personal">
+                <i class="fa fa-user me-2"></i>
+                <span class="d-none d-md-inline">Personal Details</span>
+                <span class="d-md-none">Personal</span>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a t-attf-class="nav-link rounded {{'active fw-bold' if section == 'experience' else 'text-muted'}}" 
+                 href="/my/employee/experience">
+                <i class="fa fa-briefcase me-2"></i>
+                <span class="d-none d-md-inline">Experience and Skills</span>
+                <span class="d-md-none">Experience</span>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a t-attf-class="nav-link rounded {{'active fw-bold' if section == 'certification' else 'text-muted'}}" 
+                 href="/my/employee/certification">
+                <i class="fa fa-certificate me-2"></i>
+                <span class="d-none d-md-inline">Certifications</span>
+                <span class="d-md-none">Certs</span>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a t-attf-class="nav-link rounded {{'active fw-bold' if section == 'bank' else 'text-muted'}}" 
+                 href="/my/employee/bank">
+                <i class="fa fa-university me-2"></i>
+                <span class="d-none d-md-inline">Bank Details</span>
+                <span class="d-md-none">Banking</span>
+              </a>
+            </li>
+          </ul>
+        </div>
+
+        <!-- Section Content -->
+        <div class="section-content">
+          <t t-raw="section_content"/>
+        </div>
+        
+        <!-- Enhanced CSS Styles -->
+        <style>
+          .icon-box {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+          }
+          
+          .nav-pills .nav-link {
+            transition: all 0.3s ease;
+            border: 1px solid transparent;
+          }
+          
+          .nav-pills .nav-link:hover {
+            background-color: rgba(13, 110, 253, 0.1);
+            border-color: rgba(13, 110, 253, 0.2);
+          }
+          
+          .nav-pills .nav-link.active {
+            background: linear-gradient(135deg, #0d6efd, #0056b3);
+            border-color: #0056b3;
+            box-shadow: 0 2px 4px rgba(13, 110, 253, 0.3);
+          }
+          
+          .card {
+            transition: box-shadow 0.3s ease;
+          }
+          
+          .card:hover {
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1) !important;
+          }
+          
+          @media (max-width: 768px) {
+            .icon-box {
+              width: 35px;
+              height: 35px;
+              font-size: 14px;
+            }
+          }
+        </style>
+      </div>
+    </t>
+  </template>
+</odoo>

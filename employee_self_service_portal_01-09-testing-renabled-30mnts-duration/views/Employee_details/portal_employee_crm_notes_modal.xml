@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <template id="portal_employee_crm_notes_modal" name="CRM Notes Modal Content">
+        <div class="modal-header">
+            <h5 class="modal-title">
+                <i class="fa fa-sticky-note-o"></i>
+                Notes for <t t-esc="lead.name"/>
+            </h5>
+        </div>
+        <div class="modal-body">
+            <t t-if="notes">
+                <div class="list-group">
+                    <t t-foreach="notes" t-as="note">
+                        <div class="list-group-item">
+                            <div class="d-flex w-100 justify-content-between">
+                                <div class="mb-1">
+                                    <strong t-esc="note.author_id.name or 'System'"/>
+                                </div>
+                                <small t-esc="note.date.strftime('%B %d, %Y at %I:%M %p')" class="text-muted"/>
+                            </div>
+                            <div class="note-content" t-esc="note.body" style="white-space: pre-wrap; margin-top: 10px;"/>
+                        </div>
+                    </t>
+                </div>
+            </t>
+            <t t-if="not notes">
+                <div class="alert alert-info text-center">
+                    <i class="fa fa-info-circle"></i>
+                    No notes found for this lead.
+                </div>
+            </t>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+        </div>
+    </template>
+</odoo>

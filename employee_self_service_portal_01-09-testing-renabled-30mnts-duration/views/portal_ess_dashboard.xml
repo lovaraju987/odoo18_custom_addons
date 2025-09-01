@@ -1,0 +1,517 @@
+<odoo>
+    <template id="portal_ess_dashboard" name="ESS Portal Dashboard">
+        <t t-call="portal.portal_layout">
+            <div class="o_portal container my-4">
+                <!-- Header with Enhanced Version Link -->
+                <div class="row align-items-center mb-3">
+                    <div class="col-md-8">
+                        <h2>Employee Self Service Portal (Classic View)</h2>
+                    </div>
+                    <div class="col-md-4 text-end">
+                        <a href="/my/ess" class="btn btn-outline-primary btn-sm">
+                            <i class="fa fa-rocket"></i> Go to Modern Dashboard
+                        </a>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-4 mb-4">
+                        <a href="/my/employee" class="card text-center h-100 shadow-sm text-decoration-none">
+                            <div class="card-body">
+                                <i class="fa fa-id-badge fa-2x mb-2"></i>
+                                <h5 class="card-title">Profile Info</h5>
+                                <p class="card-text">View and edit your profile information.</p>
+                            </div>
+                        </a>
+                    </div>
+                    
+                    <t t-if="has_attendance_access">
+                        <div class="col-md-4 mb-4">
+                            <div class="card text-center h-100 shadow-sm">
+                                <div class="card-body">
+                                    <i class="fa fa-calendar-check-o fa-2x mb-2"></i>
+                                    <h5 class="card-title">
+                                        Attendance
+                                        <t t-if="today_attendances and len(today_attendances) > 0 and not today_attendances[0].check_out">
+                                            <!-- Currently active -->
+                                            <span class="badge badge-warning ml-2">Active</span>
+                                        </t>
+                                        <t t-elif="today_attendances and len(today_attendances) > 0 and today_attendances[0].check_out">
+                                            <!-- Checked out but can check in again -->
+                                            <span class="badge badge-success ml-2">Ready</span>
+                                        </t>
+                                        <t t-else="">
+                                            <!-- No attendance today -->
+                                            <span class="badge badge-secondary ml-2">Not Started</span>
+                                        </t>
+                                    </h5>
+                                    <p class="card-text">Manage your daily attendance.</p>
+                                    
+                                    <!-- Quick Actions -->
+                                    <div class="mt-3">
+                                        <t t-if="today_attendances and len(today_attendances) > 0 and not today_attendances[0].check_out">
+                                            <!-- Checked in but not out - show check-out -->
+                                            <button class="btn btn-danger btn-sm mb-2" onclick="quickCheckOut()">
+                                                <i class="fa fa-sign-out"></i> Quick Check-Out
+                                            </button>
+                                            <br/>
+                                            <small class="text-success">
+                                                In since: <t t-esc="format_datetime(today_attendances[0].check_in)"/>
+                                            </small>
+                                        </t>
+                                        <t t-elif="today_attendances and len(today_attendances) > 0 and today_attendances[0].check_out">
+                                            <!-- Checked out today - show check-in again -->
+                                            <button class="btn btn-success btn-sm mb-2" onclick="quickCheckIn()">
+                                                <i class="fa fa-sign-in"></i> Check In Again
+                                            </button>
+                                            <br/>
+                                            <small class="text-muted">
+                                                Worked: <t t-esc="'%.2f' % today_attendances[0].worked_hours"/> hours
+                                            </small>
+                                        </t>
+                                        <t t-else="">
+                                            <!-- No attendance today - show check-in -->
+                                            <button class="btn btn-success btn-sm mb-2" onclick="quickCheckIn()">
+                                                <i class="fa fa-sign-in"></i> First Check-In
+                                            </button>
+                                        </t>
+                                    </div>
+                                    
+                                    <!-- Full attendance link -->
+                                    <div class="mt-3">
+                                        <a href="/my/employee/attendance" class="btn btn-outline-primary btn-sm">
+                                            <i class="fa fa-list"></i> View Full History
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </t>
+                    
+                    <t t-if="has_payslip_access">
+                        <div class="col-md-4 mb-4">
+                            <a href="/my/employee/payslips" class="card text-center h-100 shadow-sm text-decoration-none">
+                                <div class="card-body">
+                                    <i class="fa fa-file-text-o fa-2x mb-2"></i>
+                                    <h5 class="card-title">
+                                        Payslips
+                                        <t t-if="payslips_count">
+                                            <span class="badge badge-primary ml-2" t-esc="payslips_count"/>
+                                        </t>
+                                    </h5>
+                                    <p class="card-text">View and download your payslips.</p>
+                                    <t t-if="latest_payslip">
+                                        <small class="text-muted">
+                                            Latest: <t t-esc="latest_payslip.get_formatted_period()"/>
+                                        </small>
+                                    </t>
+                                </div>
+                            </a>
+                        </div>
+                    </t>
+                    
+                    <t t-if="has_crm_access">
+                        <div class="col-md-4 mb-4">
+                            <a href="/my/employee/crm" class="card text-center h-100 shadow-sm text-decoration-none">
+                                <div class="card-body">
+                                    <i class="fa fa-briefcase fa-2x mb-2"></i>
+                                    <h5 class="card-title">
+                                        CRM
+                                        <t t-if="crm_leads_count">
+                                            <span class="badge badge-info ml-2" t-esc="crm_leads_count"/>
+                                        </t>
+                                    </h5>
+                                    <p class="card-text">View your assigned leads and opportunities.</p>
+                                </div>
+                            </a>
+                        </div>
+                    </t>
+                    <t t-if="has_expenses_access">
+                        <div class="col-md-4 mb-4">
+                            <a href="/my/employee/expenses" class="card text-center h-100 shadow-sm text-decoration-none">
+                                <div class="card-body">
+                                    <i class="fa fa-money fa-2x mb-2 text-warning"></i>
+                                    <h5 class="card-title">
+                                        Expenses
+                                        <t t-if="expense_stats and expense_stats['pending_count'] > 0">
+                                            <span class="badge badge-warning ml-2" t-esc="expense_stats['pending_count']"/>
+                                        </t>
+                                    </h5>
+                                    <t t-if="expense_stats">
+                                        <p class="card-text mb-1">
+                                            <strong>This Month:</strong> <t t-esc="expense_stats['total_count']"/> expenses
+                                        </p>
+                                        <p class="card-text mb-1">
+                                            <strong>Total:</strong> $<t t-esc="'%.2f' % expense_stats['total_amount']"/>
+                                        </p>
+                                        <div class="row text-center mt-3">
+                                            <div class="col-4">
+                                                <small class="text-muted">Submitted</small><br/>
+                                                <span class="badge badge-warning"><t t-esc="expense_stats['submitted_count']"/></span>
+                                            </div>
+                                            <div class="col-4">
+                                                <small class="text-muted">Approved</small><br/>
+                                                <span class="badge badge-success"><t t-esc="expense_stats['approved_count']"/></span>
+                                            </div>
+                                            <div class="col-4">
+                                                <small class="text-muted">Amount</small><br/>
+                                                <small>$<t t-esc="'%.0f' % expense_stats['approved_amount']"/></small>
+                                            </div>
+                                        </div>
+                                    </t>
+                                    <t t-else="">
+                                        <p class="card-text">View and track your submitted expenses.</p>
+                                    </t>
+                                </div>
+                            </a>
+                        </div>
+                    </t>
+                    <!-- Add more sections as needed: Leaves, Timesheets, Announcements -->
+                </div>
+            </div>
+            
+            <!-- Enhanced Dashboard JavaScript -->
+            <script>
+            <![CDATA[
+            // Helper function for reverse geocoding
+            function reverseGeocode(lat, lon, callback) {
+                console.log(`Attempting to reverse geocode: ${lat}, ${lon}`);
+                
+                // Add cache to prevent excessive API calls
+                const cacheKey = `${lat.toFixed(6)},${lon.toFixed(6)}`;
+                const cachedResult = sessionStorage.getItem(`geo_${cacheKey}`);
+                if (cachedResult) {
+                    console.log(`Using cached location: ${cachedResult}`);
+                    callback(cachedResult);
+                    return;
+                }
+                
+                // Add a user agent header to comply with Nominatim usage policy
+                fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&zoom=18`, {
+                    headers: {
+                        'User-Agent': 'TechcarrotESS/1.0'
+                    }
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! Status: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data && data.display_name) {
+                        console.log(`Got location: ${data.display_name}`);
+                        // Cache the result for future use
+                        sessionStorage.setItem(`geo_${cacheKey}`, data.display_name);
+                        callback(data.display_name);
+                    } else {
+                        console.warn('No location name in response', data);
+                        callback(`Location at ${lat.toFixed(6)},${lon.toFixed(6)}`);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error in reverse geocoding:', error);
+                    // Fallback to coordinates
+                    callback(`Location at ${lat.toFixed(6)},${lon.toFixed(6)}`);
+                });
+            }
+            
+            // Get CSRF token helper
+            function getCSRFToken() {
+                return document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+            }
+            
+            // Quick Check-In Function with Geolocation
+            function quickCheckIn() {
+                const btn = event.target;
+                const originalText = btn.innerHTML;
+                btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Checking In...';
+                btn.disabled = true;
+                
+                if (navigator.geolocation) {
+                    navigator.geolocation.getCurrentPosition(
+                        function(position) {
+                            // Successfully got location
+                            const latitude = position.coords.latitude;
+                            const longitude = position.coords.longitude;
+                            console.log(`Got location: ${latitude}, ${longitude}`);
+                            
+                            // Get address from coordinates
+                            reverseGeocode(latitude, longitude, function(location) {
+                                // Now send check-in request with location data
+                                fetch('/my/employee/attendance/quick-checkin', {
+                                    method: 'POST',
+                                    headers: {
+                                        'Content-Type': 'application/x-www-form-urlencoded',
+                                        'X-CSRFToken': getCSRFToken()
+                                    },
+                                    body: 'csrf_token=' + encodeURIComponent(getCSRFToken()) + 
+                                          '&in_latitude=' + encodeURIComponent(latitude) + 
+                                          '&in_longitude=' + encodeURIComponent(longitude) + 
+                                          '&check_in_location=' + encodeURIComponent(location)
+                                })
+                                .then(response => response.json())
+                                .then(data => {
+                                    if (data.status === 'success') {
+                                        showNotification(data.message, 'success');
+                                        setTimeout(() => window.location.reload(), 1500);
+                                    } else {
+                                        showNotification(data.message, 'error');
+                                        btn.innerHTML = originalText;
+                                        btn.disabled = false;
+                                    }
+                                })
+                                .catch(error => {
+                                    console.error('Error:', error);
+                                    showNotification('Check-in failed. Please try again.', 'error');
+                                    btn.innerHTML = originalText;
+                                    btn.disabled = false;
+                                });
+                            });
+                        },
+                        function(error) {
+                            console.error("Geolocation error:", error);
+                            showNotification('Could not get your location. Check-in without location.', 'warning');
+                            
+                            // Continue with check-in without location
+                            fetch('/my/employee/attendance/quick-checkin', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/x-www-form-urlencoded',
+                                    'X-CSRFToken': getCSRFToken()
+                                },
+                                body: 'csrf_token=' + encodeURIComponent(getCSRFToken()) +
+                                      '&check_in_location=Quick Check-in from Dashboard (No location access)'
+                            })
+                            .then(response => response.json())
+                            .then(data => {
+                                if (data.status === 'success') {
+                                    showNotification(data.message, 'success');
+                                    setTimeout(() => window.location.reload(), 1500);
+                                } else {
+                                    showNotification(data.message, 'error');
+                                    btn.innerHTML = originalText;
+                                    btn.disabled = false;
+                                }
+                            })
+                            .catch(error => {
+                                console.error('Error:', error);
+                                showNotification('Check-in failed. Please try again.', 'error');
+                                btn.innerHTML = originalText;
+                                btn.disabled = false;
+                            });
+                        },
+                        { enableHighAccuracy: true, timeout: 10000, maximumAge: 300000 }
+                    );
+                } else {
+                    console.error("Geolocation not supported");
+                    showNotification('Your device does not support location. Check-in without location.', 'warning');
+                    
+                    // Fallback to check-in without location
+                    fetch('/my/employee/attendance/quick-checkin', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded',
+                            'X-CSRFToken': getCSRFToken()
+                        },
+                        body: 'csrf_token=' + encodeURIComponent(getCSRFToken()) +
+                              '&check_in_location=Quick Check-in from Dashboard (No location support)'
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.status === 'success') {
+                            showNotification(data.message, 'success');
+                            setTimeout(() => window.location.reload(), 1500);
+                        } else {
+                            showNotification(data.message, 'error');
+                            btn.innerHTML = originalText;
+                            btn.disabled = false;
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        showNotification('Check-in failed. Please try again.', 'error');
+                        btn.innerHTML = originalText;
+                        btn.disabled = false;
+                    });
+                }
+            }
+            
+            // Quick Check-Out Function with Geolocation
+            function quickCheckOut() {
+                const btn = event.target;
+                const originalText = btn.innerHTML;
+                btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Checking Out...';
+                btn.disabled = true;
+                
+                if (navigator.geolocation) {
+                    navigator.geolocation.getCurrentPosition(
+                        function(position) {
+                            // Successfully got location
+                            const latitude = position.coords.latitude;
+                            const longitude = position.coords.longitude;
+                            console.log(`Got location: ${latitude}, ${longitude}`);
+                            
+                            // Get address from coordinates
+                            reverseGeocode(latitude, longitude, function(location) {
+                                // Now send check-out request with location data
+                                fetch('/my/employee/attendance/quick-checkout', {
+                                    method: 'POST',
+                                    headers: {
+                                        'Content-Type': 'application/x-www-form-urlencoded',
+                                        'X-CSRFToken': getCSRFToken()
+                                    },
+                                    body: 'csrf_token=' + encodeURIComponent(getCSRFToken()) + 
+                                          '&out_latitude=' + encodeURIComponent(latitude) + 
+                                          '&out_longitude=' + encodeURIComponent(longitude) + 
+                                          '&check_out_location=' + encodeURIComponent(location)
+                                })
+                                .then(response => response.json())
+                                .then(data => {
+                                    if (data.status === 'success') {
+                                        showNotification(data.message, 'success');
+                                        setTimeout(() => window.location.reload(), 1500);
+                                    } else {
+                                        showNotification(data.message, 'error');
+                                        btn.innerHTML = originalText;
+                                        btn.disabled = false;
+                                    }
+                                })
+                                .catch(error => {
+                                    console.error('Error:', error);
+                                    showNotification('Check-out failed. Please try again.', 'error');
+                                    btn.innerHTML = originalText;
+                                    btn.disabled = false;
+                                });
+                            });
+                        },
+                        function(error) {
+                            console.error("Geolocation error:", error);
+                            showNotification('Could not get your location. Check-out without location.', 'warning');
+                            
+                            // Continue with check-out without location
+                            fetch('/my/employee/attendance/quick-checkout', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/x-www-form-urlencoded',
+                                    'X-CSRFToken': getCSRFToken()
+                                },
+                                body: 'csrf_token=' + encodeURIComponent(getCSRFToken()) +
+                                      '&check_out_location=Quick Check-out from Dashboard (No location access)'
+                            })
+                            .then(response => response.json())
+                            .then(data => {
+                                if (data.status === 'success') {
+                                    showNotification(data.message, 'success');
+                                    setTimeout(() => window.location.reload(), 1500);
+                                } else {
+                                    showNotification(data.message, 'error');
+                                    btn.innerHTML = originalText;
+                                    btn.disabled = false;
+                                }
+                            })
+                            .catch(error => {
+                                console.error('Error:', error);
+                                showNotification('Check-out failed. Please try again.', 'error');
+                                btn.innerHTML = originalText;
+                                btn.disabled = false;
+                            });
+                        },
+                        { enableHighAccuracy: true, timeout: 10000, maximumAge: 300000 }
+                    );
+                } else {
+                    console.error("Geolocation not supported");
+                    showNotification('Your device does not support location. Check-out without location.', 'warning');
+                    
+                    // Fallback to check-out without location
+                    fetch('/my/employee/attendance/quick-checkout', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded',
+                            'X-CSRFToken': getCSRFToken()
+                        },
+                        body: 'csrf_token=' + encodeURIComponent(getCSRFToken()) +
+                              '&check_out_location=Quick Check-out from Dashboard (No location support)'
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.status === 'success') {
+                            showNotification(data.message, 'success');
+                            setTimeout(() => window.location.reload(), 1500);
+                        } else {
+                            showNotification(data.message, 'error');
+                            btn.innerHTML = originalText;
+                            btn.disabled = false;
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        showNotification('Check-out failed. Please try again.', 'error');
+                        btn.innerHTML = originalText;
+                        btn.disabled = false;
+                    });
+                }
+            }
+            
+            // Enhanced Notification System
+            function showNotification(message, type) {
+                // Remove existing notifications
+                const existingNotifications = document.querySelectorAll('.quick-notification');
+                existingNotifications.forEach(n => n.remove());
+                
+                // Create new notification
+                const notification = document.createElement('div');
+                
+                // Set appropriate styling based on notification type
+                let alertClass = 'danger';
+                let iconClass = 'exclamation-triangle';
+                
+                if (type === 'success') {
+                    alertClass = 'success';
+                    iconClass = 'check-circle';
+                } else if (type === 'warning') {
+                    alertClass = 'warning';
+                    iconClass = 'exclamation-circle';
+                } else if (type === 'info') {
+                    alertClass = 'info';
+                    iconClass = 'info-circle';
+                }
+                
+                notification.className = `alert alert-${alertClass} alert-dismissible fade show quick-notification`;
+                notification.style.cssText = 'position: fixed; top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+                notification.innerHTML = `
+                    <i class="fa fa-${iconClass}"></i> ${message}
+                    <button type="button" class="btn-close" onclick="this.parentElement.remove()"></button>
+                `;
+                
+                document.body.appendChild(notification);
+                
+                // Auto-remove after 5 seconds
+                setTimeout(() => {
+                    if (notification.parentNode) {
+                        notification.remove();
+                    }
+                }, 5000);
+            }
+            
+            // Initialize dashboard features
+            document.addEventListener('DOMContentLoaded', function() {
+                console.log('ESS Dashboard with enhanced attendance loaded');
+                
+                // Add hover effects to cards
+                const cards = document.querySelectorAll('.card');
+                cards.forEach(card => {
+                    card.addEventListener('mouseenter', function() {
+                        this.style.transform = 'translateY(-2px)';
+                        this.style.transition = 'transform 0.2s ease';
+                    });
+                    
+                    card.addEventListener('mouseleave', function() {
+                        this.style.transform = 'translateY(0)';
+                    });
+                });
+            });
+            ]]>
+            </script>
+        </t>
+    </template>
+</odoo>
